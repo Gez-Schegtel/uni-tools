@@ -1557,6 +1557,7 @@ svg.addEventListener("pointerdown", ev => {
   if (rid) {
     if (sumandoALaSeleccion(ev)) S.selR = S.selR.includes(rid) ? S.selR.filter(x => x !== rid) : S.selR.concat(rid);
     else { S.selR = [rid]; S.sel = []; }
+    drag = { kind: "curve", rid, w0: w, curva0: getRama(rid).curva || 0 };
     render(); return;
   }
   if (!sumandoALaSeleccion(ev)) { S.sel = []; S.selR = []; }
@@ -1579,6 +1580,20 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "move") {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     drag.orig.forEach(o => { const n = getNodo(o.id); if (n) { n.x = snapV(o.x + dx); n.y = snapV(o.y + dy); } });
+    render(); return;
+  }
+  if (drag.kind === "curve") {
+    const r = getRama(drag.rid);
+    if (!r) return;
+    const A = getNodo(r.de), B = getNodo(r.a);
+    if (!A || !B) return;
+    if (r.de === r.a) {
+      r.curva = drag.curva0 - (w.y - drag.w0.y) * (drag.curva0 < 0 ? -1 : 1);
+    } else {
+      const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1;
+      r.curva = drag.curva0 + ((w.x - drag.w0.x) * -dy / L + (w.y - drag.w0.y) * dx / L) * 2;
+    }
+    r.curvaFija = true;
     render(); return;
   }
   if (drag.kind === "connect") { drag.cur = w; render(); return; }
@@ -1604,7 +1619,7 @@ svg.addEventListener("pointerup", ev => {
     if (Math.abs(r - l) > 4 || Math.abs(bo - t) > 4)
       S.sel = S.nodos.filter(n => n.x >= l && n.x <= r && n.y >= t && n.y <= bo).map(n => n.id);
   }
-  if (drag.kind === "move") commit();
+  if (drag.kind === "move" || drag.kind === "curve") commit();
   svg.classList.remove("panning");
   drag = null; render();
 });
