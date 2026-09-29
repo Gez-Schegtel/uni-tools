@@ -1528,6 +1528,10 @@ svg.addEventListener("pointerdown", ev => {
   const w = toWorld(ev), t = ev.target;
   svg.setPointerCapture(ev.pointerId);
 
+  if (drag && drag.kind === "curve-new") {
+    commit(); drag = null; render(); return;
+  }
+
   // un dedo en el fondo mueve la hoja (con el mouse eso es la banda de selección)
   if (ev.pointerType === "touch" && esFondo(t) && pendiente !== "nodo" && !ramaCerca(w) && modo !== "multi") {
     S.sel = []; S.selR = [];
@@ -1596,6 +1600,18 @@ svg.addEventListener("pointermove", ev => {
     r.curvaFija = true;
     render(); return;
   }
+  if (drag.kind === "curve-new") {
+    const r = getRama(drag.rid);
+    if (!r) return;
+    const A = getNodo(r.de), B = getNodo(r.a);
+    if (!A || !B) return;
+    const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1;
+    const nx = -dy / L, ny = dx / L;
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    r.curva = ((w.x - mx) * nx + (w.y - my) * ny) * 2;
+    r.curvaFija = true;
+    render(); return;
+  }
   if (drag.kind === "connect") { drag.cur = w; render(); return; }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
 });
@@ -1609,6 +1625,10 @@ svg.addEventListener("pointerup", ev => {
     if (destino) {
       const r = nuevaRama(drag.fromId, destino);
       S.ramas.push(r); S.selR = [r.id]; S.sel = [];
+      if (drag.fromId !== destino) {
+        drag = { kind: "curve-new", rid: r.id };
+        return;
+      }
       commit();
     }
   }
