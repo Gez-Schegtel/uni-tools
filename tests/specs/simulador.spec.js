@@ -169,3 +169,16 @@ test.describe("copiar y pegar (Ctrl+C / Ctrl+V)", () => {
     expect(await page.evaluate(() => S.nodes.length)).toBe(12);
   });
 });
+
+test("Ctrl + clic izquierdo y arrastrar mueve la hoja; la rueda también", async ({ page }) => {
+  const p = await page.evaluate(() => { const r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + r.width - 80, y: r.top + r.height - 80 }; });
+  const antes = await page.evaluate(() => [S.pan.x, S.pan.y]);
+  await page.keyboard.down("Control");
+  await page.mouse.move(p.x, p.y); await page.mouse.down();
+  await page.mouse.move(p.x - 50, p.y - 30, { steps: 6 }); await page.mouse.up();
+  await page.keyboard.up("Control");
+  const d = await page.evaluate(() => [S.pan.x, S.pan.y]);
+  expect([Math.round(d[0] - antes[0]), Math.round(d[1] - antes[1])]).toEqual([-50, -30]);
+  await page.mouse.wheel(0, 100);
+  await expect.poll(() => page.evaluate(() => S.pan.y)).toBeLessThan(d[1]);
+});

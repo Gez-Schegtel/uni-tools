@@ -32,7 +32,7 @@ Puerto del servidor de prueba: `PUERTO=9000 npm test` (por defecto 8780).
 |---|---|
 | `humo.spec.js` | las 4 páginas abren sin errores de consola, sin pedidos externos, sin `<script src>` ni CSS externo; los enlaces de la portada andan |
 | `archivos-danados.spec.js` | JSON/SVG roto, truncado o de otra herramienta: nunca deja la herramienta inutilizable; se descarta lo inválido y se conserva lo válido |
-| `bloque.spec.js` | herramientas y modos excluyentes (V/X/C vs B/S/N/E/T/M), seleccionar/mover/redimensionar recuadros, tiradores de tramo de flechas, doble clic para editar el contenido, copiar/pegar, deshacer, ida y vuelta por JSON y por SVG |
+| `bloque.spec.js` | herramientas y modos excluyentes (V/X/C vs B/S/N/E/T/M), seleccionar/mover/redimensionar recuadros, tiradores de tramo de flechas, doble clic para editar el contenido, copiar/pegar, mover la hoja (rueda, botón del medio, espacio, Ctrl+clic), deshacer, ida y vuelta por JSON y por SVG |
 | `simulador.spec.js` | tablas de verdad de todas las compuertas, semisumador y sumador completo, ejemplos sin oscilación, nombres de entradas en las expresiones, escape de HTML en etiquetas, biestables |
 | `senales.spec.js` | regla de Mason (lazos que se tocan / no se tocan, varias trayectorias, valor numérico), equivalente en bloques abre en `diagrama-bloque`, deshacer/rehacer |
 

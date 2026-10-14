@@ -474,7 +474,7 @@ svg#canvas{
     <tr><td>Flechas</td><td>Mover 1 paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
     <tr><td>Pantalla táctil</td><td>Un dedo en el fondo mueve la hoja; un dedo sobre un elemento lo
       selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
-    <tr><td>Rueda</td><td>Mueve el lienzo · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
+    <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve el lienzo (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
     <tr><td>Espacio / botón central</td><td>Mover la hoja</td></tr>
     <tr><td><kbd>F</kbd></td><td>Encuadrar todo</td></tr>
     <tr><td>Flecha seleccionada</td><td>“Ruta alternativa” prueba el siguiente camino sin superposiciones</td></tr>
@@ -2079,7 +2079,8 @@ svg.addEventListener("pointerdown", ev => {
     if (dedos.size > 2) return;
   }
   // pan
-  if (ev.button === 1 || spaceDown) {
+  // rueda del mouse, barra espaciadora, o Ctrl (⌘) + clic izquierdo: mueven la hoja
+  if (ev.button === 1 || spaceDown || (ev.button === 0 && (ev.ctrlKey || ev.metaKey))) {
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
     svg.classList.add("panning"); return;
   }

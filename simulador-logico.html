@@ -393,7 +393,7 @@ svg#canvas{
     <tr><td><kbd>R</kbd></td><td>Gira la compuerta seleccionada 90° (con <kbd>Shift</kbd>, al revés). Los cables siguen atados a la misma pata y se rehacen solos</td></tr>
     <tr><td>Pantalla táctil</td><td>Un dedo en el fondo mueve la hoja; un dedo sobre un elemento lo
       selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
-    <tr><td>Rueda / Espacio</td><td>Mueve el lienzo · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
+    <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve el lienzo (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
   </table>
   <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
 </div></div>
@@ -2007,7 +2007,8 @@ svg.addEventListener("pointerdown", ev => {
     if (dedos.size === 2) return arrancarPellizco();
     if (dedos.size > 2) return;
   }
-  if (ev.button === 1 || spaceDown) {
+  // rueda del mouse, barra espaciadora, o Ctrl (⌘) + clic izquierdo: mueven la hoja
+  if (ev.button === 1 || spaceDown || (ev.button === 0 && (ev.ctrlKey || ev.metaKey))) {
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
     svg.classList.add("panning"); return;
   }
