@@ -1,47 +1,51 @@
 <img src="uni-tools-logo.png" alt="uni-tools — Simulación y creación de diagramas lógicos, de bloques y de señales" width="480">
 
 # uni-tools
-Repo de opciones para la cursada en la facu. Plantear circuitos, apuntes, y no se, lo que me pinte
 
-**Actualmente se encuentra implementado los modulo para creación de diagramas de bloques y de citcuitos lógicos.**
+Herramientas para la cursada: dibujar diagramas de control y circuitos lógicos, simularlos y
+exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servidor.
 
-## Que incluyen?
-1. Diagrama de bloques: 
-   - Bloques
-   - Sumadores
-   - Bifurcaciones
-2. Circuitos lógicos: 
-   - Compuertas lógicas
-   - Biestables (Incluido uno Custom)
-   - Sumadores y Semi-sumadores
-   - Tablas de Verdad y de exitación
-   - Clock con 3 modos de funcionamiento
-   - Funciones Lógicas
-3. Todos:
-   - Visualización de ecuaciones
-   - Exportación en formatos JSON, SVG, PNG
-   - Importación en formato JSON
-   - Ajuste a la grilla (se puede desactivar)
-   - Ediciones de tamaño y otras opciones de UI de elementos
-   - Ejemplos de Uso
+**Probalo online:** https://gez-schegtel.github.io/uni-tools/
+
+## Las herramientas
+
+| Herramienta | Para qué sirve |
+|---|---|
+| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones, sumadores y bifurcaciones. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Los recuadros se mueven y cambian de tamaño. |
+| **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión simplificada y tabla de excitación. |
+| **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason. Se puede pasar el resultado a un diagrama de bloques equivalente. |
+
+Lo que tienen en común las tres:
+
+- Atajos de teclado y una leyenda en la barra de estado (el botón **?** los explica todos).
+- Deshacer y rehacer, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.
+- Ejemplos para arrancar.
+- Exportación a **SVG, PNG y JSON**; se puede volver a abrir un **JSON** o un **SVG** exportado desde acá (el SVG lleva los datos adentro).
+- Visualización de ecuaciones.
+
+## Cómo usarlo
+
+- **Online:** entrá al link de arriba.
+- **En tu compu:** descargá el repo y abrí `index.html` con doble clic. No hay nada que compilar. Si querés que se vean los logos, servilo por HTTP, por ejemplo con `python -m http.server` y entrando a `http://localhost:8000`.
+
+## Cómo está hecho
+
+Cada herramienta es **un solo archivo HTML autocontenido**: el CSS, el JavaScript y los íconos viven adentro. No hay build, ni `npm`, ni frameworks, ni CDN. Por eso funcionan sin internet y se pueden mandar por mail o llevar en un pendrive. Las notas de arquitectura para quien quiera tocar el código están en [`CLAUDE.md`](CLAUDE.md) y en [`.claude/skills/uni-tools/SKILL.md`](.claude/skills/uni-tools/SKILL.md).
 
 ## Pruebas
 
-Hay una suite automática con Playwright en `tests/` que corre en GitHub Actions (`.github/workflows/tests.yml`)
-en cada push a `main`/`features` y en cada pull request. Para correrla en tu compu:
+Hay una suite automática con Playwright en `tests/`. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features` y en cada pull request. Para correrla en tu compu:
 
 ```bash
 cd tests && npm install && npx playwright install chromium && npm test
 ```
 
-Las herramientas en sí siguen siendo HTML sueltos: `npm` se usa sólo para las pruebas. Detalles en `tests/README.md`.
+`npm` se usa **sólo** para las pruebas; las herramientas siguen siendo HTML sueltos. Detalles en [`tests/README.md`](tests/README.md).
+
+## Contribuir
+
+Los cambios van a la rama `features`; `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Antes de mandar algo, correr las pruebas.
 
 ## Licencia
 
-Software libre bajo la **GNU GPL v3 o posterior** (`GPL-3.0-or-later`). Podés usarlo, estudiarlo,
-modificarlo y redistribuirlo; si distribuís una versión modificada, tiene que seguir siendo libre
-bajo la misma licencia. Texto completo en [`LICENSE`](LICENSE). Las imágenes del logo
-(`uni-tools-*.png/jpg`) quedan afuera de esta licencia.
-
-# Link del deploy a Github Pages:
-https://gez-schegtel.github.io/uni-tools/
+Software libre bajo la **GNU GPL v3 o posterior** (`GPL-3.0-or-later`). Podés usarlo, estudiarlo, modificarlo y redistribuirlo; si distribuís una versión modificada, tiene que seguir siendo libre bajo la misma licencia. Texto completo en [`LICENSE`](LICENSE). Las imágenes del logo (`uni-tools-*.png/jpg`) quedan afuera de esta licencia.
