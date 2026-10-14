@@ -26,4 +26,4 @@ Repo de opciones para la cursada en la facu. Plantear circuitos, apuntes, y no s
    - Ejemplos de Uso
 
 # Link del deploy a Github Pages:
-https://juli-sz.github.io/uni-tools/
+https://gez-schegtel.github.io/uni-tools/
