@@ -1740,12 +1740,30 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
+   herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
+   sin tocar lo que ya está bien. */
+const esObj = (o) => !!o && typeof o === "object" && !Array.isArray(o);
+const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+function depurarNodos(lista) {
+  return (Array.isArray(lista) ? lista : []).filter(esObj).map(n => {
+    n.x = num(n.x, 0); n.y = num(n.y, 0);
+    if (typeof n.nombre !== "string") n.nombre = n.nombre == null ? "" : String(n.nombre);
+    return n;
+  });
+}
+function depurarRamas(lista, nodos) {
+  const ids = new Set(nodos.map(n => n.id));
+  return (Array.isArray(lista) ? lista : []).filter(r => esObj(r) && ids.has(r.de) && ids.has(r.a))
+    .map(r => { r.curva = num(r.curva, 0); return r; });
+}
 function cargarDoc(d, desdeArchivo) {
-  S.nodos = d.nodos || []; S.ramas = d.ramas || [];
+  S.nodos = depurarNodos(d.nodos); S.ramas = Array.isArray(d.ramas) ? d.ramas.filter(esObj) : [];
   S.nombre = limpiarNombre(desdeArchivo || d.nombre || NOMBRE_DEF);
   uidc = proximoUid(S.nodos, S.ramas);
   const vistos = new Set();
   const repetidos = sanearIds(S.nodos, "n", vistos) + sanearIds(S.ramas, "r", vistos);
+  S.ramas = depurarRamas(S.ramas, S.nodos);          // ya con los ids definitivos de los nodos
   if (repetidos) setTimeout(() => toast("Se renumeraron " + repetidos + " ids repetidos"), 60);
   S.sel = []; S.selR = [];
 }

@@ -536,14 +536,41 @@ const nombreArchivo = (ext) => limpiarNombre(S.nombre) + "." + ext;
 /* El documento entero, tal como se guarda en el JSON y como viaja adentro del SVG */
 const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes, edges: S.edges,
                           tema: S.tema, hoja: S.hoja });
+/* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
+   herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
+   sin tocar lo que ya está bien. */
+const esObj = (o) => !!o && typeof o === "object" && !Array.isArray(o);
+const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+function depurarNodos(lista) {
+  return (Array.isArray(lista) ? lista : []).filter(n => esObj(n) && Object.prototype.hasOwnProperty.call(DEF, n.type))
+    .map(n => {
+      const d = DEF[n.type];
+      n.x = num(n.x, 0); n.y = num(n.y, 0);
+      n.w = num(n.w, d.w); n.h = num(n.h, d.h);
+      n.font = num(n.font, d.font || 14);
+      if (typeof n.label !== "string") n.label = d.label;
+      if (n.type === "sum" && !esObj(n.signs)) n.signs = Object.assign({}, DEF.sum.signs);
+      return n;
+    });
+}
+function depurarFlechas(lista, nodos) {
+  const ids = new Set(nodos.map(n => n.id));
+  return (Array.isArray(lista) ? lista : []).filter(e => esObj(e) && esObj(e.from) && esObj(e.to)
+    && ids.has(e.from.id) && ids.has(e.to.id)).map(e => {
+      if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
+      return e;
+    });
+}
+const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
 function cargarDoc(d, desdeArchivo) {
-  S.nodes = d.nodes || []; S.edges = d.edges || [];
-  S.tema = Object.assign({}, TEMA_DEF, d.tema || {});
-  S.hoja = d.hoja || null;
+  S.nodes = depurarNodos(d.nodes); S.edges = Array.isArray(d.edges) ? d.edges.filter(esObj) : [];
+  S.tema = Object.assign({}, TEMA_DEF, esObj(d.tema) ? d.tema : {});
+  S.hoja = hojaValida(d.hoja);
   S.nombre = limpiarNombre(desdeArchivo || d.nombre || NOMBRE_DEF);
   uidc = proximoUid(S.nodes, S.edges);
   const vistos = new Set();
   const repetidos = sanearIds(S.nodes, "n", vistos) + sanearIds(S.edges, "e", vistos);
+  S.edges = depurarFlechas(S.edges, S.nodes);       // ya con los ids definitivos de los nodos
   if (repetidos) setTimeout(() => toast("Se renumeraron " + repetidos + " ids repetidos"), 60);
   S.sel = []; S.selEdges = [];
 }
