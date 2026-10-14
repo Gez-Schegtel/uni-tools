@@ -36,5 +36,12 @@ cd tests && npm install && npx playwright install chromium && npm test
 
 Las herramientas en sí siguen siendo HTML sueltos: `npm` se usa sólo para las pruebas. Detalles en `tests/README.md`.
 
+## Licencia
+
+Software libre bajo la **GNU GPL v3 o posterior** (`GPL-3.0-or-later`). Podés usarlo, estudiarlo,
+modificarlo y redistribuirlo; si distribuís una versión modificada, tiene que seguir siendo libre
+bajo la misma licencia. Texto completo en [`LICENSE`](LICENSE). Las imágenes del logo
+(`uni-tools-*.png/jpg`) quedan afuera de esta licencia.
+
 # Link del deploy a Github Pages:
 https://gez-schegtel.github.io/uni-tools/
