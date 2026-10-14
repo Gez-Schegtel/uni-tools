@@ -168,8 +168,11 @@ svg#canvas{
 .m-shape{fill:none;stroke:var(--c-borde);stroke-linejoin:round}
 .m-shape.solido{fill:var(--c-relleno)}
 .m-shape.suave{fill:var(--c-borde);fill-opacity:.1}
+.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
+.node.sel .m-hit{cursor:move}
 .m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
-  pointer-events:none;user-select:none}
+  user-select:none;cursor:pointer}
+.node.sel .m-label{cursor:move}
 .sel .m-shape{stroke:var(--accent)}
 .n-label{font-family:var(--draw);fill:var(--c-texto);text-anchor:middle;dominant-baseline:central;
   pointer-events:none;user-select:none}
@@ -695,6 +698,10 @@ function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
 }
+function puntoEnMarco(p, n) {
+  const R = rectOf(n);
+  return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
+}
 function portPoint(n, port) {
   if (n.type === "node") return { x: n.x, y: n.y };
   const R = rectOf(n);
@@ -1131,6 +1138,7 @@ function renderNode(n, destino) {
   const g = el("g", { class: "node" + (S.sel.includes(n.id) ? " sel" : ""), "data-id": n.id,
     style: estiloColor(n.color), transform: `translate(${n.x},${n.y})` }, destino || gNodes);
   if (n.type === "marco") {
+    el("rect", { class: "m-hit", x: -n.w / 2, y: -n.h / 2, width: n.w, height: n.h, rx: n.radio }, g);
     el("rect", { class: "m-shape" + (n.relleno === "solido" ? " solido" : n.relleno === "suave" ? " suave" : ""),
       x: -n.w / 2, y: -n.h / 2, width: n.w, height: n.h, rx: n.radio,
       "stroke-width": n.grosor, "stroke-dasharray": guiones(n) }, g);
@@ -1857,7 +1865,14 @@ svg.addEventListener("pointerdown", ev => {
     render(); return;
   }
   // nodo
-  const nid = hitNode(t);
+  let nid = hitNode(t);
+  if (!nid && S.mode !== "multi") {
+    const marcos = S.nodes.filter(n => esMarco(n) && puntoEnMarco(w, n));
+    if (marcos.length) {
+      marcos.sort((a, b) => (a.w * a.h) - (b.w * b.h));
+      nid = marcos[0].id;
+    }
+  }
   if (nid) {
     if (S.mode === "connect" && !esMarco(getNode(nid))) {
       const n = getNode(nid);
@@ -2200,6 +2215,8 @@ function buildExportSVG() {
   S.sel = []; S.selEdges = []; render();
   const ga = gAtras.cloneNode(true), ge = gEdges.cloneNode(true), gn = gNodes.cloneNode(true);
   ge.querySelectorAll(".edge-hit").forEach(x => x.remove());
+  ga.querySelectorAll(".m-hit").forEach(x => x.remove());
+  gn.querySelectorAll(".m-hit").forEach(x => x.remove());
   s.appendChild(ga); s.appendChild(ge); s.appendChild(gn);
   S.sel = selN; S.selEdges = selE; render();
   return { svg: s, W, H };
