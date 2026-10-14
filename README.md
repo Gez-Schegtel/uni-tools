@@ -5,7 +5,7 @@
 Herramientas para la cursada: dibujar diagramas de control y circuitos lógicos, simularlos y
 exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servidor.
 
-**Probalo online:** https://gez-schegtel.github.io/uni-tools/
+**Probalo online:** https://juli-sz.github.io/uni-tools/
 
 ## Las herramientas
 
