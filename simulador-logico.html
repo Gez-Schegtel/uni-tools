@@ -615,16 +615,43 @@ const nombreArchivo = (ext) => limpiarNombre(S.nombre) + "." + ext;
 const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes,
   wires: S.wires.map(w => ({ id: w.id, from: w.from, to: w.to, variant: w.variant, color: w.color })),
   tema: S.tema, hoja: S.hoja });
+/* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
+   herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
+   sin tocar lo que ya está bien. */
+const esObj = (o) => !!o && typeof o === "object" && !Array.isArray(o);
+const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+function depurarNodos(lista) {
+  return (Array.isArray(lista) ? lista : []).filter(n => esObj(n) && Object.prototype.hasOwnProperty.call(T, n.type)
+      && (n.type !== "ff" || (typeof n.kind === "string" && Object.prototype.hasOwnProperty.call(BIESTABLES, n.kind) && Array.isArray(n.pins))))
+    .map(n => {
+      n.x = num(n.x, 0); n.y = num(n.y, 0);
+      if (typeof n.label !== "string") n.label = "";
+      if (n.type === "marco") { n.w = num(n.w, T.marco.w); n.h = num(n.h, T.marco.h); }
+      if (T[n.type].var && !(Number.isInteger(n.pins) && n.pins >= 1)) n.pins = T[n.type].pins;
+      return n;
+    });
+}
+function depurarCables(lista, nodos) {
+  const porId = new Map(nodos.map(n => [n.id, n]));
+  return (Array.isArray(lista) ? lista : []).filter(w => {
+    if (!esObj(w) || !esObj(w.from) || !esObj(w.to)) return false;
+    const a = porId.get(w.from.id), b = porId.get(w.to.id);
+    if (!a || !b || !esSalida(w.from.pin) || !Number.isInteger(w.to.pin)) return false;
+    return idxSalida(w.from.pin) < nOut(a) && w.to.pin >= 0 && w.to.pin < nIn(b);
+  });
+}
+const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
 function cargarDoc(d, desdeArchivo) {
-  S.nodes = d.nodes || [];
-  S.wires = (d.wires || []).map(w => Object.assign({ variant: 0 }, w));
-  S.tema = Object.assign({}, TEMA_DEF, d.tema || {});
-  S.hoja = d.hoja || null;
+  S.nodes = depurarNodos(d.nodes);
+  S.wires = (Array.isArray(d.wires) ? d.wires : []).filter(esObj).map(w => Object.assign({ variant: 0 }, w));
+  S.tema = Object.assign({}, TEMA_DEF, esObj(d.tema) ? d.tema : {});
+  S.hoja = hojaValida(d.hoja);
   S.nombre = limpiarNombre(desdeArchivo || d.nombre || NOMBRE_DEF);
   S.nodes.forEach(n => { if (n.type === "ff") n.clkArranque = false; });
   uidc = proximoUid(S.nodes, S.wires);
   const vistos = new Set();
   const repetidos = sanearIds(S.nodes, "n", vistos) + sanearIds(S.wires, "w", vistos);
+  S.wires = depurarCables(S.wires, S.nodes);        // ya con los ids definitivos de los nodos
   if (repetidos) setTimeout(() => toast("Se renumeraron " + repetidos + " ids repetidos"), 60);
   S.sel = []; S.selW = []; VAL = new Map();
 }
@@ -1115,7 +1142,7 @@ function truthTable() {
   }
   return { ins, outs, rows };
 }
-function simplify(minterms, n) {
+function simplify(minterms, n, nombres) {
   if (!minterms.length) return "0";
   if (minterms.length === (1 << n)) return "1";
   let grupo = minterms.map(m => ({ bits: m, mask: 0 }));
@@ -1153,7 +1180,7 @@ function simplify(minterms, n) {
     elegidos.push(mejor);
     for (const m of Array.from(falta)) if (cubre(mejor, m)) falta.delete(m);
   }
-  return elegidos.map(p => termino(p, n)).join(" + ") || "0";
+  return elegidos.map(p => termino(p, n, nombres)).join(" + ") || "0";
 }
 function termino(p, n, nombres) {
   let s = "";
@@ -2259,7 +2286,8 @@ function mostrarTabla() {
   let h = "";
   tt.outs.forEach((o, i) => {
     const mts = tt.rows.filter(r => r.out[i]).map(r => r.m);
-    const expr = simplify(mts, tt.ins.length).replace(/([A-Z])'/g, "$1&#8242;");
+    // las etiquetas se escapan acá: el apóstrofo que sigue es el de negación, no el de la etiqueta
+    const expr = simplify(mts, tt.ins.length, nombres.map(esc)).replace(/'/g, "&#8242;");
     h += `<div class="expr"><b>${esc(o.label)}</b> = ${expr || "0"} &nbsp;&nbsp;<span style="color:#93a0ae">Σm(${mts.join(",") || "—"})</span></div>`;
   });
   h += `<table style="margin-top:12px"><thead><tr>` +
@@ -2270,11 +2298,7 @@ function mostrarTabla() {
       r.in.map(v => `<td class="${v ? "v1" : ""}">${v}</td>`).join("") +
       r.out.map((v, i) => `<td class="${v ? "v1" : ""} ${i === 0 ? "sep" : ""}">${r.osc ? "?" : v}</td>`).join("") +
       `</tr>`).join("") + `</tbody></table>`;
-  // reemplazo los nombres A,B,C… por las etiquetas reales en las expresiones
-  body.innerHTML = h.replace(/([A-Z])(&#8242;)?(?=[\s+<])/g, (m, L, p) => {
-    const i = L.charCodeAt(0) - 65;
-    return (nombres[i] && nombres.length > i ? nombres[i] : L) + (p || "");
-  });
+  body.innerHTML = h;
 }
 
 /* ======================= exportar ======================= */
