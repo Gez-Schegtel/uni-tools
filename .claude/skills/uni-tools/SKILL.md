@@ -133,8 +133,18 @@ elemento suelto va por `style`, que sí le gana a la clase.
   snapshot `data:` y las rutas relativas mueren. Hay que levantar un servidor HTTP.
 - **El navegador cachea el HTML.** Sumar `?v=N` a la URL al recargar; si no, se depura una versión
   vieja.
-- **Los archivos están en CRLF.** Un script de parcheo tiene que normalizar y devolver el final de
-  línea original, o el diff sale entero.
+- **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
+  diff sale entero. (Esta nota decía CRLF; no era cierto.)
+- **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y
+  `depurarCables`/`depurarFlechas`/`depurarRamas` (según la herramienta) tiran lo que no se puede
+  dibujar —nodos que no son objetos, tipos desconocidos, cables a nodos o patas inexistentes— y
+  completan números faltantes (`x`, `y`, `w`, `h`, `font`). **No tocan lo que ya es válido.** Si se
+  agrega un campo obligatorio a un nodo, completarlo ahí también, o un JSON viejo va a tirar un
+  `NaN` en el SVG. Los cables/flechas se depuran *después* de `sanearIds`, porque comparan contra
+  los ids definitivos.
+- **Tabla de verdad del simulador:** los nombres de las entradas se pasan a `simplify(minterms, n,
+  nombres)`; se escapan con `esc()` antes. No volver a reemplazar letras A, B, C sobre el HTML ya
+  armado: pisaba nombres (la salida «S» o una entrada «B» se confundían).
 - **La paleta de colores vive en `localStorage`** (`uni-tools-paleta`), no en el documento: sigue al
   navegador, no al archivo.
 - **Los SVG exportados llevan el documento adentro**, en `<metadata id="uni-tools-datos">`. Por eso
@@ -167,6 +177,8 @@ hacer nada. Conviene mirarlo de verdad.
 4. Para lo que tiene respuesta conocida —la tabla de verdad de un sumador, el Δ de Mason de un lazo
    simple, la proporción de una A4— comparar contra el resultado esperado, no contra la intuición.
 5. Chequear que el JS parsea (el comando está en `CLAUDE.md`).
+6. Correr `cd tests && npm test`. Un bug nuevo se arregla con su prueba en `tests/specs/`; una
+   función nueva con al menos una prueba del camino feliz y una del archivo roto.
 
 Si se levantó un servidor con `.claude/launch.json`, borrar el archivo al terminar: no es parte del
 proyecto.

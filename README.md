@@ -25,5 +25,16 @@ Repo de opciones para la cursada en la facu. Plantear circuitos, apuntes, y no s
    - Ediciones de tamaño y otras opciones de UI de elementos
    - Ejemplos de Uso
 
+## Pruebas
+
+Hay una suite automática con Playwright en `tests/` que corre en GitHub Actions (`.github/workflows/tests.yml`)
+en cada push a `main`/`features` y en cada pull request. Para correrla en tu compu:
+
+```bash
+cd tests && npm install && npx playwright install chromium && npm test
+```
+
+Las herramientas en sí siguen siendo HTML sueltos: `npm` se usa sólo para las pruebas. Detalles en `tests/README.md`.
+
 # Link del deploy a Github Pages:
 https://gez-schegtel.github.io/uni-tools/
