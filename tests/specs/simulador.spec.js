@@ -126,3 +126,18 @@ test.describe("guardar y abrir", () => {
     expect(await page.evaluate(() => [S.nodes.length, S.wires.length])).toEqual([6, 6]);
   });
 });
+
+test("doble clic sobre una compuerta abre el editor del nombre, y Enter lo guarda", async ({ page }) => {
+  await page.evaluate(() => cargarEjemplo("half"));
+  const c = await page.evaluate(() => {
+    const n = S.nodes.find((n) => n.type === "in"), r = document.getElementById("canvas").getBoundingClientRect();
+    return { id: n.id, x: r.left + S.pan.x + n.x * S.zoom, y: r.top + S.pan.y + n.y * S.zoom };
+  });
+  await page.mouse.dblclick(c.x, c.y);
+  await expect(page.locator(".editor-hoja")).toBeFocused();
+  await page.keyboard.type("Q");
+  await page.keyboard.press("Enter");
+  expect(await page.evaluate((id) => getNode(id).label, c.id)).toBe("Q");
+  await page.evaluate(() => undo());
+  expect(await page.evaluate((id) => getNode(id).label, c.id)).not.toBe("Q");
+});

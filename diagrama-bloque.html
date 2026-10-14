@@ -1877,8 +1877,8 @@ function puntoEtiqueta(e) {                    // el medio del tramo más largo,
   }
   return { x: (best[0].x + best[1].x) / 2, y: (best[0].y + best[1].y) / 2 };
 }
-svg.addEventListener("dblclick", ev => {
-  const nid = hitNode(ev.target);
+/* Abre el editor sobre un bloque (por id) o sobre una flecha (por id). */
+function editarElemento(nid, eid) {
   if (nid) {
     const n = getNode(nid);
     if (!n || n.type === "node") return;        // la bifurcación no tiene contenido
@@ -1886,13 +1886,46 @@ svg.addEventListener("dblclick", ev => {
     editarEnLaHoja(n.x, n.y, n.label, n.w, v => n.label = v);
     return;
   }
-  const eg = ev.target.closest ? ev.target.closest("[data-eid]") : null;
-  const e = eg && getEdge(eg.getAttribute("data-eid"));
+  const e = eid && getEdge(eid);
   if (e && e.pts && e.pts.length > 1) {
     S.selEdges = [e.id]; S.sel = []; render();
     const p = puntoEtiqueta(e);
     editarEnLaHoja(p.x, p.y, e.label, 60, v => e.label = v);
   }
+}
+/* El doble clic no se puede esperar del navegador: al apretar, el elemento se
+   redibuja y el navegador descarta el "click" (el elemento del pointerdown ya no
+   existe cuando llega el pointerup), así que "dblclick" nunca se dispara. Se
+   detecta a mano: dos pulsaciones seguidas, cerca y sobre el mismo elemento. */
+let ultimaPulsacion = null, dobleClic = null;
+const MS_DOBLE_CLIC = 400, PX_DOBLE_CLIC = 6;
+svg.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0 || ev.pointerType === "touch" && !ev.isPrimary) return;
+  const nid = hitNode(ev.target);
+  const eg = ev.target.closest ? ev.target.closest("[data-eid]") : null;
+  const eid = nid ? null : (eg && eg.getAttribute("data-eid"));
+  const id = nid || eid;
+  const ahora = ev.timeStamp, u = ultimaPulsacion;
+  dobleClic = null;
+  if (id && u && u.id === id && ahora - u.t < MS_DOBLE_CLIC
+      && Math.hypot(ev.clientX - u.x, ev.clientY - u.y) < PX_DOBLE_CLIC) {
+    dobleClic = { nid, eid };
+    ultimaPulsacion = null;
+  } else {
+    ultimaPulsacion = id ? { id, t: ahora, x: ev.clientX, y: ev.clientY } : null;
+  }
+}, true);
+svg.addEventListener("pointerup", () => {
+  if (!dobleClic) return;
+  const { nid, eid } = dobleClic;
+  dobleClic = null;
+  setTimeout(() => editarElemento(nid, eid), 0);   // después de que termine el soltado normal
+}, true);
+// Por si algún navegador sí manda el dblclick (p. ej. un elemento que no se redibuja)
+svg.addEventListener("dblclick", ev => {
+  if (editorAbierto) return;
+  const eg = ev.target.closest ? ev.target.closest("[data-eid]") : null;
+  editarElemento(hitNode(ev.target), eg && eg.getAttribute("data-eid"));
 });
 
 /* ======================= interacción ======================= */
@@ -2278,13 +2311,6 @@ svg.addEventListener("pointerup", ev => {
   } else if (drag.kind === "move" && drag.moved) commit();
   svg.classList.remove("panning");
   drag = null; render();
-});
-svg.addEventListener("dblclick", ev => {
-  const nid = hitNode(ev.target);
-  if (!nid) return;
-  S.sel = [nid]; S.selEdges = []; render();
-  const inp = document.getElementById("n-label");
-  if (inp) { inp.focus(); inp.select(); }
 });
 svg.addEventListener("wheel", ev => {
   ev.preventDefault();

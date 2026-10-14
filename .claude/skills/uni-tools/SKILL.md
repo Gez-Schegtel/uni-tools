@@ -133,6 +133,12 @@ elemento suelto va por `style`, que sí le gana a la clase.
   snapshot `data:` y las rutas relativas mueren. Hay que levantar un servidor HTTP.
 - **El navegador cachea el HTML.** Sumar `?v=N` a la URL al recargar; si no, se depura una versión
   vieja.
+- **El evento `dblclick` del navegador no llega nunca** sobre los elementos del lienzo: `render()`
+  los reemplaza al apretar, el `click` se descarta y con él el `dblclick`. Las tres herramientas
+  detectan el doble clic a mano (`pointerdown` + `pointerup` en captura, 400 ms y 6 px) y despachan un
+  `dblclick` sintético, o llaman a `editarElemento` en el diagrama de bloques. No volver a depender
+  del evento nativo ni agregar un segundo manejador de `dblclick` que enfoque el panel: le robaba
+  el foco al editor sobre la hoja y lo cerraba.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.)
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y

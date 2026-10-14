@@ -89,3 +89,25 @@ test.describe("edición", () => {
     expect(await page.evaluate(() => S.nodos.length)).toBe(n + 1);
   });
 });
+
+test("doble clic sobre un nodo abre el editor del nombre, y sobre una rama el de su transmitancia", async ({ page }) => {
+  const nodo = await page.evaluate(() => {
+    const n = S.nodos[1], r = document.getElementById("canvas").getBoundingClientRect();
+    return { id: n.id, x: r.left + S.pan.x + n.x * S.zoom, y: r.top + S.pan.y + n.y * S.zoom };
+  });
+  await page.mouse.dblclick(nodo.x, nodo.y);
+  await expect(page.locator(".editor-hoja")).toBeFocused();
+  await page.keyboard.type("z");
+  await page.keyboard.press("Enter");
+  expect(await page.evaluate((id) => getNodo(id).nombre, nodo.id)).toBe("z");
+  // sobre la etiqueta de una rama
+  const rama = await page.evaluate(() => {
+    const r0 = S.ramas.find((r) => r.de !== r.a), c = curvaDe(r0), r = document.getElementById("canvas").getBoundingClientRect();
+    return { id: r0.id, x: r.left + S.pan.x + c.lx * S.zoom, y: r.top + S.pan.y + c.ly * S.zoom };
+  });
+  await page.mouse.dblclick(rama.x, rama.y);
+  await expect(page.locator(".editor-hoja")).toBeFocused();
+  await page.keyboard.type("K");
+  await page.keyboard.press("Enter");
+  expect(await page.evaluate((id) => getRama(id).g, rama.id)).toBe("K");
+});

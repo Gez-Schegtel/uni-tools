@@ -138,3 +138,71 @@ test.describe("guardar y abrir", () => {
     expect(await page.evaluate(() => [S.nodes.length, S.edges.length])).toEqual(cuenta);
   });
 });
+
+test.describe("doble clic para editar el contenido directamente", () => {
+  const centro = (page, id) => page.evaluate((id) => {
+    const n = getNode(id), r = document.getElementById("canvas").getBoundingClientRect();
+    return { x: r.left + S.pan.x + n.x * S.zoom, y: r.top + S.pan.y + n.y * S.zoom };
+  }, id);
+  const idBloque = (page) => page.evaluate(() => S.nodes.find((n) => n.type === "block").id);
+  const hayEditor = (page) => page.evaluate(() => !!document.querySelector(".editor-hoja"));
+
+  test("doble clic sobre un bloque abre el editor con el contenido, y Enter lo guarda", async ({ page }) => {
+    const id = await idBloque(page), c = await centro(page, id);
+    const antes = await page.evaluate((id) => getNode(id).label, id);
+    await page.mouse.dblclick(c.x, c.y);
+    await expect(page.locator(".editor-hoja")).toBeFocused();
+    expect(await page.inputValue(".editor-hoja")).toBe(antes);
+    await page.keyboard.type("K(s)");
+    await page.keyboard.press("Enter");
+    expect(await hayEditor(page)).toBe(false);
+    expect(await page.evaluate((id) => getNode(id).label, id)).toBe("K(s)");
+    await page.evaluate(() => undo());                        // y se puede deshacer
+    expect(await page.evaluate((id) => getNode(id).label, id)).toBe(antes);
+  });
+  test("Escape cancela sin cambiar nada", async ({ page }) => {
+    const id = await idBloque(page), c = await centro(page, id);
+    const antes = await page.evaluate((id) => getNode(id).label, id);
+    await page.mouse.dblclick(c.x, c.y);
+    await page.keyboard.type("zzz");
+    await page.keyboard.press("Escape");
+    expect(await hayEditor(page)).toBe(false);
+    expect(await page.evaluate((id) => getNode(id).label, id)).toBe(antes);
+  });
+  test("dos clics lentos, o sobre bloques distintos, no abren el editor", async ({ page }) => {
+    const ids = await page.evaluate(() => S.nodes.filter((n) => n.type === "block").map((n) => n.id));
+    const a = await centro(page, ids[0]), b = await centro(page, ids[1]);
+    await page.mouse.click(a.x, a.y);
+    await page.waitForTimeout(600);
+    await page.mouse.click(a.x, a.y);
+    expect(await hayEditor(page)).toBe(false);
+    await page.mouse.click(a.x, a.y);
+    await page.mouse.click(b.x, b.y);
+    expect(await hayEditor(page)).toBe(false);
+  });
+  test("arrastrar un bloque y soltarlo no abre el editor", async ({ page }) => {
+    const id = await idBloque(page), c = await centro(page, id);
+    await arrastrar(page, c, [40, 40]);
+    expect(await hayEditor(page)).toBe(false);
+  });
+  test("funciona también en sumadores y en la etiqueta de una flecha", async ({ page }) => {
+    const suma = await page.evaluate(() => S.nodes.find((n) => n.type === "sum").id);
+    const c = await centro(page, suma);
+    await page.mouse.dblclick(c.x, c.y);
+    expect(await hayEditor(page)).toBe(true);
+    await page.keyboard.press("Escape");
+    const p = await page.evaluate(() => {
+      // un cuarto del tramo más largo: el medio lo ocupa el tirador de la flecha seleccionada
+      const e = S.edges.find((e) => e.pts && e.pts.length > 1), L = segsOf(e.pts)
+        .reduce((m, s) => Math.hypot(s[1].x - s[0].x, s[1].y - s[0].y) > Math.hypot(m[1].x - m[0].x, m[1].y - m[0].y) ? s : m);
+      const m = { x: L[0].x * .75 + L[1].x * .25, y: L[0].y * .75 + L[1].y * .25 };
+      const r = document.getElementById("canvas").getBoundingClientRect();
+      return { id: e.id, x: r.left + S.pan.x + m.x * S.zoom, y: r.top + S.pan.y + m.y * S.zoom };
+    });
+    await page.mouse.dblclick(p.x, p.y);
+    expect(await hayEditor(page)).toBe(true);
+    await page.keyboard.type("x1");
+    await page.keyboard.press("Enter");
+    expect(await page.evaluate((id) => getEdge(id).label, p.id)).toBe("x1");
+  });
+});

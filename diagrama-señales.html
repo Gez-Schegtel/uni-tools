@@ -1469,6 +1469,33 @@ svg.addEventListener("dblclick", ev => {
     editarEnLaHoja(c.lx, c.ly, r.g, v => r.g = v);
   }
 });
+/* El doble clic no se puede esperar del navegador: al apretar, el elemento se
+   redibuja y el navegador descarta el "click" (el elemento del pointerdown ya no
+   existe cuando llega el pointerup), así que "dblclick" nunca se dispara. Se
+   detecta a mano: dos pulsaciones seguidas y en el mismo lugar generan un
+   "dblclick" sobre lo que haya ahí, y lo atiende el manejador de arriba. */
+let ultimaPulsacion = null, dobleClic = null;
+const MS_DOBLE_CLIC = 400, PX_DOBLE_CLIC = 6;
+svg.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0 || (ev.pointerType === "touch" && !ev.isPrimary)) return;
+  const u = ultimaPulsacion;
+  dobleClic = null;
+  if (u && ev.timeStamp - u.t < MS_DOBLE_CLIC && Math.hypot(ev.clientX - u.x, ev.clientY - u.y) < PX_DOBLE_CLIC) {
+    dobleClic = { x: ev.clientX, y: ev.clientY };
+    ultimaPulsacion = null;
+  } else ultimaPulsacion = { t: ev.timeStamp, x: ev.clientX, y: ev.clientY };
+}, true);
+svg.addEventListener("pointerup", () => {
+  if (!dobleClic) return;
+  const { x, y } = dobleClic;
+  dobleClic = null;
+  setTimeout(() => {                                // después de que termine el soltado normal
+    if (editorAbierto) return;
+    const blanco = document.elementFromPoint(x, y);
+    if (blanco && svg.contains(blanco))
+      blanco.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, clientX: x, clientY: y, detail: 2 }));
+  }, 0);
+}, true);
 
 /* ======================= gestos táctiles =======================
    Un dedo en el fondo mueve la hoja, un dedo sobre un nodo o una rama lo

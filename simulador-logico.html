@@ -1926,6 +1926,33 @@ svg.addEventListener("dblclick", ev => {
   const arriba = n.type === "in" || n.type === "out" || n.type === "clk";
   editarEnLaHoja(n.x, n.y - (arriba ? bodyH(n) / 2 + 11 : 0), n.label, bodyW(n), v => n.label = v);
 });
+/* El doble clic no se puede esperar del navegador: al apretar, el elemento se
+   redibuja y el navegador descarta el "click" (el elemento del pointerdown ya no
+   existe cuando llega el pointerup), así que "dblclick" nunca se dispara. Se
+   detecta a mano: dos pulsaciones seguidas y en el mismo lugar generan un
+   "dblclick" sobre lo que haya ahí, y lo atiende el manejador de arriba. */
+let ultimaPulsacion = null, dobleClic = null;
+const MS_DOBLE_CLIC = 400, PX_DOBLE_CLIC = 6;
+svg.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0 || (ev.pointerType === "touch" && !ev.isPrimary)) return;
+  const u = ultimaPulsacion;
+  dobleClic = null;
+  if (u && ev.timeStamp - u.t < MS_DOBLE_CLIC && Math.hypot(ev.clientX - u.x, ev.clientY - u.y) < PX_DOBLE_CLIC) {
+    dobleClic = { x: ev.clientX, y: ev.clientY };
+    ultimaPulsacion = null;
+  } else ultimaPulsacion = { t: ev.timeStamp, x: ev.clientX, y: ev.clientY };
+}, true);
+svg.addEventListener("pointerup", () => {
+  if (!dobleClic) return;
+  const { x, y } = dobleClic;
+  dobleClic = null;
+  setTimeout(() => {                                // después de que termine el soltado normal
+    if (editorAbierto) return;
+    const blanco = document.elementFromPoint(x, y);
+    if (blanco && svg.contains(blanco))
+      blanco.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, clientX: x, clientY: y, detail: 2 }));
+  }, 0);
+}, true);
 
 /* ======================= gestos táctiles =======================
    Un dedo en el fondo mueve la hoja, un dedo sobre una compuerta o un cable lo
@@ -2107,12 +2134,6 @@ function conectar(fromId, fromPin, toId, toPin) {
   S.wires.push({ id: uid("w"), from: { id: a.id, pin: a.pin }, to: { id: b.id, pin: b.pin }, variant: 0 });
   commit();
 }
-svg.addEventListener("dblclick", ev => {
-  const nid = hitNode(ev.target);
-  if (!nid) return;
-  S.sel = [nid]; S.selW = []; render();
-  const i = document.getElementById("n-label"); if (i) { i.focus(); i.select(); }
-});
 svg.addEventListener("wheel", ev => {
   ev.preventDefault();
   const r = svg.getBoundingClientRect();
