@@ -195,6 +195,13 @@ svg#canvas{
 #canvas.split-mode{cursor:crosshair}
 #canvas.split-mode .edge{stroke:var(--accent)}
 #canvas.split-mode g:hover>.edge{stroke-width:3.4}
+#canvas.drawing-marco{cursor:crosshair}
+#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
+#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
+.m-handle-wrap{cursor:nwse-resize}
+.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
+.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
+.m-handle-wrap:hover .m-handle{fill:var(--accent)}
 .band{fill:rgba(13,91,214,.08);stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 /* área de impresión: lo de afuera se sombrea porque no entra en la exportación */
 .hoja-fuera{fill:rgba(18,24,31,.06);pointer-events:none}
@@ -1159,7 +1166,7 @@ function renderNode(n, destino) {
     dibujarMath(g, n.label, n.font, 0, 0);
     el("rect", { x: -n.w / 2, y: -n.h / 2, width: n.w, height: n.h, fill: "transparent" }, g);
   }
-  if (S.sel.includes(n.id)) {
+  if (S.sel.includes(n.id) && !esMarco(n)) {
     const R = rectOf(n);
     el("rect", { class: "sel-box", x: R.l - n.x - 4, y: R.t - n.y - 4, width: R.w + 8, height: R.h + 8 }, g);
   }
@@ -1241,6 +1248,24 @@ function renderPorts() {
     }
   }
 }
+function renderHandles() {
+  if (S.sel.length !== 1) return;
+  const n = getNode(S.sel[0]);
+  if (!esMarco(n)) return;
+  const R = rectOf(n);
+  const corners = [
+    { dir: "nw", x: R.l, y: R.t, cursor: "nwse-resize" },
+    { dir: "ne", x: R.r, y: R.t, cursor: "nesw-resize" },
+    { dir: "se", x: R.r, y: R.b, cursor: "nwse-resize" },
+    { dir: "sw", x: R.l, y: R.b, cursor: "nesw-resize" }
+  ];
+  for (const c of corners) {
+    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id,
+      style: `cursor:${c.cursor}` }, gOv);
+    el("rect", { x: c.x - 9, y: c.y - 9, width: 18, height: 18, fill: "transparent" }, g);
+    el("rect", { class: "m-handle", x: c.x - 5, y: c.y - 5, width: 10, height: 10, rx: 2 }, g);
+  }
+}
 let hoverNode = null;
 function render() {
   actualizarTamaños();
@@ -1257,6 +1282,7 @@ function render() {
   for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
   renderHoja();
   renderPorts();
+  renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
     const a = drag.start;
     el("path", { class: "ghostline", d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
@@ -1265,6 +1291,15 @@ function render() {
     const b = drag.band;
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
+  }
+  if (drag && drag.kind === "draw-marco") {
+    const x1 = drag.start.x, y1 = drag.start.y;
+    const x2 = drag.cur.x, y2 = drag.cur.y;
+    const l = Math.min(x1, x2), t = Math.min(y1, y2);
+    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
+    el("rect", { class: "m-shape",
+      style: "stroke:var(--accent);stroke-dasharray:4 3;stroke-width:1.5;fill:rgba(13,91,214,.06)",
+      x: l, y: t, width: w, height: h, rx: 6 }, gOv);
   }
   $("#st-n").textContent = S.nodes.length;
   $("#st-e").textContent = S.edges.length;
@@ -1707,15 +1742,23 @@ function hitNode(target) {
    lo arrastra igual que con el mouse, y dos dedos hacen zoom. */
 const dedos = new Map();                     // pointerId -> posición en pantalla
 let pellizco = null, gestoZoom = false;
-const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-eid],.port"));
+const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-eid],.port,.m-handle-wrap"));
 function centroDedos() {
   const p = Array.from(dedos.values());
   return { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2,
            d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) };
 }
+function limpiarCursorResize() {
+  svg.classList.remove("resizing-nw", "resizing-ne", "resizing-se", "resizing-sw");
+}
 function cancelarDrag() {                    // al aparecer el segundo dedo se deshace lo empezado
   if (drag && drag.kind === "move" && drag.orig)
     drag.orig.forEach(o => { const n = getNode(o.id); if (n) { n.x = o.x; n.y = o.y; } });
+  if (drag && drag.kind === "resize-marco" && drag.orig) {
+    const n = getNode(drag.nodeId);
+    if (n) { n.x = drag.orig.x; n.y = drag.orig.y; n.w = drag.orig.w; n.h = drag.orig.h; }
+  }
+  limpiarCursorResize();
   drag = null;
   svg.classList.remove("panning");
 }
@@ -1744,10 +1787,10 @@ function soltarDedo(ev) {
   if (!dedos.size) { const hubo = gestoZoom; gestoZoom = false; if (hubo) { drag = null; return true; } }
   return gestoZoom;                          // mientras queden dedos del pellizco, no se arrastra
 }
-svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; render(); });
+svg.addEventListener("pointercancel", ev => { soltarDedo(ev); cancelarDrag(); render(); });
 
 svg.addEventListener("pointerdown", ev => {
-  svg.setPointerCapture(ev.pointerId);
+  try { svg.setPointerCapture(ev.pointerId); } catch {}
   const w = toWorld(ev);
   const t = ev.target;
   if (ev.pointerType === "touch") {
@@ -1764,6 +1807,35 @@ svg.addEventListener("pointerdown", ev => {
   if (ev.pointerType === "touch" && esFondo(t) && !pendingAdd && S.mode !== "multi") {
     S.sel = []; S.selEdges = [];
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
+    render(); return;
+  }
+  // tirador de recuadro -> redimensionar esquina
+  const hw = t.closest ? t.closest(".m-handle-wrap") : null;
+  if (hw) {
+    const dir = hw.getAttribute("data-handle");
+    const nid = hw.getAttribute("data-nid");
+    const n = getNode(nid);
+    if (n) {
+      const R = rectOf(n);
+      const fixedX = (dir === "nw" || dir === "sw") ? R.r : R.l;
+      const fixedY = (dir === "nw" || dir === "ne") ? R.b : R.t;
+      drag = {
+        kind: "resize-marco",
+        nodeId: nid,
+        dir,
+        fixedX,
+        fixedY,
+        orig: { x: n.x, y: n.y, w: n.w, h: n.h },
+        moved: false
+      };
+      svg.classList.add("resizing-" + dir);
+      return;
+    }
+  }
+  // dibujar recuadro
+  if (pendingAdd === "marco") {
+    const sx = snapV(w.x), sy = snapV(w.y);
+    drag = { kind: "draw-marco", start: { x: sx, y: sy }, cur: { x: sx, y: sy }, moved: false };
     render(); return;
   }
   // puerto -> conectar
@@ -1834,6 +1906,36 @@ svg.addEventListener("pointermove", ev => {
     S.pan.y = drag.py + (ev.clientY - drag.sy);
     render(); return;
   }
+  if (drag.kind === "resize-marco") {
+    const n = getNode(drag.nodeId);
+    if (!n) return;
+    let x1 = drag.fixedX, y1 = drag.fixedY;
+    let x2 = snapV(w.x), y2 = snapV(w.y);
+    const minSize = 20;
+    if (Math.abs(x2 - x1) < minSize) x2 = x1 + (x2 >= x1 ? minSize : -minSize);
+    if (Math.abs(y2 - y1) < minSize) y2 = y1 + (y2 >= y1 ? minSize : -minSize);
+    const l = Math.min(x1, x2), r = Math.max(x1, x2);
+    const t = Math.min(y1, y2), b = Math.max(y1, y2);
+    const nw = r - l, nh = b - t;
+    const nx = l + nw / 2, ny = t + nh / 2;
+    if (n.w !== nw || n.h !== nh || n.x !== nx || n.y !== ny) {
+      n.w = nw; n.h = nh; n.x = nx; n.y = ny;
+      drag.moved = true;
+      render();
+    }
+    return;
+  }
+  if (drag.kind === "draw-marco") {
+    const cx = snapV(w.x), cy = snapV(w.y);
+    if (cx !== drag.cur.x || cy !== drag.cur.y) {
+      drag.cur = { x: cx, y: cy };
+      if (Math.abs(drag.cur.x - drag.start.x) > 3 || Math.abs(drag.cur.y - drag.start.y) > 3) {
+        drag.moved = true;
+      }
+      render();
+    }
+    return;
+  }
   if (drag.kind === "move") {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 1) drag.moved = true;
@@ -1850,6 +1952,34 @@ svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }
   const w = toWorld(ev);
   if (!drag) return;
+  if (drag.kind === "resize-marco") {
+    limpiarCursorResize();
+    if (drag.moved) commit();
+    drag = null;
+    render();
+    return;
+  }
+  if (drag.kind === "draw-marco") {
+    const x1 = drag.start.x, y1 = drag.start.y;
+    const x2 = drag.cur.x, y2 = drag.cur.y;
+    const dw = Math.abs(x2 - x1), dh = Math.abs(y2 - y1);
+    if (!drag.moved || (dw < 10 && dh < 10)) {
+      addAt("marco", snapV(w.x), snapV(w.y));
+    } else {
+      const nw = Math.max(20, dw);
+      const nh = Math.max(20, dh);
+      const cx = Math.min(x1, x2) + nw / 2;
+      const cy = Math.min(y1, y2) + nh / 2;
+      const n = makeNode("marco", cx, cy, { w: nw, h: nh });
+      S.nodes.push(n);
+      S.sel = [n.id]; S.selEdges = [];
+      setPending(null);
+      commit();
+    }
+    drag = null;
+    render();
+    return;
+  }
   if (drag.kind === "connect") {
     const t = document.elementFromPoint(ev.clientX, ev.clientY);
     let targetId = null, targetPort = null;
@@ -1915,8 +2045,10 @@ function setPending(type) {
   pendingAdd = type;
   document.querySelectorAll(".ptool").forEach(b => b.classList.toggle("on", b.dataset.add === type));
   svg.classList.toggle("split-mode", type === "node");
+  svg.classList.toggle("drawing-marco", type === "marco");
   $("#st-hint").textContent = !type ? ""
     : type === "node" ? "Hacé clic sobre una flecha: la bifurcación se inserta en su punto medio · Esc cancela"
+    : type === "marco" ? "Arrastrá para dibujar el recuadro o hacé clic para colocarlo · Esc cancela"
     : "Hacé clic en la hoja para colocarlo · Esc cancela";
 }
 function addAt(type, x, y) {
@@ -2200,7 +2332,7 @@ window.addEventListener("keydown", ev => {
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodes.map(n => n.id); render(); return; }
   if (ev.ctrlKey || ev.metaKey) return;
   if (k === "delete" || k === "backspace") { ev.preventDefault(); deleteSel(); commit(); render(); return; }
-  if (k === "escape") { setPending(null); S.sel = []; S.selEdges = []; render(); return; }
+  if (k === "escape") { if (drag) cancelarDrag(); setPending(null); S.sel = []; S.selEdges = []; render(); return; }
   if (k === "v") return setMode("select");
   if (k === "x") return setMode("multi");
   if (k === "c") return setMode("connect");
