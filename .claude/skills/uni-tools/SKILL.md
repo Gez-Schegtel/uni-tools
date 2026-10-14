@@ -145,6 +145,13 @@ elemento suelto va por `style`, que sí le gana a la clase.
   clonar un cable hay que conservar *todo* (`from.pin`, `to.pin`, colores): el duplicar viejo del
   simulador armaba el cable a mano y perdía la pata de salida. En señales, los nodos pegados
   reciben un nombre libre y vuelven a `tipo: "normal"`.
+- **El lienzo no puede ser seleccionable ni arrastrable por el navegador** (`user-select:none` en
+  `svg#canvas`, `dragstart`/`selectstart` cancelados y la selección limpiada al apretar). En Firefox,
+  arrastrar sobre el SVG armaba una selección de texto y el siguiente arrastre arrancaba un
+  "arrastrar y soltar" nativo que cancelaba los eventos del puntero: Ctrl+clic y la banda de
+  selección quedaban trabados hasta hacer clic en otro elemento. En Chromium no se notaba. Cualquier
+  gesto nuevo sobre el lienzo hay que probarlo en Firefox también (las pruebas automáticas sólo
+  corren en Chromium).
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.)
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y
