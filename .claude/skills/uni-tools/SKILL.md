@@ -139,6 +139,12 @@ elemento suelto va por `style`, que sí le gana a la clase.
   `dblclick` sintético, o llaman a `editarElemento` en el diagrama de bloques. No volver a depender
   del evento nativo ni agregar un segundo manejador de `dblclick` que enfoque el panel: le robaba
   el foco al editor sobre la hoja y lo cerraba.
+- **Copiar/pegar/duplicar comparten una sola ruta** en cada herramienta: `tomarSeleccion()` saca una
+  foto (con clones profundos) y `insertar(foto, desp)` la mete con ids nuevos; Ctrl+C guarda la foto
+  en `portapapeles`, Ctrl+V la inserta (cada pegado más corrido) y Ctrl+D hace las dos cosas. Al
+  clonar un cable hay que conservar *todo* (`from.pin`, `to.pin`, colores): el duplicar viejo del
+  simulador armaba el cable a mano y perdía la pata de salida. En señales, los nodos pegados
+  reciben un nombre libre y vuelven a `tipo: "normal"`.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.)
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y

@@ -141,3 +141,31 @@ test("doble clic sobre una compuerta abre el editor del nombre, y Enter lo guard
   await page.evaluate(() => undo());
   expect(await page.evaluate((id) => getNode(id).label, c.id)).not.toBe("Q");
 });
+
+test.describe("copiar y pegar (Ctrl+C / Ctrl+V)", () => {
+  test("el circuito pegado funciona igual: los cables conservan sus patas", async ({ page }) => {
+    await page.evaluate(() => cargarEjemplo("half"));
+    const [n0, w0] = await page.evaluate(() => [S.nodes.length, S.wires.length]);
+    await page.evaluate(() => { S.sel = S.nodes.map((n) => n.id); render(); });
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    expect(await page.evaluate(() => [S.nodes.length, S.wires.length])).toEqual([n0 * 2, w0 * 2]);
+    // todas las patas existen (antes Ctrl+D perdía la pata de salida de cada cable)
+    expect(await page.evaluate(() => S.wires.every((w) => w.from.pin !== undefined && w.to.pin !== undefined))).toBe(true);
+    // las entradas copiadas reciben letras distintas
+    const etiquetas = await page.evaluate(() => S.nodes.filter((n) => n.type === "in").map((n) => n.label));
+    expect(new Set(etiquetas).size).toBe(etiquetas.length);
+    // la copia calcula lo mismo que el original: 2 entradas más → 4 entradas, 16 filas
+    expect(await page.evaluate(() => truthTable().rows.length)).toBe(16);
+    // y sobrevive a guardar y abrir (no se descarta ningún cable)
+    const json = await page.evaluate(() => JSON.stringify(docDatos()));
+    await abrirTexto(page, json);
+    expect(await page.evaluate(() => S.wires.length)).toBe(w0 * 2);
+  });
+  test("Ctrl+D también conserva las patas de los cables", async ({ page }) => {
+    await page.evaluate(() => { cargarEjemplo("half"); S.sel = S.nodes.map((n) => n.id); render(); });
+    await page.keyboard.press("Control+d");
+    expect(await page.evaluate(() => S.wires.every((w) => w.from.pin !== undefined))).toBe(true);
+    expect(await page.evaluate(() => S.nodes.length)).toBe(12);
+  });
+});

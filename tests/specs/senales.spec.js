@@ -111,3 +111,35 @@ test("doble clic sobre un nodo abre el editor del nombre, y sobre una rama el de
   await page.keyboard.press("Enter");
   expect(await page.evaluate((id) => getRama(id).g, rama.id)).toBe("K");
 });
+
+test.describe("copiar y pegar (Ctrl+C / Ctrl+V)", () => {
+  test("los nodos pegados tienen nombre libre y no duplican entrada ni salida", async ({ page }) => {
+    await page.evaluate(() => { cargarEjemplo("dos"); S.sel = S.nodos.map((n) => n.id); render(); });
+    const [n0, r0] = await page.evaluate(() => [S.nodos.length, S.ramas.length]);
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    expect(await page.evaluate(() => [S.nodos.length, S.ramas.length])).toEqual([n0 * 2, r0 * 2]);
+    const r = await page.evaluate(() => ({
+      nombres: S.nodos.map((n) => n.nombre),
+      entradas: S.nodos.filter((n) => n.tipo === "entrada").length,
+      salidas: S.nodos.filter((n) => n.tipo === "salida").length,
+      ramasOk: S.ramas.every((r) => getNodo(r.de) && getNodo(r.a)),
+    }));
+    expect(new Set(r.nombres).size).toBe(r.nombres.length);
+    expect([r.entradas, r.salidas, r.ramasOk]).toEqual([1, 1, true]);
+    // Mason sigue calculando sobre el original
+    expect(await page.evaluate(() => analizar().P.length)).toBe(1);
+  });
+  test("deshacer saca lo pegado; sin copiar, Ctrl+V no hace nada", async ({ page }) => {
+    await page.evaluate(() => cargarEjemplo("simple"));
+    const n0 = await page.evaluate(() => S.nodos.length);
+    await page.keyboard.press("Control+v");
+    expect(await page.evaluate(() => S.nodos.length)).toBe(n0);
+    await page.evaluate(() => { S.sel = [S.nodos[1].id]; render(); });
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    expect(await page.evaluate(() => S.nodos.length)).toBe(n0 + 1);
+    await page.evaluate(() => undo());
+    expect(await page.evaluate(() => S.nodos.length)).toBe(n0);
+  });
+});

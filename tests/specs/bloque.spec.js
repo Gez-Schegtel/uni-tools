@@ -206,3 +206,62 @@ test.describe("doble clic para editar el contenido directamente", () => {
     expect(await page.evaluate((id) => getEdge(id).label, p.id)).toBe("x1");
   });
 });
+
+test.describe("copiar y pegar (Ctrl+C / Ctrl+V)", () => {
+  const cuenta = (page) => page.evaluate(() => [S.nodes.length, S.edges.length]);
+  test("copia la selección con sus flechas internas y la pega con ids nuevos, desplazada", async ({ page }) => {
+    await page.evaluate(() => loadExample());
+    const [n0, e0] = await cuenta(page);
+    const sel = await page.evaluate(() => { const e = S.edges[0]; S.sel = [e.from.id, e.to.id]; render(); return [e.from.id, e.to.id]; });
+    const orig = await page.evaluate((s) => s.map((id) => { const n = getNode(id); return [n.x, n.y]; }), sel);
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    expect(await cuenta(page)).toEqual([n0 + 2, e0 + 1]);
+    const nuevos = await page.evaluate(() => S.sel.map((id) => { const n = getNode(id); return [n.id, n.x, n.y]; }));
+    expect(nuevos).toHaveLength(2);
+    expect(nuevos.every(([id]) => !sel.includes(id))).toBe(true);
+    expect(nuevos.map(([, x, y]) => [x, y])).not.toEqual(orig);
+    // los ids siguen siendo únicos y la flecha nueva une a los nuevos
+    expect(await page.evaluate(() => new Set([...S.nodes, ...S.edges].map((o) => o.id)).size === S.nodes.length + S.edges.length)).toBe(true);
+    expect(await page.evaluate(() => S.edges.every((e) => getNode(e.from.id) && getNode(e.to.id)))).toBe(true);
+  });
+  test("pegar varias veces no encima las copias, y se puede deshacer", async ({ page }) => {
+    await page.evaluate(() => { loadExample(); S.sel = [S.nodes.find((n) => n.type === "block").id]; render(); });
+    const n0 = (await cuenta(page))[0];
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    await page.keyboard.press("Control+v");
+    expect((await cuenta(page))[0]).toBe(n0 + 2);
+    const pos = await page.evaluate(() => S.nodes.slice(-2).map((n) => n.x + "," + n.y));
+    expect(new Set(pos).size).toBe(2);
+    await page.evaluate(() => undo());
+    expect((await cuenta(page))[0]).toBe(n0 + 1);
+  });
+  test("sin nada copiado, Ctrl+V no hace nada; con el cursor en un campo de texto tampoco interfiere", async ({ page }) => {
+    await page.evaluate(() => loadExample());
+    const antes = await cuenta(page);
+    await page.keyboard.press("Control+v");
+    expect(await cuenta(page)).toEqual(antes);
+  });
+  test("la flecha con ruta a mano copiada conserva su forma", async ({ page }) => {
+    const doc = {
+      nodes: [{ id: "a", type: "block", x: 200, y: 200, w: 72, h: 42, label: "G", font: 15 },
+              { id: "b", type: "block", x: 500, y: 320, w: 72, h: 42, label: "H", font: 15 }],
+      edges: [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0 }],
+    };
+    await abrirTexto(page, JSON.stringify(doc));
+    await page.evaluate(() => { S.selEdges = ["e1"]; S.sel = []; render(); });
+    const r = await page.locator(".seg-handle-wrap").first().boundingBox();
+    await arrastrar(page, { x: r.x + r.width / 2, y: r.y + r.height / 2 }, [30, 30]);
+    await page.evaluate(() => { S.sel = ["a", "b"]; S.selEdges = []; render(); });
+    await page.keyboard.press("Control+c");
+    await page.keyboard.press("Control+v");
+    const forma = await page.evaluate(() => {
+      const [o, c] = [S.edges[0], S.edges[1]];
+      const rel = (e, dx) => e.pts.map((p) => [Math.round(p.x - dx), Math.round(p.y - dx)]);
+      const d = getNode(c.from.id).x - getNode("a").x;
+      return { copiada: !!c.manual, igual: JSON.stringify(rel(o, 0)) === JSON.stringify(rel(c, d)) };
+    });
+    expect(forma).toEqual({ copiada: true, igual: true });
+  });
+});

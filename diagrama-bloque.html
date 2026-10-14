@@ -468,6 +468,7 @@ svg#canvas{
       El bloque se agranda solo para que entre.</td></tr>
     <tr><td><kbd>Supr</kbd></td><td>Borrar lo seleccionado</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>Deshacer / rehacer</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Copiar y pegar lo seleccionado (con sus flechas internas); cada pegado sale un poco más corrido</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Seleccionar todo</td></tr>
     <tr><td>Flechas</td><td>Mover 1 paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
@@ -2377,19 +2378,42 @@ function deleteSel() {
   S.edges = S.edges.filter(e => !ids.has(e.from.id) && !ids.has(e.to.id) && !S.selEdges.includes(e.id));
   S.sel = []; S.selEdges = [];
 }
-function duplicateSel() {
+/* Copiar / pegar. Lo copiado es una foto de la selección y de las flechas que unen
+   dos elementos seleccionados; cada pegado la inserta con ids nuevos, corrida un
+   poco más que el anterior para que no queden encimadas. Duplicar (Ctrl+D) es
+   copiar y pegar en un solo paso. */
+let portapapeles = null, pegados = 0;
+const clonar = (o) => JSON.parse(JSON.stringify(o));
+function tomarSeleccion() {
+  const ids = new Set(S.sel);
+  const nodes = S.nodes.filter(n => ids.has(n.id)).map(clonar);
+  const edges = S.edges.filter(e => ids.has(e.from.id) && ids.has(e.to.id)).map(clonar);
+  return { nodes, edges };
+}
+function insertar(cop, desp) {
   const map = {};
-  const copies = S.sel.map(getNode).filter(Boolean).map(n => {
-    const c = JSON.parse(JSON.stringify(n));
-    c.id = uid("n"); c.x += S.grid * 2; c.y += S.grid * 2; map[n.id] = c.id;
+  const nodes = cop.nodes.map(n => { const c = clonar(n); c.id = uid("n"); map[n.id] = c.id; c.x += desp; c.y += desp; return c; });
+  const edges = cop.edges.map(e => {
+    const c = clonar(e);
+    c.id = uid("e"); c.from.id = map[e.from.id]; c.to.id = map[e.to.id]; c.variant = 0;
+    delete c.pts;
+    // la ruta a mano son coordenadas de líneas: moverlas lo mismo en x e y sirve en cualquier tramo
+    if (c.manual && Array.isArray(c.manual.c)) c.manual.c = c.manual.c.map(v => v + desp);
     return c;
   });
-  const eCopies = S.edges.filter(e => map[e.from.id] && map[e.to.id]).map(e => ({
-    id: uid("e"), from: { id: map[e.from.id], port: e.from.port },
-    to: { id: map[e.to.id], port: e.to.port }, variant: 0, label: e.label, dashed: e.dashed
-  }));
-  S.nodes.push(...copies); S.edges.push(...eCopies);
-  S.sel = copies.map(c => c.id); S.selEdges = [];
+  S.nodes.push(...nodes); S.edges.push(...edges);
+  S.sel = nodes.map(c => c.id); S.selEdges = [];
+}
+function duplicateSel() { insertar(tomarSeleccion(), S.grid * 2); }
+function copiarSel() {
+  if (!S.sel.length) { toast("Elegí algo para copiar"); return; }
+  portapapeles = tomarSeleccion(); pegados = 0;
+  toast(portapapeles.nodes.length === 1 ? "Copiado" : "Copiados " + portapapeles.nodes.length + " elementos");
+}
+function pegarSel() {
+  if (!portapapeles) { toast("No hay nada copiado"); return; }
+  insertar(portapapeles, S.grid * 2 * ++pegados);
+  commit(); render();
 }
 function splitEdge(e) {
   if (!e.pts || e.pts.length < 2) return;
@@ -2640,6 +2664,8 @@ window.addEventListener("keydown", ev => {
   if (ev.code === "Space") { spaceDown = true; ev.preventDefault(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "c") { ev.preventDefault(); copiarSel(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "v") { ev.preventDefault(); pegarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "d") { ev.preventDefault(); duplicateSel(); commit(); render(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodes.map(n => n.id); render(); return; }
   if (ev.ctrlKey || ev.metaKey) return;

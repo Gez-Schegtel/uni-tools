@@ -387,6 +387,7 @@ svg#canvas{
     <tr><td><kbd>T</kbd></td><td>Tabla de verdad con la expresión simplificada</td></tr>
     <tr><td><kbd>Supr</kbd></td><td>Borrar lo seleccionado</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>Deshacer / rehacer</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Copiar y pegar lo seleccionado (con sus cables internos); cada pegado sale un poco más corrido</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar</td></tr>
     <tr><td>Flechas</td><td>Mover un paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
     <tr><td><kbd>R</kbd></td><td>Gira la compuerta seleccionada 90° (con <kbd>Shift</kbd>, al revés). Los cables siguen atados a la misma pata y se rehacen solos</td></tr>
@@ -2236,18 +2237,43 @@ function borrar() {
   S.wires = S.wires.filter(w => !ids.has(w.from.id) && !ids.has(w.to.id) && !S.selW.includes(w.id));
   S.sel = []; S.selW = [];
 }
-function duplicar() {
-  const map = {};
-  const copias = S.sel.map(getNode).filter(Boolean).map(n => {
-    const c = JSON.parse(JSON.stringify(n));
-    c.id = uid("n"); c.x += S.grid * 2; c.y += S.grid * 2; map[n.id] = c.id;
+/* Copiar / pegar. Lo copiado es una foto de la selección y de los cables que unen
+   dos elementos seleccionados; cada pegado la inserta con ids nuevos, corrida un
+   poco más que el anterior para que no queden encimadas. Duplicar (Ctrl+D) es
+   copiar y pegar en un solo paso. */
+let portapapeles = null, pegados = 0;
+const clonar = (o) => JSON.parse(JSON.stringify(o));
+function tomarSeleccion() {
+  const ids = new Set(S.sel);
+  const nodes = S.nodes.filter(n => ids.has(n.id)).map(clonar);
+  const wires = S.wires.filter(w => ids.has(w.from.id) && ids.has(w.to.id)).map(clonar);
+  return { nodes, wires };
+}
+function insertar(cop, desp) {
+  const map = {}, nuevos = [];
+  cop.nodes.forEach(n => {
+    const c = clonar(n); c.id = uid("n"); map[n.id] = c.id; c.x += desp; c.y += desp;
+    S.nodes.push(c); nuevos.push(c.id);                 // se agrega ya: proximaLetra mira lo que hay
     if (c.type === "in") c.label = proximaLetra();
-    return c;
   });
-  const wc = S.wires.filter(w => map[w.from.id] && map[w.to.id]).map(w => ({
-    id: uid("w"), from: { id: map[w.from.id] }, to: { id: map[w.to.id], pin: w.to.pin }, variant: 0 }));
-  S.nodes.push(...copias); S.wires.push(...wc);
-  S.sel = copias.map(c => c.id); S.selW = [];
+  cop.wires.forEach(w => {
+    const c = clonar(w);
+    c.id = uid("w"); c.from.id = map[w.from.id]; c.to.id = map[w.to.id]; c.variant = 0;
+    delete c.pts;
+    S.wires.push(c);
+  });
+  S.sel = nuevos; S.selW = [];
+}
+function duplicar() { insertar(tomarSeleccion(), S.grid * 2); }
+function copiarSel() {
+  if (!S.sel.length) { toast("Elegí algo para copiar"); return; }
+  portapapeles = tomarSeleccion(); pegados = 0;
+  toast(portapapeles.nodes.length === 1 ? "Copiado" : "Copiados " + portapapeles.nodes.length + " elementos");
+}
+function pegarSel() {
+  if (!portapapeles) { toast("No hay nada copiado"); return; }
+  insertar(portapapeles, S.grid * 2 * ++pegados);
+  commit(); render();
 }
 function rotar(paso) {
   const ns = S.sel.map(getNode).filter(n => n && puedeGirar(n));
@@ -2500,6 +2526,8 @@ window.addEventListener("keydown", ev => {
   if (ev.code === "Space") { spaceDown = true; ev.preventDefault(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "c") { ev.preventDefault(); copiarSel(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "v") { ev.preventDefault(); pegarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "d") { ev.preventDefault(); duplicar(); commit(); render(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodes.map(n => n.id); render(); return; }
   if (ev.ctrlKey || ev.metaKey) return;
