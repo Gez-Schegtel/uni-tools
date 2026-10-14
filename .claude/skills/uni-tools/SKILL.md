@@ -113,6 +113,20 @@ código de dibujo para pintar algo distinto.
 `<text class="g-label">` no hace nada, porque `.g-label` define `fill`. Para pisar el color de un
 elemento suelto va por `style`, que sí le gana a la clase.
 
+## Flechas corridas a mano y tiradores de tamaño (diagrama-bloque)
+
+- `e.manual = { c: [...] }` guarda las líneas del medio de una ruta ortogonal (la y de un tramo
+  horizontal, la x de uno vertical). La primera y la última línea salen de los puertos. Vive en la
+  flecha, así que el historial, el guardado y el SVG exportado lo arrastran solos. `routeAll()` lo
+  aplica con `aplicarManual()` y, si no es válido (puertos que cambiaron la paridad), cae a la ruta
+  automática. Todo lo que reacomoda flechas tiene que llamar a `rutaAuto(e)` y no sólo poner
+  `variant = 0`, o la ruta manual sobrevive.
+- La orientación de un tramo se deduce de la paridad (`tramoHoriz`), nunca de los puntos: un tramo
+  de largo cero no tiene orientación.
+- Los tiradores de tamaño salen de `renderHandles()` para `esEstirable(n)`; la cuenta está en
+  `estirar()`. Los recuadros dejan fijo el lado opuesto; bloques y sumadores crecen desde el centro
+  para no desalinear los puertos.
+
 ## Trampas conocidas
 
 - **Las imágenes no cargan con `file://`.** El previsualizador sirve las páginas locales como

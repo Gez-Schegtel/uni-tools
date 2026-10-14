@@ -127,6 +127,12 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5;
 }
 #status .k{color:var(--ink-2)}
+#status .atajos{display:flex;gap:8px;align-items:center;white-space:nowrap;color:var(--ink-2)}
+#st-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#status .atajos [data-modo],#status .atajos [data-add]{cursor:pointer;padding:1px 5px;border-radius:5px}
+#status .atajos .act{background:var(--accent);color:#fff}
+#status .atajos .act kbd{color:var(--ink)}
+@media (max-width:1280px){#status .atajos{display:none}}
 #toast{
   position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;font-size:12px;padding:8px 14px;border-radius:8px;
@@ -187,6 +193,7 @@ svg#canvas{
 .edge{stroke:var(--c-flecha);stroke-width:1.6;fill:none;stroke-linejoin:round;stroke-linecap:round}
 .edge.dashed{stroke-dasharray:6 4}
 .edge-hit{stroke:transparent;stroke-width:14;fill:none;cursor:pointer}
+.edge-sel .edge-hit{cursor:move}                 /* una flecha seleccionada se agarra y se acomoda */
 .sel .n-shape{stroke:var(--accent)}
 .sel-box{fill:none;stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3}
 .sel-dot{fill:var(--accent)}
@@ -201,10 +208,27 @@ svg#canvas{
 #canvas.drawing-marco{cursor:crosshair}
 #canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
 #canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
+#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
+#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
+#canvas.moviendo-tramo-h{cursor:ns-resize!important}
+#canvas.moviendo-tramo-v{cursor:ew-resize!important}
 .m-handle-wrap{cursor:nwse-resize}
 .m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
+.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
+.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
 .m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
 .m-handle-wrap:hover .m-handle{fill:var(--accent)}
+/* tiradores de los tramos de una flecha seleccionada: un tramo horizontal se sube y baja, uno vertical se corre de lado */
+/* asa para mover un recuadro seleccionado: anda en cualquier modo, aunque adentro haya otros elementos */
+.m-grip-wrap{cursor:move}
+.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
+.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.m-grip-wrap:hover .m-grip{fill:var(--accent)}
+.m-grip-wrap:hover .m-grip-ico{stroke:#fff}
+.seg-handle-wrap.h{cursor:ns-resize}
+.seg-handle-wrap.v{cursor:ew-resize}
+.seg-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
+.seg-handle-wrap:hover .seg-handle{fill:var(--accent)}
 .band{fill:rgba(13,91,214,.08);stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 /* área de impresión: lo de afuera se sombrea porque no entra en la exportación */
 .hoja-fuera{fill:rgba(18,24,31,.06);pointer-events:none}
@@ -408,6 +432,21 @@ svg#canvas{
   <span><span class="k">Elementos</span> <span id="st-n">0</span></span>
   <span><span class="k">Flechas</span> <span id="st-e">0</span></span>
   <span><span class="k">Selección</span> <span id="st-s">—</span></span>
+  <span class="atajos" id="atajos">
+    <span class="k">Atajos:</span>
+    <span data-modo="select"><kbd>V</kbd> Selección</span>
+    <span data-modo="multi"><kbd>X</kbd> Múltiple</span>
+    <span data-modo="connect"><kbd>C</kbd> Conectar</span>
+    <span data-add="block"><kbd>B</kbd> Bloque</span>
+    <span data-add="sum"><kbd>S</kbd> Sumador</span>
+    <span data-add="node"><kbd>N</kbd> Bifurc.</span>
+    <span data-add="io"><kbd>E</kbd> E/S</span>
+    <span data-add="text"><kbd>T</kbd> Texto</span>
+    <span data-add="marco"><kbd>M</kbd> Recuadro</span>
+    <span><kbd>F</kbd> Encuadrar</span>
+    <span><kbd>Esc</kbd> Soltar</span>
+    <span><kbd>?</kbd> Ayuda</span>
+  </span>
   <span id="st-hint" style="margin-left:auto"></span>
 </div>
 
@@ -415,8 +454,9 @@ svg#canvas{
   <h2>Atajos y cómo se usa</h2>
   <p class="sub">Todo el diagrama vive en tu navegador. Guardá con “Guardar” para no perderlo.</p>
   <table>
-    <tr><td><kbd>V</kbd> / <kbd>C</kbd></td><td>Modo selección / modo conectar</td></tr>
-    <tr><td><kbd>B</kbd><kbd>S</kbd><kbd>N</kbd><kbd>E</kbd><kbd>T</kbd></td><td>Insertar bloque, sumador, bifurcación, entrada-salida, texto</td></tr>
+    <tr><td><kbd>V</kbd> / <kbd>X</kbd> / <kbd>C</kbd></td><td>Modo selección / selección múltiple / conectar</td></tr>
+    <tr><td><kbd>B</kbd><kbd>S</kbd><kbd>N</kbd><kbd>E</kbd><kbd>T</kbd><kbd>M</kbd></td><td>Insertar bloque, sumador, bifurcación, entrada-salida, texto, recuadro</td></tr>
+    <tr><td>Modos y herramientas</td><td>Son excluyentes: elegir una herramienta sale del modo, y elegir un modo suelta la herramienta. Al colocar el elemento se vuelve a Selección. <kbd>Esc</kbd> suelta la herramienta (o el modo) y vuelve a Selección. Los atajos están siempre en la franja de abajo.</td></tr>
     <tr><td>Bifurcación</td><td>Elegí la herramienta y hacé clic en una flecha: se inserta en el medio y parte la línea en dos</td></tr>
     <tr><td>Arrastrar desde un punto azul</td><td>Crea una flecha hacia otro elemento (o soltala en el vacío para cancelar)</td></tr>
     <tr><td>Doble clic</td><td>Renombrar el elemento</td></tr>
@@ -437,6 +477,8 @@ svg#canvas{
     <tr><td>Espacio / botón central</td><td>Mover la hoja</td></tr>
     <tr><td><kbd>F</kbd></td><td>Encuadrar todo</td></tr>
     <tr><td>Flecha seleccionada</td><td>“Ruta alternativa” prueba el siguiente camino sin superposiciones</td></tr>
+    <tr><td>Arrastrar un tramo de flecha</td><td>Con la flecha seleccionada, tirá de los cuadraditos del medio de cada tramo (o de la línea) para correrlo; “Ruta automática” la suelta</td></tr>
+    <tr><td>Tiradores de las esquinas</td><td>Con un bloque, sumador o recuadro seleccionado, estiran su tamaño (el recuadro también por los lados)</td></tr>
   </table>
   <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
 </div></div>
@@ -828,6 +870,59 @@ function bboxAll() {
   for (const n of S.nodes) { const R = rectOf(n); l = Math.min(l, R.l); t = Math.min(t, R.t); r = Math.max(r, R.r); b = Math.max(b, R.b); }
   return { l, t, r, b };
 }
+/* ---- ruta manual ----
+   Una ruta ortogonal es una sucesión de tramos que alternan horizontal y vertical. Cada tramo
+   vive sobre una "línea": la y de uno horizontal, la x de uno vertical. La primera línea la fija
+   el puerto de salida, la última el de llegada, y las del medio se pueden elegir a mano.
+   Una flecha corrida a mano guarda sólo esas líneas del medio en e.manual.c (coordenadas
+   absolutas, de afuera hacia adentro); el resto sale de dónde estén los puertos. Así la ruta
+   sigue siendo válida aunque se muevan los bloques. */
+const TRAMO_MIN = 12;                           // lo que tiene que sobresalir el tramo pegado a un puerto
+const TRAMO_PUNTA = 20;                         // lo que sale un tramo nuevo antes de doblar
+const puertoHoriz = (port) => dirOf(port).x !== 0;     // ¿el tramo pegado a este puerto es horizontal?
+// ¿el tramo i de la ruta es horizontal? Se deduce por la paridad y no de los puntos, que pueden coincidir
+const tramoHoriz = (e, i) => puertoHoriz(e.from.port) === (i % 2 === 0);
+// una flecha corrida a mano tiene que terminar con el tramo del puerto de llegada en la orientación que corresponde
+function manualValida(e) {
+  const c = e.manual && e.manual.c;
+  if (!Array.isArray(c) || !c.length || c.some(v => typeof v !== "number" || !isFinite(v))) return false;
+  return tramoHoriz(e, c.length + 1) === puertoHoriz(e.to.port);
+}
+// las líneas del medio no pueden hacer que el tramo pegado a un puerto salga para atrás
+function acotarLinea(e, c, j, k, A, B) {
+  const horiz = tramoHoriz(e, j + 1);             // la línea j+1 de la ruta (la 0 es la del puerto)
+  const eje = horiz ? "y" : "x";
+  const lado = (P, port) => {
+    const d = dirOf(port)[eje];
+    if (!d) return;
+    const min = P[eje] + d * TRAMO_MIN;
+    c = d > 0 ? Math.max(c, min) : Math.min(c, min);
+  };
+  if (j === 0) lado(A, e.from.port);
+  if (j === k - 1) lado(B, e.to.port);
+  return c;
+}
+function aplicarManual(e, A, B) {
+  if (!manualValida(e)) return null;
+  const k = e.manual.c.length;
+  const lineas = e.manual.c.map((v, j) => acotarLinea(e, v, j, k, A, B));
+  if (k === 1) {                                  // un solo tramo del medio: tiene que servir a los dos puertos
+    const eje = tramoHoriz(e, 1) ? "y" : "x";
+    const ok = (P, port) => (lineas[0] - P[eje]) * dirOf(port)[eje] >= TRAMO_MIN - .01;
+    if (!ok(A, e.from.port) || !ok(B, e.to.port)) return null;
+  }
+  const todas = [puertoHoriz(e.from.port) ? A.y : A.x].concat(lineas,
+    [tramoHoriz(e, k + 1) ? B.y : B.x]);
+  const pts = [{ x: A.x, y: A.y }];
+  for (let j = 1; j < todas.length; j++) {        // el punto j es donde se cruzan las líneas j-1 y j
+    pts.push(tramoHoriz(e, j) ? { x: todas[j - 1], y: todas[j] }    // la j horizontal aporta la y
+                              : { x: todas[j], y: todas[j - 1] });
+  }
+  pts.push({ x: B.x, y: B.y });
+  return pts;
+}
+// vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
+function rutaAuto(e) { e.variant = 0; delete e.manual; }
 function routeAll() {
   const placed = [];
   const all = bboxAll();
@@ -852,7 +947,7 @@ function routeAll() {
       if (uniq.length > 12) break;
     }
     const idx = ((e.variant || 0) % uniq.length + uniq.length) % uniq.length;
-    e.pts = uniq[idx].p;
+    e.pts = aplicarManual(e, A, B) || uniq[idx].p;
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
@@ -1183,7 +1278,7 @@ function renderNode(n, destino) {
 function renderEdge(e) {
   if (!e.pts) return;
   const sel = S.selEdges.includes(e.id);
-  const g = el("g", { "data-eid": e.id, style: estiloColor(e.color) }, gEdges);
+  const g = el("g", { class: sel ? "edge-sel" : "", "data-eid": e.id, style: estiloColor(e.color) }, gEdges);
   el("path", { class: "edge-hit", d: pathD(e.pts, 6) }, g);
   const tgt = getNode(e.to.id);
   const noHead = e.arrow === false || (tgt && tgt.type === "node");  // una bifurcación no lleva punta
@@ -1256,22 +1351,56 @@ function renderPorts() {
     }
   }
 }
+/* Tiradores de tamaño. Se pueden estirar los recuadros, los bloques y los sumadores. Los
+   recuadros tienen además los cuatro lados; en bloques y sumadores los lados están ocupados
+   por los puertos de conexión, así que sólo llevan las esquinas. */
+const esEstirable = (n) => !!n && (n.type === "marco" || n.type === "block" || n.type === "sum");
 function renderHandles() {
+  renderTiradoresTramo();
   if (S.sel.length !== 1) return;
   const n = getNode(S.sel[0]);
-  if (!esMarco(n)) return;
+  if (!esEstirable(n)) return;
   const R = rectOf(n);
-  const corners = [
-    { dir: "nw", x: R.l, y: R.t, cursor: "nwse-resize" },
-    { dir: "ne", x: R.r, y: R.t, cursor: "nesw-resize" },
-    { dir: "se", x: R.r, y: R.b, cursor: "nwse-resize" },
-    { dir: "sw", x: R.l, y: R.b, cursor: "nesw-resize" }
+  const tiradores = [
+    { dir: "nw", x: R.l, y: R.t }, { dir: "ne", x: R.r, y: R.t },
+    { dir: "se", x: R.r, y: R.b }, { dir: "sw", x: R.l, y: R.b }
   ];
-  for (const c of corners) {
-    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id,
-      style: `cursor:${c.cursor}` }, gOv);
-    el("rect", { x: c.x - 9, y: c.y - 9, width: 18, height: 18, fill: "transparent" }, g);
-    el("rect", { class: "m-handle", x: c.x - 5, y: c.y - 5, width: 10, height: 10, rx: 2 }, g);
+  if (esMarco(n)) tiradores.push(
+    { dir: "n", x: R.cx, y: R.t }, { dir: "s", x: R.cx, y: R.b },
+    { dir: "w", x: R.l, y: R.cy }, { dir: "e", x: R.r, y: R.cy });
+  if (esMarco(n)) {                            // asa de arriba a la izquierda, por fuera del recuadro
+    const gx = R.l + 10, gy = R.t - 24;
+    const g = el("g", { class: "m-grip-wrap", "data-nid": n.id }, gOv);
+    el("rect", { class: "m-grip", x: gx, y: gy, width: 26, height: 18, rx: 4 }, g);
+    el("path", { class: "m-grip-ico", d: `M ${gx + 13} ${gy + 4} V ${gy + 14} M ${gx + 8} ${gy + 9} H ${gx + 18}
+      M ${gx + 13} ${gy + 4} l -2 2 M ${gx + 13} ${gy + 4} l 2 2 M ${gx + 13} ${gy + 14} l -2 -2 M ${gx + 13} ${gy + 14} l 2 -2
+      M ${gx + 8} ${gy + 9} l 2 -2 M ${gx + 8} ${gy + 9} l 2 2 M ${gx + 18} ${gy + 9} l -2 -2 M ${gx + 18} ${gy + 9} l -2 2` }, g);
+  }
+  // el cuadrito de dibujo queda por fuera de la caja de selección punteada
+  const sal = esMarco(n) ? 0 : 4;
+  for (const c of tiradores) {
+    const x = c.x + (c.dir.includes("e") ? sal : c.dir.includes("w") ? -sal : 0);
+    const y = c.y + (c.dir.includes("s") ? sal : c.dir.includes("n") ? -sal : 0);
+    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id }, gOv);
+    el("rect", { x: x - 9, y: y - 9, width: 18, height: 18, fill: "transparent" }, g);
+    el("rect", { class: "m-handle", x: x - 5, y: y - 5, width: 10, height: 10, rx: 2 }, g);
+  }
+}
+// una flecha seleccionada muestra un tirador en el medio de cada tramo
+function renderTiradoresTramo() {
+  for (const id of S.selEdges) {
+    const e = getEdge(id);
+    if (!e || !e.pts) continue;
+    for (let i = 0; i < e.pts.length - 1; i++) {
+      const a = e.pts[i], b = e.pts[i + 1];
+      if (Math.hypot(b.x - a.x, b.y - a.y) < 18) continue;   // muy cortito: sigue pudiéndose arrastrar la línea
+      const h = tramoHoriz(e, i), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      const g = el("g", { class: "seg-handle-wrap " + (h ? "h" : "v"),
+        "data-seg-eid": e.id, "data-seg": i }, gOv);
+      el("rect", { x: mx - 11, y: my - 11, width: 22, height: 22, fill: "transparent" }, g);
+      el("rect", { class: "seg-handle", x: mx - (h ? 8 : 3.5), y: my - (h ? 3.5 : 8),
+        width: h ? 16 : 7, height: h ? 7 : 16, rx: 3 }, g);
+    }
   }
 }
 let hoverNode = null;
@@ -1356,7 +1485,9 @@ function renderInspector() {
         <button class="btn" id="e-reset">Ruta automática</button>
         <button class="btn" id="e-flip">Invertir sentido</button>
       </div>
-      <div class="hint" style="margin-top:8px">Las flechas se rutean solas esquivando bloques y otras líneas. Si una no te gusta, probá rutas alternativas.</div>
+      <div class="hint" style="margin-top:8px">Las flechas se rutean solas esquivando bloques y otras líneas. Con la flecha
+        seleccionada, arrastrá los cuadraditos de sus tramos (o la línea misma) para acomodarla a mano;
+        «Ruta automática» la suelta de nuevo. También podés probar rutas alternativas.</div>
       <div class="row" style="margin-top:10px"><label>Origen</label><div class="fill"><select id="e-fp">
         ${portOpts(e.from.port)}</select></div></div>
       <div class="row"><label>Destino</label><div class="fill"><select id="e-tp">
@@ -1397,8 +1528,9 @@ function renderInspector() {
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
-        <div class="hint" style="margin-top:8px">Sin relleno lo agarrás por el borde y los clics de
-          adentro pasan a lo que haya debajo. Con relleno se agarra de cualquier parte.</div></div>`;
+        <div class="hint" style="margin-top:8px">Para moverlo, arrastralo de la asa de arriba a la
+          izquierda (anda siempre), del borde o de cualquier parte vacía de adentro. Los elementos que
+          tiene adentro no se mueven con él.</div></div>`;
     }
     else
     h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
@@ -1430,7 +1562,8 @@ function renderInspector() {
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
-        ${auto ? `<div class="hint" style="margin-top:8px">El bloque crece o se achica solo con la ecuación que escribas.</div>` : ""}
+        ${auto ? `<div class="hint" style="margin-top:8px">El bloque crece o se achica solo con la ecuación que escribas.${
+          n.type === "block" ? " Si lo estirás con los tiradores de las esquinas, pasa a tamaño manual." : ""}</div>` : ""}
       </div>`;
     }
     h += seccionColorPropio(n, "nc-", clavesColor(n));
@@ -1637,12 +1770,12 @@ function wireInspector(nsel, esel) {
   const ar = document.getElementById("e-arrow");
   if (ar) { ar.value = esel[0].arrow === false ? "0" : "1"; ar.onchange = () => { esel.forEach(e => e.arrow = ar.value === "1"); commit(); render(); }; }
   bind("e-split", () => esel.forEach(splitEdge));
-  bind("e-alt", () => esel.forEach(e => e.variant = (e.variant || 0) + 1));
-  bind("e-reset", () => esel.forEach(e => e.variant = 0));
-  bind("e-flip", () => esel.forEach(e => { const f = e.from; e.from = e.to; e.to = f; e.variant = 0; }));
+  bind("e-alt", () => esel.forEach(e => { e.variant = (e.variant || 0) + 1; delete e.manual; }));
+  bind("e-reset", () => esel.forEach(rutaAuto));
+  bind("e-flip", () => esel.forEach(e => { const f = e.from; e.from = e.to; e.to = f; rutaAuto(e); }));
   const fp = document.getElementById("e-fp"), tp = document.getElementById("e-tp");
-  if (fp) fp.onchange = () => { esel.forEach(e => { e.from.port = fp.value; e.variant = 0; }); commit(); render(); };
-  if (tp) tp.onchange = () => { esel.forEach(e => { e.to.port = tp.value; e.variant = 0; }); commit(); render(); };
+  if (fp) fp.onchange = () => { esel.forEach(e => { e.from.port = fp.value; rutaAuto(e); }); commit(); render(); };
+  if (tp) tp.onchange = () => { esel.forEach(e => { e.to.port = tp.value; rutaAuto(e); }); commit(); render(); };
 
   if (nsel.length) wireColorPropio("nc-", clavesColor(nsel[0]), nsel);
   if (esel.length) wireColorPropio("ec-", ["flecha"], esel);
@@ -1750,21 +1883,29 @@ function hitNode(target) {
    lo arrastra igual que con el mouse, y dos dedos hacen zoom. */
 const dedos = new Map();                     // pointerId -> posición en pantalla
 let pellizco = null, gestoZoom = false;
-const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-eid],.port,.m-handle-wrap"));
+const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-eid],.port,.m-handle-wrap,.m-grip-wrap,.seg-handle-wrap"));
 function centroDedos() {
   const p = Array.from(dedos.values());
   return { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2,
            d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) };
 }
 function limpiarCursorResize() {
-  svg.classList.remove("resizing-nw", "resizing-ne", "resizing-se", "resizing-sw");
+  svg.classList.remove("resizing-nw", "resizing-ne", "resizing-se", "resizing-sw",
+    "resizing-n", "resizing-s", "resizing-e", "resizing-w", "moviendo-tramo-h", "moviendo-tramo-v");
 }
 function cancelarDrag() {                    // al aparecer el segundo dedo se deshace lo empezado
   if (drag && drag.kind === "move" && drag.orig)
     drag.orig.forEach(o => { const n = getNode(o.id); if (n) { n.x = o.x; n.y = o.y; } });
-  if (drag && drag.kind === "resize-marco" && drag.orig) {
+  if (drag && drag.kind === "resize" && drag.orig) {
     const n = getNode(drag.nodeId);
-    if (n) { n.x = drag.orig.x; n.y = drag.orig.y; n.w = drag.orig.w; n.h = drag.orig.h; }
+    if (n) {
+      n.x = drag.orig.x; n.y = drag.orig.y; n.w = drag.orig.w; n.h = drag.orig.h;
+      if (drag.orig.auto === undefined) delete n.auto; else n.auto = drag.orig.auto;
+    }
+  }
+  if (drag && drag.kind === "tramo") {
+    const e = getEdge(drag.edgeId);
+    if (e) { if (drag.orig) e.manual = drag.orig; else delete e.manual; }
   }
   limpiarCursorResize();
   drag = null;
@@ -1797,6 +1938,76 @@ function soltarDedo(ev) {
 }
 svg.addEventListener("pointercancel", ev => { soltarDedo(ev); cancelarDrag(); render(); });
 
+/* ---- estirar un recuadro, bloque o sumador ----
+   Un recuadro deja fijo el lado opuesto al tirador, como en cualquier editor. Un bloque o un
+   sumador crece desde el centro: así sus puertos siguen alineados con los de los vecinos y
+   las flechas no se quiebran. Al estirar a mano un bloque deja de ajustarse a la ecuación. */
+function estirar(n, d, w) {
+  const dir = d.dir, o = d.orig;
+  if (esMarco(n)) {
+    const MIN = 20;
+    let l = o.x - o.w / 2, r = o.x + o.w / 2, t = o.y - o.h / 2, b = o.y + o.h / 2;
+    if (dir.includes("w")) l = Math.min(snapV(w.x), r - MIN);
+    if (dir.includes("e")) r = Math.max(snapV(w.x), l + MIN);
+    if (dir.includes("n")) t = Math.min(snapV(w.y), b - MIN);
+    if (dir.includes("s")) b = Math.max(snapV(w.y), t + MIN);
+    n.w = r - l; n.h = b - t; n.x = l + n.w / 2; n.y = t + n.h / 2;
+    return;
+  }
+  const paso = S.snap ? S.grid / 2 : 1;              // el ancho total sube de a una celda
+  const medio = (v) => Math.round(v / paso) * paso;
+  const hw = medio(Math.abs(w.x - o.x)), hh = medio(Math.abs(w.y - o.y));
+  if (n.type === "sum") {
+    const r = Math.min(60, Math.max(10, hw, hh));    // mismo rango que "Diámetro" del panel
+    n.w = n.h = r * 2;
+  } else {
+    n.w = Math.max(30, hw * 2); n.h = Math.max(24, hh * 2);
+    n.auto = false;
+  }
+  n.x = o.x; n.y = o.y;
+}
+/* ---- correr un tramo de una flecha ----
+   Cualquier tramo se corre a lo ancho. Uno del medio sólo cambia su línea; uno pegado a un
+   puerto no se puede despegar, así que al correrlo la flecha sale una punta recta del puerto,
+   dobla y recién ahí sigue por la línea nueva. */
+function tramoCercano(e, w) {
+  if (!e || !e.pts) return -1;
+  let mejor = -1, md = 7 / S.zoom;
+  for (let i = 0; i < e.pts.length - 1; i++) {
+    const a = e.pts[i], b = e.pts[i + 1];
+    const dx = Math.max(Math.min(a.x, b.x) - w.x, 0, w.x - Math.max(a.x, b.x));
+    const dy = Math.max(Math.min(a.y, b.y) - w.y, 0, w.y - Math.max(a.y, b.y));
+    const dist = Math.hypot(dx, dy);
+    if (dist < md) { md = dist; mejor = i; }
+  }
+  return mejor;
+}
+function empezarTramo(eid, i, w) {
+  const e = getEdge(eid);
+  if (!e || !e.pts || i < 0 || i > e.pts.length - 2) return false;
+  const pts = e.pts, n = pts.length - 1;              // n tramos
+  const h = tramoHoriz(e, i);
+  const coord = (j) => tramoHoriz(e, j) ? pts[j].y : pts[j].x;   // la línea del tramo j, tal como se ve
+  const medio = [];
+  for (let j = 1; j <= n - 2; j++) medio.push(coord(j));
+  // la punta que sale de un puerto: una línea perpendicular un poco más allá del puerto
+  const punta = (P, port) => { const d = dirOf(port); return d.x ? P.x + d.x * TRAMO_PUNTA : P.y + d.y * TRAMO_PUNTA; };
+  const A = pts[0], B = pts[pts.length - 1];
+  let c = medio, idx = i - 1;
+  if (i === 0) {                                       // pegado al puerto de salida
+    c = [punta(A, e.from.port), coord(0)].concat(medio);
+    if (n === 1) c.push(punta(B, e.to.port));          // una recta: también hay que despegarse del destino
+    idx = 1;
+  } else if (i === n - 1) {                            // pegado al puerto de llegada
+    c = medio.concat([coord(n - 1), punta(B, e.to.port)]);
+    idx = medio.length;
+  }
+  drag = { kind: "tramo", edgeId: eid, h, c, idx,
+    orig: e.manual ? JSON.parse(JSON.stringify(e.manual)) : null,
+    c0: c[idx], p0: h ? w.y : w.x, moved: false };
+  svg.classList.add(h ? "moviendo-tramo-h" : "moviendo-tramo-v");
+  return true;
+}
 svg.addEventListener("pointerdown", ev => {
   try { svg.setPointerCapture(ev.pointerId); } catch {}
   const w = toWorld(ev);
@@ -1817,29 +2028,34 @@ svg.addEventListener("pointerdown", ev => {
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
     render(); return;
   }
-  // tirador de recuadro -> redimensionar esquina
+  // tirador de tamaño (recuadro, bloque o sumador) -> estirar
   const hw = t.closest ? t.closest(".m-handle-wrap") : null;
   if (hw) {
     const dir = hw.getAttribute("data-handle");
     const nid = hw.getAttribute("data-nid");
     const n = getNode(nid);
     if (n) {
-      const R = rectOf(n);
-      const fixedX = (dir === "nw" || dir === "sw") ? R.r : R.l;
-      const fixedY = (dir === "nw" || dir === "ne") ? R.b : R.t;
       drag = {
-        kind: "resize-marco",
+        kind: "resize",
         nodeId: nid,
         dir,
-        fixedX,
-        fixedY,
-        orig: { x: n.x, y: n.y, w: n.w, h: n.h },
+        orig: { x: n.x, y: n.y, w: n.w, h: n.h, auto: n.auto },
         moved: false
       };
       svg.classList.add("resizing-" + dir);
       return;
     }
   }
+  // asa de un recuadro -> moverlo (y lo que esté seleccionado con él)
+  const gp = t.closest ? t.closest(".m-grip-wrap") : null;
+  if (gp && getNode(gp.getAttribute("data-nid"))) {
+    drag = { kind: "move", w0: w, moved: false,
+      orig: S.sel.map(id => { const n = getNode(id); return { id, x: n.x, y: n.y }; }) };
+    return;
+  }
+  // tirador de un tramo de flecha -> correrlo a un costado
+  const sh = t.closest ? t.closest(".seg-handle-wrap") : null;
+  if (sh && empezarTramo(sh.getAttribute("data-seg-eid"), +sh.getAttribute("data-seg"), w)) return;
   // dibujar recuadro
   if (pendingAdd === "marco") {
     const sx = snapV(w.x), sy = snapV(w.y);
@@ -1861,7 +2077,12 @@ svg.addEventListener("pointerdown", ev => {
       splitEdge(getEdge(id)); setPending(null); commit(); render(); return;
     }
     if (sumandoALaSeleccion(ev)) { S.selEdges = S.selEdges.includes(id) ? S.selEdges.filter(x => x !== id) : S.selEdges.concat(id); }
-    else { S.selEdges = [id]; S.sel = []; }
+    else {
+      S.selEdges = [id]; S.sel = [];
+      // agarrar la línea por un tramo de adentro ya la corre: seleccionar y acomodar en un solo gesto
+      const i = tramoCercano(getEdge(id), w);
+      if (i >= 0) empezarTramo(id, i, w);
+    }
     render(); return;
   }
   // nodo
@@ -1921,23 +2142,27 @@ svg.addEventListener("pointermove", ev => {
     S.pan.y = drag.py + (ev.clientY - drag.sy);
     render(); return;
   }
-  if (drag.kind === "resize-marco") {
+  if (drag.kind === "resize") {
     const n = getNode(drag.nodeId);
     if (!n) return;
-    let x1 = drag.fixedX, y1 = drag.fixedY;
-    let x2 = snapV(w.x), y2 = snapV(w.y);
-    const minSize = 20;
-    if (Math.abs(x2 - x1) < minSize) x2 = x1 + (x2 >= x1 ? minSize : -minSize);
-    if (Math.abs(y2 - y1) < minSize) y2 = y1 + (y2 >= y1 ? minSize : -minSize);
-    const l = Math.min(x1, x2), r = Math.max(x1, x2);
-    const t = Math.min(y1, y2), b = Math.max(y1, y2);
-    const nw = r - l, nh = b - t;
-    const nx = l + nw / 2, ny = t + nh / 2;
-    if (n.w !== nw || n.h !== nh || n.x !== nx || n.y !== ny) {
-      n.w = nw; n.h = nh; n.x = nx; n.y = ny;
-      drag.moved = true;
-      render();
-    }
+    const antes = [n.x, n.y, n.w, n.h].join();
+    estirar(n, drag, w);
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render(); }
+    return;
+  }
+  if (drag.kind === "tramo") {
+    const e = getEdge(drag.edgeId);
+    if (!e) return;
+    const p = drag.h ? w.y : w.x;
+    if (!drag.moved && Math.abs(p - drag.p0) * S.zoom < 3) return;   // un clic no mueve nada
+    const k = drag.c.length, A = e.pts[0], B = e.pts[e.pts.length - 1];
+    const c = acotarLinea(e, snapV(drag.c0 + (p - drag.p0)), drag.idx, k, A, B);
+    if (!drag.moved && c === drag.c0) return;               // todavía no se movió de verdad
+    if (drag.moved && e.manual && e.manual.c[drag.idx] === c) return;
+    drag.moved = true;
+    e.manual = { c: drag.c.slice() };
+    e.manual.c[drag.idx] = c;
+    render();
     return;
   }
   if (drag.kind === "draw-marco") {
@@ -1967,7 +2192,7 @@ svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }
   const w = toWorld(ev);
   if (!drag) return;
-  if (drag.kind === "resize-marco") {
+  if (drag.kind === "resize" || drag.kind === "tramo") {
     limpiarCursorResize();
     if (drag.moved) commit();
     drag = null;
@@ -2056,15 +2281,31 @@ svg.addEventListener("wheel", ev => {
 
 /* ======================= alta de elementos ======================= */
 let pendingAdd = null;
+/* Una herramienta de inserción y un modo (selección, múltiple, conectar) son excluyentes:
+   elegir una suelta la otra. Al colocar el elemento se vuelve a Selección. */
 function setPending(type) {
-  pendingAdd = type;
-  document.querySelectorAll(".ptool").forEach(b => b.classList.toggle("on", b.dataset.add === type));
-  svg.classList.toggle("split-mode", type === "node");
-  svg.classList.toggle("drawing-marco", type === "marco");
-  $("#st-hint").textContent = !type ? ""
-    : type === "node" ? "Hacé clic sobre una flecha: la bifurcación se inserta en su punto medio · Esc cancela"
-    : type === "marco" ? "Arrastrá para dibujar el recuadro o hacé clic para colocarlo · Esc cancela"
-    : "Hacé clic en la hoja para colocarlo · Esc cancela";
+  pendingAdd = type || null;
+  if (pendingAdd && S.mode !== "select") S.mode = "select";   // sale de Conectar / Múltiple
+  document.querySelectorAll(".ptool").forEach(b => b.classList.toggle("on", b.dataset.add === pendingAdd));
+  svg.classList.toggle("split-mode", pendingAdd === "node");
+  svg.classList.toggle("drawing-marco", pendingAdd === "marco");
+  svg.classList.toggle("mode-connect", !pendingAdd && S.mode === "connect");
+  pintarModo();
+  if (pendingAdd) render();
+}
+// botones de modo y franja de atajos: se marca lo que esté activo, y nada más
+function pintarModo() {
+  for (const m of ["select", "multi", "connect"])
+    $("#m-" + m).classList.toggle("on", !pendingAdd && S.mode === m);
+  document.querySelectorAll("#atajos [data-modo]").forEach(e =>
+    e.classList.toggle("act", !pendingAdd && S.mode === e.dataset.modo));
+  document.querySelectorAll("#atajos [data-add]").forEach(e =>
+    e.classList.toggle("act", e.dataset.add === pendingAdd));
+  $("#st-hint").textContent = pendingAdd === "node" ? "Hacé clic sobre una flecha: la bifurcación se inserta en su punto medio · Esc cancela"
+    : pendingAdd === "marco" ? "Arrastrá para dibujar el recuadro o hacé clic para colocarlo · Esc cancela"
+    : pendingAdd ? "Hacé clic en la hoja para colocarlo · Esc cancela"
+    : S.mode === "connect" ? "Arrastrá de un elemento a otro para crear la flecha"
+    : S.mode === "multi" ? "Cada clic suma o saca de la selección · arrastrá en el fondo para encerrar varios" : "";
 }
 function addAt(type, x, y) {
   const n = makeNode(type, x, y);
@@ -2127,7 +2368,7 @@ function splitEdge(e) {
   S.edges.push({ id: uid("e"), from: { id: nn.id, port: outPort }, to: e.to, variant: 0,
     label: e.label, dashed: e.dashed, arrow: e.arrow, width: e.width });
   e.to = { id: nn.id, port: inPort };
-  e.label = ""; e.variant = 0;
+  e.label = ""; rutaAuto(e);
   S.sel = [nn.id]; S.selEdges = [];
 }
 function align(kind) {
@@ -2150,7 +2391,7 @@ function align(kind) {
     const step = (s[s.length - 1].y - s[0].y) / (s.length - 1);
     s.forEach((n, i) => n.y = snapV(s[0].y + step * i));
   }
-  S.edges.forEach(e => e.variant = 0);
+  S.edges.forEach(rutaAuto);
   commit(); render();
 }
 function fit() {
@@ -2277,16 +2518,17 @@ $("#m-multi").onclick = () => setMode(S.mode === "multi" ? "select" : "multi");
 $("#m-connect").onclick = () => setMode("connect");
 function setMode(m) {
   S.mode = m;
-  $("#m-select").classList.toggle("on", m === "select");
-  $("#m-multi").classList.toggle("on", m === "multi");
-  $("#m-connect").classList.toggle("on", m === "connect");
+  pendingAdd = null;                         // elegir un modo suelta la herramienta de inserción
+  document.querySelectorAll(".ptool").forEach(b => b.classList.remove("on"));
+  svg.classList.remove("split-mode", "drawing-marco");
   svg.classList.toggle("mode-connect", m === "connect");
-  $("#st-hint").textContent = m === "connect" ? "Arrastrá de un elemento a otro para crear la flecha"
-    : m === "multi" ? "Cada clic suma o saca de la selección · arrastrá en el fondo para encerrar varios" : "";
+  pintarModo();
   render();
 }
 /* En selección múltiple cada clic suma o saca, igual que si tuvieras Shift apretado */
 const sumandoALaSeleccion = (ev) => ev.shiftKey || S.mode === "multi";
+document.querySelectorAll("#atajos [data-modo]").forEach(e => e.onclick = () => setMode(e.dataset.modo));
+document.querySelectorAll("#atajos [data-add]").forEach(e => e.onclick = () => setPending(pendingAdd === e.dataset.add ? null : e.dataset.add));
 $("#b-undo").onclick = undo;
 $("#b-redo").onclick = redo;
 $("#b-del").onclick = () => { deleteSel(); commit(); render(); };
@@ -2306,7 +2548,7 @@ $("#gridsize").onchange = e => {
 $("#b-gridshow").onclick = () => { S.showGrid = !S.showGrid; render(); };
 $("#b-snapall").onclick = () => {
   S.nodes.forEach(n => { n.x = Math.round(n.x / S.grid) * S.grid; n.y = Math.round(n.y / S.grid) * S.grid; });
-  S.edges.forEach(e => e.variant = 0);
+  S.edges.forEach(rutaAuto);
   commit(); render(); toast("Todo alineado a la grilla");
 };
 $("#b-zoomin").onclick = () => { S.zoom = Math.min(4, S.zoom * 1.2); render(); };
@@ -2349,7 +2591,11 @@ window.addEventListener("keydown", ev => {
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodes.map(n => n.id); render(); return; }
   if (ev.ctrlKey || ev.metaKey) return;
   if (k === "delete" || k === "backspace") { ev.preventDefault(); deleteSel(); commit(); render(); return; }
-  if (k === "escape") { if (drag) cancelarDrag(); setPending(null); S.sel = []; S.selEdges = []; render(); return; }
+  if (k === "escape") {
+    if (drag) cancelarDrag();
+    if (pendingAdd) setPending(null); else if (S.mode !== "select") setMode("select");
+    S.sel = []; S.selEdges = []; render(); return;
+  }
   if (k === "v") return setMode("select");
   if (k === "x") return setMode("multi");
   if (k === "c") return setMode("connect");
