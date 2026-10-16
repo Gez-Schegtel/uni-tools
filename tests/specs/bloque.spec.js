@@ -176,6 +176,7 @@ test.describe("doble clic para editar el contenido directamente", () => {
     await page.waitForTimeout(600);
     await page.mouse.click(a.x, a.y);
     expect(await hayEditor(page)).toBe(false);
+    await page.waitForTimeout(600);       // si no, este clic y el anterior en A sí son un doble clic
     await page.mouse.click(a.x, a.y);
     await page.mouse.click(b.x, b.y);
     expect(await hayEditor(page)).toBe(false);
