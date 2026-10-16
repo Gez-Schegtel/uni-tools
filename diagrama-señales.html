@@ -317,6 +317,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
     <tr><td><kbd>Supr</kbd></td><td>Borrar lo seleccionado</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>Deshacer / rehacer</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Copiar y pegar los nodos seleccionados (con las ramas que los unen); cada pegado sale un poco más corrido</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar los nodos seleccionados (con las ramas que los unen)</td></tr>
     <tr><td>Flechas</td><td>Mover un paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
     <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve la hoja (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom</td></tr>
     <tr><td>Pantalla táctil</td><td>Un dedo en el fondo mueve la hoja; un dedo sobre un nodo o una
@@ -1448,6 +1449,12 @@ function insertar(cop, desp) {
   });
   S.sel = nuevos; S.selR = [];
 }
+/* Duplicar (Ctrl+D) es copiar y pegar en un solo paso, sin tocar lo que haya copiado */
+function duplicar() {
+  if (!S.sel.length) { toast("Elegí algo para duplicar"); return; }
+  insertar(tomarSeleccion(), S.grid * 2);
+  commit(); render();
+}
 function copiarSel() {
   if (!S.sel.length) { toast("Elegí algo para copiar"); return; }
   portapapeles = tomarSeleccion(); pegados = 0;
@@ -1761,6 +1768,7 @@ window.addEventListener("keydown", ev => {
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "c") { ev.preventDefault(); copiarSel(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "d") { ev.preventDefault(); duplicar(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "v") { ev.preventDefault(); pegarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodos.map(n => n.id); render(); return; }
   if (ev.ctrlKey || ev.metaKey) return;

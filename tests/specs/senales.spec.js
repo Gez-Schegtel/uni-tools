@@ -156,3 +156,32 @@ test("Ctrl + clic izquierdo y arrastrar mueve la hoja; la rueda también", async
   await page.mouse.wheel(0, 100);
   await expect.poll(() => page.evaluate(() => S.pan.y)).toBeLessThan(d[1]);
 });
+
+test.describe("duplicar (Ctrl+D)", () => {
+  test("duplica los nodos seleccionados con sus ramas, corridos, y se deshace", async ({ page }) => {
+    await page.evaluate(() => { cargarEjemplo("dos"); S.sel = S.nodos.slice(1, 3).map((n) => n.id); render(); });
+    const [n0, r0, internas] = await page.evaluate(() => [S.nodos.length, S.ramas.length,
+      S.ramas.filter((r) => S.sel.includes(r.de) && S.sel.includes(r.a)).length]);
+    const orig = await page.evaluate(() => S.sel.map((id) => { const n = getNodo(id); return [n.x, n.y]; }));
+    await page.keyboard.press("Control+d");
+    expect(await page.evaluate(() => [S.nodos.length, S.ramas.length])).toEqual([n0 + 2, r0 + internas]);
+    const nuevos = await page.evaluate(() => S.sel.map((id) => { const n = getNodo(id); return [n.x, n.y, n.tipo, n.nombre]; }));
+    expect(nuevos.map(([x, y]) => [x - 40, y - 40])).toEqual(orig);           // dos pasos de grilla
+    expect(nuevos.every(([, , tipo]) => tipo === "normal")).toBe(true);
+    const nombres = await page.evaluate(() => S.nodos.map((n) => n.nombre));
+    expect(new Set(nombres).size).toBe(nombres.length);
+    await page.evaluate(() => undo());
+    expect(await page.evaluate(() => [S.nodos.length, S.ramas.length])).toEqual([n0, r0]);
+  });
+  test("no pisa lo copiado con Ctrl+C, y sin selección no hace nada", async ({ page }) => {
+    await page.evaluate(() => { cargarEjemplo("simple"); S.sel = [S.nodos[1].id]; render(); });
+    await page.keyboard.press("Control+c");
+    await page.evaluate(() => { S.sel = [S.nodos[2].id]; render(); });
+    await page.keyboard.press("Control+d");
+    const n = await page.evaluate(() => S.nodos.length);
+    await page.evaluate(() => { S.sel = []; render(); });
+    await page.keyboard.press("Control+d");
+    expect(await page.evaluate(() => S.nodos.length)).toBe(n);
+    expect(await page.evaluate(() => portapapeles.nodos.length)).toBe(1);
+  });
+});
