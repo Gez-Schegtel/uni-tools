@@ -20,6 +20,7 @@ Lo que tienen en común las tres:
 - Atajos de teclado y una leyenda en la barra de estado (el botón **?** los explica todos).
 - Deshacer y rehacer, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.
 - Ejemplos para arrancar.
+- Botón **Inicio** para volver a la portada, y **autoguardado**: lo que vas haciendo queda guardado en el navegador y al volver a abrir la herramienta seguís donde lo dejaste (no reemplaza a «Guardar»: no viaja a otra compu).
 - Exportación a **SVG, PNG y JSON**; se puede volver a abrir un **JSON** o un **SVG** exportado desde acá (el SVG lleva los datos adentro).
 - Visualización de ecuaciones.
 

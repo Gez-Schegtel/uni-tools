@@ -166,6 +166,13 @@ elemento suelto va por `style`, que sí le gana a la clase.
   grandes se nota.
 - **`simplify` del simulador da la expresión mínima** (menos términos, después menos literales):
   esenciales, golosa como cota y búsqueda exacta con poda, con tope de 150 ms por salida.
+- **Autoguardado y botón «Inicio».** Cada herramienta guarda `docDatos()` en `localStorage`
+  (`uni-tools-autoguardado-bloque|simulador|senales`) 400 ms después de cada `commit()` y siempre en
+  `pagehide`/`visibilitychange`; al arrancar, si hay algo guardado, lo carga con `cargarDoc` (la misma
+  validación que un archivo) en vez del ejemplo. `autoActivo` evita guardar mientras arranca. «Inicio»
+  pregunta antes de salir si hay algo dibujado; si el navegador no deja guardar (`autoOk` en falso),
+  el aviso dice que se pierde y `beforeunload` también avisa. La portada marca qué herramienta tiene
+  algo guardado. Un campo nuevo del documento tiene que estar en `docDatos()` para sobrevivir.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.)
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y

@@ -31,6 +31,8 @@ body{font-family:var(--ui);color:var(--ink);background:var(--shell);
 header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;
   background:var(--paper);border-bottom:1px solid var(--line);z-index:5}
 .brand{display:flex;align-items:baseline;gap:8px;margin-right:4px}
+a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
+#b-inicio{flex:none}
 .brand b{font-size:14px;letter-spacing:-.01em}
 .brand span{font-family:var(--mono);font-size:10px;color:#8a97a5;letter-spacing:.08em;text-transform:uppercase}
 .group{display:flex;align-items:center;gap:4px;padding-right:12px;border-right:1px solid var(--line-2)}
@@ -260,6 +262,8 @@ svg#canvas{
 <body>
 
 <header>
+  <a class="btn ghost" id="b-inicio" href="index.html" title="Volver al inicio (el diagrama queda guardado en este navegador)">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Inicio</a>
   <div class="brand"><b>Circuitos lógicos</b><span>simulador</span></div>
 
   <div class="group collapsed">
@@ -1916,6 +1920,7 @@ function commit() {
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }
   redoStack = []; lastSnap = s;
+  autoguardar();
 }
 function undo() { if (!undoStack.length) return; redoStack.push(snapshot()); const s = undoStack.pop(); restore(s); lastSnap = s; render(); }
 function redo() { if (!redoStack.length) return; undoStack.push(snapshot()); const s = redoStack.pop(); restore(s); lastSnap = s; render(); }
@@ -2708,9 +2713,55 @@ if (togglePanelBtn && inspectorPanel) {
   }
 }
 
+/* ======================= autoguardado =======================
+   Lo que se va haciendo queda guardado en este navegador (localStorage), una copia por
+   herramienta: al volver a abrirla se recupera tal como quedó. Se guarda un rato después de
+   cada cambio y siempre al salir de la página. Es una red de seguridad, no reemplaza a
+   "Guardar": no viaja a otra compu ni a otro navegador. */
+const CLAVE_AUTO = "uni-tools-autoguardado-simulador";
+let autoActivo = false, autoOk = true, autoTimer = 0;
+function guardarAhora() {
+  if (!autoActivo) return;
+  clearTimeout(autoTimer);
+  try { localStorage.setItem(CLAVE_AUTO, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); autoOk = true; }
+  catch (e) { autoOk = false; }                    // modo privado, cuota llena, etc.
+}
+function autoguardar() {
+  if (!autoActivo) return;
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(guardarAhora, 400);
+}
+function recuperarAutoguardado() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CLAVE_AUTO) || "null");
+    if (!g || !esObj(g.doc) || !Array.isArray(g.doc.nodes)) return false;
+    cargarDoc(g.doc);                                // pasa por la misma validación que un archivo
+    return true;
+  } catch (e) { return false; }
+}
+window.addEventListener("pagehide", guardarAhora);
+document.addEventListener("visibilitychange", () => { if (document.hidden) guardarAhora(); });
+// Si el navegador no deja guardar y hay algo dibujado, avisa antes de cerrar o recargar
+window.addEventListener("beforeunload", ev => {
+  guardarAhora();
+  if (!autoOk && S.nodes.length) { ev.preventDefault(); ev.returnValue = ""; }
+});
+
+/* ======================= volver al inicio ======================= */
+function irAlInicio() {
+  guardarAhora();
+  const msg = autoOk
+    ? "¿Volver al inicio?\n\nTu diagrama queda guardado en este navegador: cuando vuelvas a abrir Circuitos lógicos lo vas a encontrar como lo dejaste."
+    : "¿Volver al inicio?\n\nEste navegador no deja guardar automáticamente: si no descargaste el diagrama con «Guardar», se va a perder.";
+  if (!S.nodes.length || confirm(msg)) location.href = "index.html";
+}
+document.getElementById("b-inicio").addEventListener("click", ev => { ev.preventDefault(); irAlInicio(); });
+
 /* ======================= arranque ======================= */
-cargarEjemplo("full");
-lastSnap = snapshot();
+if (recuperarAutoguardado()) { fit(); setTimeout(() => toast("Se recuperó tu último diagrama"), 60); }
+else cargarEjemplo("full");
+lastSnap = snapshot(); undoStack = []; redoStack = [];
+autoActivo = true;
 window.addEventListener("resize", render);
 </script>
 </body>
