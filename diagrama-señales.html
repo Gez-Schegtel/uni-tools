@@ -394,7 +394,8 @@ function proximoUid(...listas) {
 function sanearIds(lista, prefijo, vistos) {
   let arreglados = 0;
   for (const o of lista) {
-    if (!o.id || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
+    // un id raro (que no sea texto simple) se renumera: también se usa adentro del HTML
+    if (typeof o.id !== "string" || !/^[A-Za-z0-9_-]+$/.test(o.id) || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
     vistos.add(o.id);
   }
   return arreglados;

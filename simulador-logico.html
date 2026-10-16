@@ -609,7 +609,8 @@ function proximoUid(...listas) {
 function sanearIds(lista, prefijo, vistos) {
   let arreglados = 0;
   for (const o of lista) {
-    if (!o.id || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
+    // un id raro (que no sea texto simple) se renumera: también se usa adentro del HTML
+    if (typeof o.id !== "string" || !/^[A-Za-z0-9_-]+$/.test(o.id) || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
     vistos.add(o.id);
   }
   return arreglados;
@@ -634,13 +635,26 @@ const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes,
    sin tocar lo que ya está bien. */
 const esObj = (o) => !!o && typeof o === "object" && !Array.isArray(o);
 const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+/* Los colores terminan escritos en el SVG y en el HTML del panel: sólo se aceptan #rgb … #rrggbbaa.
+   De un objeto de colores ({ relleno: "#fff", … }) quedan nada más las entradas válidas. */
+const colorValido = (c) => typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c);
+const soloColores = (o) => {
+  if (!esObj(o)) return undefined;
+  const r = {};
+  for (const k of Object.keys(o)) if (colorValido(o[k])) r[k] = o[k];
+  return Object.keys(r).length ? r : undefined;
+};
 function depurarNodos(lista) {
   return (Array.isArray(lista) ? lista : []).filter(n => esObj(n) && Object.prototype.hasOwnProperty.call(T, n.type)
       && (n.type !== "ff" || (typeof n.kind === "string" && Object.prototype.hasOwnProperty.call(BIESTABLES, n.kind) && Array.isArray(n.pins))))
     .map(n => {
       n.x = num(n.x, 0); n.y = num(n.y, 0);
       if (typeof n.label !== "string") n.label = "";
-      if (n.type === "marco") { n.w = num(n.w, T.marco.w); n.h = num(n.h, T.marco.h); }
+      if (n.type === "marco") {
+        n.w = num(n.w, T.marco.w); n.h = num(n.h, T.marco.h);
+        n.font = num(n.font, 12); n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6);
+      }
+      if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       if (T[n.type].var && !(Number.isInteger(n.pins) && n.pins >= 1)) n.pins = T[n.type].pins;
       return n;
     });
@@ -657,8 +671,12 @@ function depurarCables(lista, nodos) {
 const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
 function cargarDoc(d, desdeArchivo) {
   S.nodes = depurarNodos(d.nodes);
-  S.wires = (Array.isArray(d.wires) ? d.wires : []).filter(esObj).map(w => Object.assign({ variant: 0 }, w));
-  S.tema = Object.assign({}, TEMA_DEF, esObj(d.tema) ? d.tema : {});
+  S.wires = (Array.isArray(d.wires) ? d.wires : []).filter(esObj).map(w => {
+    w = Object.assign({ variant: 0 }, w);
+    if (w.color !== undefined) { w.color = soloColores(w.color); if (!w.color) delete w.color; }
+    return w;
+  });
+  S.tema = Object.assign({}, TEMA_DEF, soloColores(d.tema) || {});
   S.hoja = hojaValida(d.hoja);
   S.nombre = limpiarNombre(desdeArchivo || d.nombre || NOMBRE_DEF);
   S.nodes.forEach(n => { if (n.type === "ff") n.clkArranque = false; });

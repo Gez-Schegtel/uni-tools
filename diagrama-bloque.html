@@ -555,6 +555,15 @@ const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes, edges
    sin tocar lo que ya está bien. */
 const esObj = (o) => !!o && typeof o === "object" && !Array.isArray(o);
 const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+/* Los colores terminan escritos en el SVG y en el HTML del panel: sólo se aceptan #rgb … #rrggbbaa.
+   De un objeto de colores ({ relleno: "#fff", … }) quedan nada más las entradas válidas. */
+const colorValido = (c) => typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c);
+const soloColores = (o) => {
+  if (!esObj(o)) return undefined;
+  const r = {};
+  for (const k of Object.keys(o)) if (colorValido(o[k])) r[k] = o[k];
+  return Object.keys(r).length ? r : undefined;
+};
 function depurarNodos(lista) {
   return (Array.isArray(lista) ? lista : []).filter(n => esObj(n) && Object.prototype.hasOwnProperty.call(DEF, n.type))
     .map(n => {
@@ -564,6 +573,8 @@ function depurarNodos(lista) {
       n.font = num(n.font, d.font || 14);
       if (typeof n.label !== "string") n.label = d.label;
       if (n.type === "sum" && !esObj(n.signs)) n.signs = Object.assign({}, DEF.sum.signs);
+      if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); }
+      if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       return n;
     });
 }
@@ -572,13 +583,15 @@ function depurarFlechas(lista, nodos) {
   return (Array.isArray(lista) ? lista : []).filter(e => esObj(e) && esObj(e.from) && esObj(e.to)
     && ids.has(e.from.id) && ids.has(e.to.id)).map(e => {
       if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
+      if (e.width !== undefined) { e.width = num(e.width, undefined); if (e.width === undefined) delete e.width; }
+      if (e.color !== undefined) { e.color = soloColores(e.color); if (!e.color) delete e.color; }
       return e;
     });
 }
 const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
 function cargarDoc(d, desdeArchivo) {
   S.nodes = depurarNodos(d.nodes); S.edges = Array.isArray(d.edges) ? d.edges.filter(esObj) : [];
-  S.tema = Object.assign({}, TEMA_DEF, esObj(d.tema) ? d.tema : {});
+  S.tema = Object.assign({}, TEMA_DEF, soloColores(d.tema) || {});
   S.hoja = hojaValida(d.hoja);
   S.nombre = limpiarNombre(desdeArchivo || d.nombre || NOMBRE_DEF);
   uidc = proximoUid(S.nodes, S.edges);
@@ -733,7 +746,8 @@ function proximoUid(...listas) {
 function sanearIds(lista, prefijo, vistos) {
   let arreglados = 0;
   for (const o of lista) {
-    if (!o.id || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
+    // un id raro (que no sea texto simple) se renumera: también se usa adentro del HTML
+    if (typeof o.id !== "string" || !/^[A-Za-z0-9_-]+$/.test(o.id) || vistos.has(o.id)) { o.id = uid(prefijo); arreglados++; }
     vistos.add(o.id);
   }
   return arreglados;
