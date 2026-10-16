@@ -472,7 +472,7 @@ svg#canvas{
       El bloque se agranda solo para que entre.</td></tr>
     <tr><td><kbd>Supr</kbd></td><td>Borrar lo seleccionado</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>Deshacer / rehacer</td></tr>
-    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Copiar y pegar lo seleccionado (con sus flechas internas); cada pegado sale un poco más corrido</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>X</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Cortar (Ctrl+X) también vale: el primer pegado vuelve al mismo lugar. Copiar y pegar lo seleccionado (con sus flechas internas); cada pegado sale un poco más corrido</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Seleccionar todo</td></tr>
     <tr><td>Flechas</td><td>Mover 1 paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
@@ -2444,6 +2444,16 @@ function insertar(cop, desp) {
   S.sel = nodes.map(c => c.id); S.selEdges = [];
 }
 function duplicateSel() { insertar(tomarSeleccion(), S.grid * 2); }
+/* Cortar (Ctrl+X): copia y borra. El primer pegado después de cortar vuelve al mismo lugar;
+   los siguientes se van corriendo como siempre. Sólo se corta lo que se copia (la selección
+   y lo que la une por dentro): una flecha suelta seleccionada aparte no se borra. */
+function cortarSel() {
+  if (!S.sel.length) { toast("Elegí algo para cortar"); return; }
+  portapapeles = tomarSeleccion(); pegados = -1;
+  S.selEdges = []; deleteSel(); commit(); render();
+  const k = portapapeles.nodes.length;
+  toast(k === 1 ? "Cortado" : "Cortados " + k + " elementos");
+}
 function copiarSel() {
   if (!S.sel.length) { toast("Elegí algo para copiar"); return; }
   portapapeles = tomarSeleccion(); pegados = 0;
@@ -2711,6 +2721,7 @@ window.addEventListener("keydown", ev => {
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "c") { ev.preventDefault(); copiarSel(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "x") { ev.preventDefault(); cortarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "v") { ev.preventDefault(); pegarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "d") { ev.preventDefault(); duplicateSel(); commit(); render(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodes.map(n => n.id); render(); return; }

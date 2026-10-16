@@ -316,7 +316,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
     <tr><td><kbd>A</kbd></td><td>Análisis: ecuaciones, trayectorias, lazos, cofactores y función de transferencia</td></tr>
     <tr><td><kbd>Supr</kbd></td><td>Borrar lo seleccionado</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></td><td>Deshacer / rehacer</td></tr>
-    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Copiar y pegar los nodos seleccionados (con las ramas que los unen); cada pegado sale un poco más corrido</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>X</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Cortar (Ctrl+X) también vale: el primer pegado vuelve al mismo lugar. Copiar y pegar los nodos seleccionados (con las ramas que los unen); cada pegado sale un poco más corrido</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar los nodos seleccionados (con las ramas que los unen)</td></tr>
     <tr><td>Flechas</td><td>Mover un paso de grilla (<kbd>Shift</kbd> = 1 px)</td></tr>
     <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve la hoja (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom</td></tr>
@@ -1440,8 +1440,12 @@ function insertar(cop, desp) {
   const map = {}, nuevos = [];
   cop.nodos.forEach(n => {
     const c = clonar(n); c.id = uid("n"); map[n.id] = c.id; c.x += desp; c.y += desp;
-    c.nombre = proximoNombre(); c.tipo = "normal";
     S.nodos.push(c); nuevos.push(c.id);             // se agrega ya: proximoNombre mira lo que hay
+    // nombre y tipo se conservan si no chocan con otro nodo (p. ej. al pegar lo cortado): si no,
+    // nombre libre y nodo normal (entrada y salida hay una sola de cada una)
+    const otros = S.nodos.filter(o => o !== c);
+    if (otros.some(o => o.nombre === c.nombre)) c.nombre = proximoNombre();
+    if (c.tipo !== "normal" && otros.some(o => o.tipo === c.tipo)) c.tipo = "normal";
   });
   cop.ramas.forEach(r => {
     const c = clonar(r); c.id = uid("r"); c.de = map[r.de]; c.a = map[r.a];
@@ -1454,6 +1458,16 @@ function duplicar() {
   if (!S.sel.length) { toast("Elegí algo para duplicar"); return; }
   insertar(tomarSeleccion(), S.grid * 2);
   commit(); render();
+}
+/* Cortar (Ctrl+X): copia y borra. El primer pegado después de cortar vuelve al mismo lugar;
+   los siguientes se van corriendo como siempre. Sólo se corta lo que se copia (la selección
+   y lo que la une por dentro): una flecha suelta seleccionada aparte no se borra. */
+function cortarSel() {
+  if (!S.sel.length) { toast("Elegí algo para cortar"); return; }
+  portapapeles = tomarSeleccion(); pegados = -1;
+  S.selR = []; borrar(); commit(); render();
+  const k = portapapeles.nodos.length;
+  toast(k === 1 ? "Cortado" : "Cortados " + k + " nodos");
 }
 function copiarSel() {
   if (!S.sel.length) { toast("Elegí algo para copiar"); return; }
@@ -1768,6 +1782,7 @@ window.addEventListener("keydown", ev => {
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "c") { ev.preventDefault(); copiarSel(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && k === "x") { ev.preventDefault(); cortarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "d") { ev.preventDefault(); duplicar(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "v") { ev.preventDefault(); pegarSel(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "a") { ev.preventDefault(); S.sel = S.nodos.map(n => n.id); render(); return; }

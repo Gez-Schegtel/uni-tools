@@ -143,8 +143,11 @@ elemento suelto va por `style`, que sí le gana a la clase.
   foto (con clones profundos) y `insertar(foto, desp)` la mete con ids nuevos; Ctrl+C guarda la foto
   en `portapapeles`, Ctrl+V la inserta (cada pegado más corrido) y Ctrl+D hace las dos cosas. Al
   clonar un cable hay que conservar *todo* (`from.pin`, `to.pin`, colores): el duplicar viejo del
-  simulador armaba el cable a mano y perdía la pata de salida. En señales, los nodos pegados
-  reciben un nombre libre y vuelven a `tipo: "normal"`.
+  simulador armaba el cable a mano y perdía la pata de salida. Ctrl+X (`cortarSel`) copia, borra y
+  deja `pegados = -1` para que el primer pegado vuelva al mismo lugar. Al pegar, el nombre (señales)
+  o la letra de una entrada (simulador) se conservan si nadie más los usa, y en señales el tipo
+  entrada/salida también; si chocan, nombre libre y nodo normal (así copiar sigue renombrando y
+  cortar/pegar no).
 - **El lienzo no puede ser seleccionable ni arrastrable por el navegador** (`user-select:none` en
   `svg#canvas`, `dragstart`/`selectstart` cancelados y la selección limpiada al apretar). En Firefox,
   arrastrar sobre el SVG armaba una selección de texto y el siguiente arrastre arrancaba un
