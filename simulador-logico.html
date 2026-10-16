@@ -2537,6 +2537,13 @@ const ATAJOS = { "1": "and", "2": "or", "3": "not", "4": "nand", "5": "nor", "6"
 window.addEventListener("keydown", ev => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)) return;
   const k = ev.key.toLowerCase();
+  // Con una ventana abierta (ayuda, tabla de verdad, análisis, abrir) los atajos no tocan el
+  // diagrama de atrás: Ctrl+C copia el texto de la ventana, Supr no borra lo seleccionado, etc.
+  // Sólo Esc hace algo: cerrarla.
+  if (document.querySelector(".overlay.show")) {
+    if (k === "escape") document.querySelectorAll(".overlay.show").forEach(o => o.classList.remove("show"));
+    return;
+  }
   if (ev.code === "Space") { spaceDown = true; ev.preventDefault(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "z") { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
   if ((ev.ctrlKey || ev.metaKey) && k === "y") { ev.preventDefault(); redo(); return; }
