@@ -152,6 +152,20 @@ elemento suelto va por `style`, que sí le gana a la clase.
   selección quedaban trabados hasta hacer clic en otro elemento. En Chromium no se notaba. Cualquier
   gesto nuevo sobre el lienzo hay que probarlo en Firefox también (las pruebas automáticas sólo
   corren en Chromium).
+- **Atajos con una ventana abierta:** el `keydown` de cada herramienta corta apenas hay un
+  `.overlay.show` (sólo Esc la cierra). Sin eso, Ctrl+C no dejaba copiar el texto del análisis o de
+  la tabla, y Supr/Ctrl+V/Ctrl+Z tocaban el diagrama de atrás. Una ventana nueva tiene que usar la
+  clase `overlay` para quedar cubierta.
+- **Todo lo que viene de un archivo se valida antes de usarse en HTML:** ids
+  (`/^[A-Za-z0-9_-]+$/`, en `sanearIds`), colores (`colorValido`/`soloColores`) y números (`num`).
+  Un campo nuevo que termine adentro de un template `${…}` del panel o del SVG tiene que pasar por
+  `depurarNodos`/`cargarDoc` o por `esc()`; si no, un JSON armado puede ejecutar código.
+- **Mover la hoja no llama a `render()`**: `moverVista()` sólo cambia la transformación de
+  `#viewport`. Si algo dibujado pasara a depender de `S.pan`, hay que redibujarlo ahí también.
+  Arrastrar elementos sí re-rutea todo (las rutas dependen unas de otras), y con diagramas muy
+  grandes se nota.
+- **`simplify` del simulador da la expresión mínima** (menos términos, después menos literales):
+  esenciales, golosa como cota y búsqueda exacta con poda, con tope de 150 ms por salida.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.)
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y
