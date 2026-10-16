@@ -19,6 +19,35 @@ for (const [archivo, clave] of HERRAMIENTAS) {
       expect(errores).toEqual([]);
     });
 
+    test("mover la hoja (arrastre o rueda) no redibuja todo: sólo corre la vista", async ({ page }) => {
+      const errores = await abrir(page, archivo);
+      await page.evaluate(() => { window.__renders = 0; const r = render; render = function () { window.__renders++; return r.apply(this, arguments); }; });
+      const p = await page.evaluate(() => { const r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.right - 90, y: r.bottom - 90 }; });
+      const antes = await page.evaluate(() => [S.pan.x, S.pan.y]);
+      const dibujo = await page.evaluate(() => document.getElementById("viewport").innerHTML.length);
+      await page.keyboard.down("Control");
+      await page.mouse.move(p.x, p.y); await page.mouse.down();
+      await page.evaluate(() => { window.__renders = 0; });
+      await page.mouse.move(p.x - 40, p.y - 25, { steps: 10 });
+      const durante = await page.evaluate(() => window.__renders);
+      await page.mouse.up(); await page.keyboard.up("Control");
+      expect(durante).toBe(0);
+      const d = await page.evaluate(() => [S.pan.x, S.pan.y]);
+      expect([Math.round(d[0] - antes[0]), Math.round(d[1] - antes[1])]).toEqual([-40, -25]);
+      expect(await page.evaluate(() => document.getElementById("viewport").getAttribute("transform")))
+        .toBe(`translate(${d[0]},${d[1]}) scale(${await page.evaluate(() => S.zoom)})`);
+      // la rueda mueve sin redibujar; Ctrl + rueda (zoom) sí redibuja
+      await page.evaluate(() => { window.__renders = 0; });
+      await page.mouse.wheel(0, 120);
+      await expect.poll(() => page.evaluate(() => S.pan.y)).toBeLessThan(d[1]);
+      expect(await page.evaluate(() => window.__renders)).toBe(0);
+      await page.keyboard.down("Control"); await page.mouse.wheel(0, -120); await page.keyboard.up("Control");
+      await expect.poll(() => page.evaluate(() => window.__renders)).toBeGreaterThan(0);
+      // y lo dibujado sigue igual
+      expect(await page.evaluate(() => document.getElementById("viewport").innerHTML.length)).toBeGreaterThan(dibujo * 0.5);
+      expect(errores).toEqual([]);
+    });
+
     test("una selección de texto que haya quedado se limpia al apretar sobre el lienzo", async ({ page }) => {
       await abrir(page, archivo);
       await page.evaluate(() => { const s = getSelection(), r = document.createRange(); r.selectNodeContents(document.body); s.removeAllRanges(); s.addRange(r); });

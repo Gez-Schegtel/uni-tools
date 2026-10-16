@@ -652,10 +652,16 @@ function renderNodo(n) {
   }
   if (S.sel.includes(n.id)) el("rect", { class: "sel-box", x: -18, y: -30, width: 36, height: 48 }, g);
 }
+/* Mover la hoja (sin cambiar el zoom) no cambia nada de lo dibujado: alcanza con correr la vista.
+   Redibujar todo en cada movimiento del mouse re-ruteaba todas las flechas y con diagramas
+   grandes se trababa. */
+function moverVista() {
+  viewport.setAttribute("transform", `translate(${S.pan.x},${S.pan.y}) scale(${S.zoom})`);
+}
 function render() {
   acomodarRamas();
   gRamas.textContent = ""; gNodos.textContent = ""; gOv.textContent = "";
-  viewport.setAttribute("transform", `translate(${S.pan.x},${S.pan.y}) scale(${S.zoom})`);
+  moverVista();
   $("#gridbg").style.display = S.showGrid ? "" : "none";
   for (const r of S.ramas) renderRama(r);
   for (const n of S.nodos) renderNodo(n);
@@ -1658,7 +1664,7 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "pan") {
     S.pan.x = drag.p0.x + (ev.clientX - drag.x0);
     S.pan.y = drag.p0.y + (ev.clientY - drag.y0);
-    render(); return;
+    moverVista(); return;
   }
   if (drag.kind === "move") {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
@@ -1733,7 +1739,7 @@ svg.addEventListener("wheel", ev => {
     S.pan.y = my - (my - S.pan.y) * (S.zoom / antes);
   } else if (ev.shiftKey) { S.pan.x -= ev.deltaY; }
   else { S.pan.x -= ev.deltaX; S.pan.y -= ev.deltaY; }
-  render();
+  if (ev.ctrlKey || ev.metaKey) render(); else moverVista();   // el zoom sí cambia tamaños
 }, { passive: false });
 
 window.addEventListener("keydown", ev => {

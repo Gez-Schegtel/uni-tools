@@ -1459,12 +1459,18 @@ function renderTiradoresTramo() {
   }
 }
 let hoverNode = null;
+/* Mover la hoja (sin cambiar el zoom) no cambia nada de lo dibujado: alcanza con correr la vista.
+   Redibujar todo en cada movimiento del mouse re-ruteaba todas las flechas y con diagramas
+   grandes se trababa. */
+function moverVista() {
+  viewport.setAttribute("transform", `translate(${S.pan.x},${S.pan.y}) scale(${S.zoom})`);
+}
 function render() {
   actualizarTamaños();
   routeAll();
   aplicarTema();
   gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  viewport.setAttribute("transform", `translate(${S.pan.x},${S.pan.y}) scale(${S.zoom})`);
+  moverVista();
   $("#gridbg").style.display = S.showGrid ? "" : "none";
   // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
   for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
@@ -2229,7 +2235,7 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "pan") {
     S.pan.x = drag.px + (ev.clientX - drag.sx);
     S.pan.y = drag.py + (ev.clientY - drag.sy);
-    render(); return;
+    moverVista(); return;
   }
   if (drag.kind === "resize") {
     const n = getNode(drag.nodeId);
@@ -2358,7 +2364,7 @@ svg.addEventListener("wheel", ev => {
     S.pan.x -= dx * f;
     S.pan.y -= dy * f;
   }
-  render();
+  if (ev.ctrlKey || ev.metaKey) render(); else moverVista();   // el zoom sí cambia tamaños
 }, { passive: false });
 
 /* ======================= alta de elementos ======================= */
