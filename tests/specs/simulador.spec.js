@@ -182,3 +182,59 @@ test("Ctrl + clic izquierdo y arrastrar mueve la hoja; la rueda también", async
   await page.mouse.wheel(0, 100);
   await expect.poll(() => page.evaluate(() => S.pan.y)).toBeLessThan(d[1]);
 });
+
+test.describe("simplificación (Quine–McCluskey)", () => {
+  test("da la expresión mínima aunque la elección golosa no la encuentre", async ({ page }) => {
+    // Σm(0,1,3,4,7,9,11,13,15): la golosa daba A'C'D' + CD + AD + A'B'C' (10 literales);
+    // la mínima es A'C'D' + CD + AD + B'D (9 literales)
+    const e = await page.evaluate(() => simplify([0, 1, 3, 4, 7, 9, 11, 13, 15], 4));
+    expect(e.split(" + ").sort()).toEqual(["A'C'D'", "AD", "B'D", "CD"].sort());
+  });
+  test("es correcta y mínima para todas las funciones de 3 variables y una muestra de 4", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const evalua = (e, n, m) => e === "1" || (e !== "0" && e.split(" + ").some((t) => {
+        for (let i = 0; i < n; i++) {
+          const x = new RegExp(String.fromCharCode(65 + i) + "('?)").exec(t); if (!x) continue;
+          const bit = (m >> (n - 1 - i)) & 1; if (x[1] ? bit : !bit) return false;
+        }
+        return true;
+      }));
+      const cost = (e) => e === "0" || e === "1" ? [0, 0] : [e.split(" + ").length, (e.match(/[A-Z]/g) || []).length];
+      // mínimo por fuerza bruta: todas las combinaciones de cubos válidos, de menor a mayor
+      const minimo = (mt, n) => {
+        const N = 1 << n, cubos = [];
+        for (let mask = 0; mask < N; mask++) for (let bits = 0; bits < N; bits++) {
+          if (bits & mask) continue; let ok = true, cov = 0;
+          for (let m = 0; m < N; m++) if ((m & ~mask) === bits) { if (!mt.includes(m)) { ok = false; break; } cov |= 1 << m; }
+          if (ok) { let l = 0; for (let i = 0; i < n; i++) if (!(mask & (1 << i))) l++; cubos.push([cov, l]); }
+        }
+        const full = mt.reduce((a, m) => a | (1 << m), 0); let best = null;
+        for (let k = 1; k <= mt.length && !best; k++) (function rec(s, k, acc, lit) {
+          if (!k) { if (acc === full && (!best || lit < best[1])) best = [0, lit]; return; }
+          for (let i = s; i < cubos.length; i++) rec(i + 1, k - 1, acc | cubos[i][0], lit + cubos[i][1]);
+        })(0, k, 0, 0), best && (best[0] = k);
+        return best;
+      };
+      let malas = 0, noMin = 0, probadas = 0, sem = 5;
+      const azar = () => (sem = (sem * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+      const casos = [];
+      for (let f = 0; f < 256; f++) casos.push([3, [...Array(8).keys()].filter((m) => f >> m & 1)]);
+      for (let t = 0; t < 120; t++) casos.push([4, [...Array(16).keys()].filter(() => azar() < .5)]);
+      for (const [n, mt] of casos) {
+        const e = simplify(mt, n); probadas++;
+        for (let m = 0; m < (1 << n); m++) if (evalua(e, n, m) !== mt.includes(m)) { malas++; break; }
+        if (mt.length && mt.length < (1 << n)) { const c = cost(e), b = minimo(mt, n); if (c[0] > b[0] || (c[0] === b[0] && c[1] > b[1])) noMin++; }
+      }
+      return { probadas, malas, noMin };
+    });
+    expect(r).toEqual({ probadas: 376, malas: 0, noMin: 0 });
+  });
+  test("con 10 entradas sigue respondiendo rápido", async ({ page }) => {
+    const ms = await page.evaluate(() => {
+      let sem = 11; const azar = () => (sem = (sem * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+      const mt = [...Array(1024).keys()].filter(() => azar() < .5);
+      const t = performance.now(); simplify(mt, 10); return performance.now() - t;
+    });
+    expect(ms).toBeLessThan(2000);
+  });
+});

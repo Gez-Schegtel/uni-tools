@@ -1201,17 +1201,50 @@ function simplify(minterms, n, nombres) {
     if (c.length === 1 && !elegidos.includes(c[0])) elegidos.push(c[0]);
   }
   for (const p of elegidos) for (const m of Array.from(falta)) if (cubre(p, m)) falta.delete(m);
-  while (falta.size) {
+  // Lo que no cubren los esenciales se cubre con la combinación de primos más barata: menos
+  // términos y, a igual cantidad, menos literales. Primero una pasada golosa (rápida) que da una
+  // solución válida y sirve de cota; después una búsqueda exacta con poda que la mejora si puede.
+  // La búsqueda tiene un tope de tiempo (150 ms por salida) para no colgar la página con 9 o 10
+  // entradas: si se corta, queda lo mejor encontrado, que nunca es peor que la golosa.
+  const literales = (p) => { let c = 0; for (let i = 0; i < n; i++) if (!(p.mask & (1 << i))) c++; return c; };
+  const resto = primos.filter(p => !elegidos.includes(p));
+  const golosa = [], faltaG = new Set(falta);
+  while (faltaG.size) {
     let mejor = null, cuenta = -1;
-    for (const p of primos) {
-      if (elegidos.includes(p)) continue;
-      let c = 0; for (const m of falta) if (cubre(p, m)) c++;
-      if (c > cuenta) { cuenta = c; mejor = p; }
+    for (const p of resto) {
+      if (golosa.includes(p)) continue;
+      let c = 0; for (const m of faltaG) if (cubre(p, m)) c++;
+      if (c > cuenta || (c === cuenta && mejor && literales(p) < literales(mejor))) { cuenta = c; mejor = p; }
     }
     if (!mejor || cuenta <= 0) break;
-    elegidos.push(mejor);
-    for (const m of Array.from(falta)) if (cubre(mejor, m)) falta.delete(m);
+    golosa.push(mejor);
+    for (const m of Array.from(faltaG)) if (cubre(mejor, m)) faltaG.delete(m);
   }
+  let mejorSel = golosa, mejorLit = golosa.reduce((a, p) => a + literales(p), 0);
+  // datos precalculados para que cada paso sea barato: qué primos cubren cada minterm que falta
+  const porM = new Map();
+  for (const m of falta) porM.set(m, resto.filter(p => cubre(p, m)).sort((a, b) => literales(a) - literales(b)));
+  const limite = Date.now() + 150;                              // ms como mucho por salida
+  let pasos = 0;
+  const buscar = (faltan, sel, lit) => {
+    if ((++pasos & 255) === 0 && Date.now() > limite) pasos = -Infinity;
+    if (pasos < 0) return;
+    if (!faltan.size) {
+      if (sel.length < mejorSel.length || (sel.length === mejorSel.length && lit < mejorLit)) { mejorSel = sel.slice(); mejorLit = lit; }
+      return;
+    }
+    if (sel.length + 1 > mejorSel.length) return;               // hace falta al menos un término más
+    // se ramifica sobre el minterm con menos primos que lo cubren
+    let cands = null;
+    for (const m of faltan) { const c = porM.get(m); if (!cands || c.length < cands.length) { cands = c; if (c.length <= 1) break; } }
+    for (const p of cands) {
+      if (sel.length + 1 === mejorSel.length && lit + literales(p) >= mejorLit) continue;
+      const quedan = new Set(); for (const m of faltan) if (!cubre(p, m)) quedan.add(m);
+      sel.push(p); buscar(quedan, sel, lit + literales(p)); sel.pop();
+    }
+  };
+  if (falta.size && !faltaG.size) buscar(falta, [], 0);
+  elegidos.push(...mejorSel);
   return elegidos.map(p => termino(p, n, nombres)).join(" + ") || "0";
 }
 function termino(p, n, nombres) {
