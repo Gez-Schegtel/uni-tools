@@ -1,6 +1,6 @@
 ---
 name: uni-tools
-description: Arquitectura compartida y flujo de trabajo de las herramientas de uni-tools (diagrama-bloque.html, simulador-logico.html, diagrama-señales.html). Usar siempre que se toque cualquiera de esos archivos o index.html — agregar o cambiar elementos, compuertas, nodos, ramas, opciones del panel lateral, exportación, colores, área de impresión, atajos, gestos táctiles, o el análisis de Mason — y también al depurar algo raro en el lienzo, en el ruteo de flechas o en la exportación a SVG/PNG/JSON.
+description: Arquitectura compartida y flujo de trabajo de las herramientas de uni-tools (diagrama-bloque.html, simulador-logico.html, diagrama-señales.html) y de sus fuentes en src/ (src/comun, src/bloque, src/simulador, src/senales, src/construir.js). Usar siempre que se toque cualquiera de esos archivos o index.html — agregar o cambiar elementos, compuertas, nodos, ramas, opciones del panel lateral, exportación, colores, área de impresión, atajos, gestos táctiles, o el análisis de Mason — y también al depurar algo raro en el lienzo, en el ruteo de flechas o en la exportación a SVG/PNG/JSON.
 ---
 
 # Trabajar en las herramientas de uni-tools
@@ -10,14 +10,58 @@ leer cómo resuelve el problema la herramienta vecina antes de inventar algo nue
 simulador ya existe un panel de colores que anda, en el diagrama de señales conviene portarlo, no
 rediseñarlo.
 
-## El molde que comparten
+## Dónde está el código: `src/`, no la raíz
 
-Cada archivo tiene la misma estructura, de arriba hacia abajo: `<style>` con las variables de color
-y el dibujo, el `<header>` con los grupos plegables, el `<svg>` con sus capas, el `<aside>` del
-panel lateral, las ventanas modales, y un `<script>` con todo el JavaScript.
+Los HTML de la raíz **se arman** con `node src/construir.js` a partir de `src/` y no se editan a
+mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola vez en `src/comun/`:
 
-Dentro del script el orden también se repite: modelo → geometría → dibujo → interacción → historial
-→ exportar/abrir → barra → arranque.
+| archivo | qué tiene |
+|---|---|
+| `lienzo.js` | `"use strict"`, `NS`, `$`, `svg`, `viewport`, el arreglo de Firefox, `el()`, `esc()`, `toast()` |
+| `ids.js` | `uid`, `proximoUid`, `sanearIds`, `buscarNodo` |
+| `documento.js` | `esObj`, `num`, `limpiarNombre`, `abrirTexto`, `datosDeSVG`, `download`, `descargarPNG`, el esqueleto del SVG exportado (`svgExportado`, `fondoExportado`, `capasSinSeleccion`) y los botones de Archivo y la ventana Abrir |
+| `historial.js` | `snapshot`, `commit`, `undo`, `redo` |
+| `portapapeles.js` | `borrar`, `tomarSeleccion`, `duplicar`, `copiarSel`, `cortarSel`, `pegarSel` |
+| `vista.js` | `drag`, `spaceDown`, `toWorld`, `snapV`, `moverVista`, `encuadrar`, `instalarRueda`, botones de zoom |
+| `tactil.js` | dedos, pellizco, `cancelarDrag`, `soltarDedo` |
+| `doble-clic.js` | el editor sobre la hoja (`editarEnLaHoja`, `cerrarEditor`) y `detectarDobleClic` |
+| `teclado.js` | el `keydown` común (ventana abierta, Ctrl+Z/Y/C/X/V/D/A, Supr, F, ?, flechas) |
+| `panel.js` | `lock`, `enVivo`, `alClic`, `opciones` |
+| `barra.js` | deshacer/rehacer/borrar/duplicar, grupos plegables, panel lateral, cerrar ventanas con clic afuera |
+| `autoguardado.js` | autoguardado, «Inicio» y `arrancar()` |
+| `colores.js`, `hoja.js`, `recuadros.js`, `ortogonal.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, cajas/alineación y ruteo ortogonal (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`) |
+| `base.css`, `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos |
+
+Cada herramienta (`src/bloque/`, `src/simulador/`, `src/senales/`) tiene su `pagina.html` (marcado y
+**el orden** en que se pegan CSS y JS), `estilos.css` (después de `base.css`, así que manda),
+`herramienta.js` y sus propios módulos (modelo, geometría/ruteo, dibujo, panel, interacción,
+exportar, barra, ejemplos, arranque).
+
+### El contrato con el código común
+
+El código común no sabe cómo se llaman las cosas en cada herramienta: lo lee de `HERRAMIENTA`
+(en `herramienta.js`) y de funciones globales que cada una define.
+
+- `HERRAMIENTA`: `nombre`, `titulo`, `clave` (autoguardado), `nodos`/`conexiones`/`selConexiones`
+  (los nombres de las colecciones en `S`), `extremos(c)` (los dos ids que une una conexión),
+  `fondoPNG()`, `cancelarArrastre(drag)` opcional, y `textos` (las frases que cambian: «diagrama» o
+  «circuito», mensajes de abrir/guardar…).
+- Funciones que tiene que definir cada una: `render`, `renderInspector`, `docDatos`, `restore`,
+  `cargarDoc`, `insertar`, `fit`, `buildExportSVG`, `teclaPropia(k, ev)` (devuelve `true` si usó la
+  tecla), `alEscape`, y la constante `NOMBRE_DEF`. Bloques y simulador además `rectOf`, `rutaAuto`,
+  `sonHermanas`, `TEMA_DEF`, `NOMBRE_COLOR` y `aplicarTema`.
+
+Agregar algo para las tres (un atajo, un botón de la barra, un paso del historial) va en `comun/`
+una sola vez. Si sólo una lo necesita distinto, se resuelve con un dato en `HERRAMIENTA` o una
+función propia, no copiando el módulo.
+
+### El molde de cada página
+
+Cada página armada tiene la misma estructura, de arriba hacia abajo: `<style>` con las variables de
+color y el dibujo, el `<header>` con los grupos plegables, el `<svg>` con sus capas, el `<aside>` del
+panel lateral, las ventanas modales, y un único `<script>` clásico con todo el JavaScript (por eso
+los módulos se ven entre sí como globales y el orden de inclusión importa para las `const`/`let`
+que se usan al cargar).
 
 ### El estado vive en un solo objeto
 
@@ -70,17 +114,23 @@ apertura de archivos, mantener las dos defensas.
 
 ## Dónde se engancha cada cosa
 
+Todas las rutas de esta sección son de `src/<herramienta>/` salvo que diga `comun/`.
+
 **Un tipo de elemento nuevo** (compuerta, bloque, nodo): la tabla de tipos (`T` o `DEF`) con su
 tamaño y nombre → `makeNode`/`nuevoNodo` para los valores por defecto → una rama en `renderNode` →
 un ítem en la paleta y su ícono → el atajo de teclado → una sección en el panel si tiene opciones →
 y, si dibuja fuera del molde, `bodyW`/`bodyH`/`rectOf` y los pines.
 
 **Una opción del elemento seleccionado**: se arma el HTML en `renderInspector` y se conecta en
-`wireInspector`. Ahí `live(id, fn)` ya resuelve el patrón de "escribir en vivo, commitear al salir".
+`wireInspector` (`panel.js`). Ahí `enVivo(id, fn)` (`comun/panel.js`) ya resuelve el patrón de
+"escribir en vivo, commitear al salir", y `alClic(id, fn)` el de un botón que guarda y redibuja (no
+envolver con `alClic` algo que ya hace `commit()`+`render()`, como `duplicar`: en bloques eso dejaba
+un paso de deshacer vacío, porque el documento guarda la ruta de las flechas).
 
 **Algo que se guarda con el documento**: `docDatos()`, `cargarDoc()` y `snapshot()`/`restore()`.
 
-**Algo que se exporta**: `buildExportSVG()`. Ojo con que el simulador inlinea los estilos como
+**Algo que se exporta**: `buildExportSVG()` (`exportar.js`), que arma sobre `svgExportado()` de
+`comun/documento.js`. Ojo con que el simulador inlinea los estilos como
 atributos (`inlinarEstilos` + `ESTILO_EXPORT`), mientras que las otras dos mandan un `<style>` con
 variables CSS.
 
@@ -135,12 +185,13 @@ elemento suelto va por `style`, que sí le gana a la clase.
   vieja.
 - **El evento `dblclick` del navegador no llega nunca** sobre los elementos del lienzo: `render()`
   los reemplaza al apretar, el `click` se descarta y con él el `dblclick`. Las tres herramientas
-  detectan el doble clic a mano (`pointerdown` + `pointerup` en captura, 400 ms y 6 px) y despachan un
-  `dblclick` sintético, o llaman a `editarElemento` en el diagrama de bloques. No volver a depender
+  detectan el doble clic a mano con `detectarDobleClic` (`comun/doble-clic.js`: `pointerdown` +
+  `pointerup` en captura, 400 ms y 6 px) y despachan un `dblclick` sintético (`dobleClicSintetico`),
+  o llaman a `editarElemento` en el diagrama de bloques. No volver a depender
   del evento nativo ni agregar un segundo manejador de `dblclick` que enfoque el panel: le robaba
   el foco al editor sobre la hoja y lo cerraba.
-- **Copiar/pegar/duplicar comparten una sola ruta** en cada herramienta: `tomarSeleccion()` saca una
-  foto (con clones profundos) y `insertar(foto, desp)` la mete con ids nuevos; Ctrl+C guarda la foto
+- **Copiar/pegar/duplicar comparten una sola ruta** (`comun/portapapeles.js`): `tomarSeleccion()` saca una
+  foto (con clones profundos) y `insertar(foto, desp)` (el de cada herramienta) la mete con ids nuevos; Ctrl+C guarda la foto
   en `portapapeles`, Ctrl+V la inserta (cada pegado más corrido) y Ctrl+D hace las dos cosas. Al
   clonar un cable hay que conservar *todo* (`from.pin`, `to.pin`, colores): el duplicar viejo del
   simulador armaba el cable a mano y perdía la pata de salida. Ctrl+X (`cortarSel`) copia, borra y
@@ -153,9 +204,9 @@ elemento suelto va por `style`, que sí le gana a la clase.
   arrastrar sobre el SVG armaba una selección de texto y el siguiente arrastre arrancaba un
   "arrastrar y soltar" nativo que cancelaba los eventos del puntero: Ctrl+clic y la banda de
   selección quedaban trabados hasta hacer clic en otro elemento. En Chromium no se notaba. Cualquier
-  gesto nuevo sobre el lienzo hay que probarlo en Firefox también (las pruebas automáticas sólo
-  corren en Chromium).
-- **Atajos con una ventana abierta:** el `keydown` de cada herramienta corta apenas hay un
+  gesto nuevo sobre el lienzo hay que probarlo en Firefox también: la suite corre en Chromium y en
+  Firefox (`--project=firefox` para uno solo).
+- **Atajos con una ventana abierta:** el `keydown` común (`comun/teclado.js`) corta apenas hay un
   `.overlay.show` (sólo Esc la cierra). Sin eso, Ctrl+C no dejaba copiar el texto del análisis o de
   la tabla, y Supr/Ctrl+V/Ctrl+Z tocaban el diagrama de atrás. Una ventana nueva tiene que usar la
   clase `overlay` para quedar cubierta.
@@ -167,9 +218,26 @@ elemento suelto va por `style`, que sí le gana a la clase.
   `#viewport`. Si algo dibujado pasara a depender de `S.pan`, hay que redibujarlo ahí también.
   Arrastrar elementos sí re-rutea todo (las rutas dependen unas de otras), y con diagramas muy
   grandes se nota.
+- **Ecuaciones de los bloques: exponentes y subíndices sin llaves siguen a LaTeX.** `s^-1` lleva el
+  signo arriba (antes se perdía) y, de un nombre, sólo va la primera letra: `\omega_ns` es ω_n·s
+  (antes salía ω con subíndice «ns»); para varias letras, `H_{ent}`. La altura de un exponente o
+  subíndice cuenta lo que tenga adentro (una fracción en un exponente se salía del bloque).
+  `correccion.spec.js` evalúa lo dibujado contra lo escrito: si se toca el tipógrafo, tiene que pasar.
+- **Equivalente en bloques del diagrama de señales:** a un sumador entran a lo sumo tres ramas (la
+  pata derecha es la salida); si son más, se encadenan sumadores. La salida con varias ramas o con
+  un autolazo lleva un sumador antes del rótulo. Antes, la salida recibía varias flechas sin sumar y
+  con cinco ramas dos compartían pata y signo. `correccion.spec.js` resuelve el sistema del
+  equivalente y lo compara con el grafo.
+- **Mason supone que la entrada es una fuente.** Si al nodo de entrada le llegan ramas, la ventana
+  lo avisa (el resultado es la transferencia desde una señal inyectada en ese nodo).
+- **Encuadrar (F) deja libre el lugar de la paleta flotante** (`encuadrar` en `comun/vista.js`), salvo
+  en pantallas angostas: antes la paleta tapaba las entradas de los ejemplos del simulador.
+- **El ruteo no pasa por encima del origen ni del destino de la conexión** (`propios` en
+  `scorePath`): antes, en el latch SR los cables cruzaban las compuertas. La bifurcación de bloques
+  (un punto) queda afuera de esa regla.
 - **`simplify` del simulador da la expresión mínima** (menos términos, después menos literales):
   esenciales, golosa como cota y búsqueda exacta con poda, con tope de 150 ms por salida.
-- **Autoguardado y botón «Inicio».** Cada herramienta guarda `docDatos()` en `localStorage`
+- **Autoguardado y botón «Inicio»** (`comun/autoguardado.js`). Cada herramienta guarda `docDatos()` en `localStorage`
   (`uni-tools-autoguardado-bloque|simulador|senales`) 400 ms después de cada `commit()` y siempre en
   `pagehide`/`visibilitychange`; al arrancar, si hay algo guardado, lo carga con `cargarDoc` (la misma
   validación que un archivo) en vez del ejemplo. `autoActivo` evita guardar mientras arranca. «Inicio»
@@ -177,7 +245,14 @@ elemento suelto va por `style`, que sí le gana a la clase.
   el aviso dice que se pierde y `beforeunload` también avisa. La portada marca qué herramienta tiene
   algo guardado. Un campo nuevo del documento tiene que estar en `docDatos()` para sobrevivir.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
-  diff sale entero. (Esta nota decía CRLF; no era cierto.)
+  diff sale entero. (Esta nota decía CRLF; no era cierto.) `src/construir.js` rechaza una fuente con
+  CRLF.
+- **Un cambio en `src/` no se ve hasta armar.** Después de editar, `node src/construir.js`; si no,
+  se prueba (y se commitea) la página vieja. `tests/specs/fuentes.spec.js` lo detecta.
+- **El orden de `pagina.html` importa.** Es un solo `<script>`: una `const` usada al cargar (por
+  ejemplo `TEMA_DEF` en `comun/colores.js`, `T`/`BIESTABLES` al armar la paleta del simulador o
+  `HERRAMIENTA` en `comun/autoguardado.js`) tiene que estar incluida antes, o tira "Cannot access …
+  before initialization".
 - **Los archivos que se abren pasan por `cargarDoc`, que depura.** `depurarNodos` y
   `depurarCables`/`depurarFlechas`/`depurarRamas` (según la herramienta) tiran lo que no se puede
   dibujar —nodos que no son objetos, tipos desconocidos, cables a nodos o patas inexistentes— y
@@ -212,7 +287,8 @@ elemento lo selecciona, dos dedos hacen zoom) están en las tres.
 Estas herramientas son todo interfaz: un cambio que "parece bien" en el código puede verse mal o no
 hacer nada. Conviene mirarlo de verdad.
 
-1. Levantar `python -m http.server 8765` y abrir la página con `?v=N`.
+1. Armar las páginas (`node src/construir.js`), levantar `python -m http.server 8765` y abrir la
+   página con `?v=N`.
 2. Revisar que no haya errores de consola.
 3. Manejar la herramienta desde el navegador y **medir**, no estimar: posiciones de pines,
    separaciones entre elementos, colores calculados con `getComputedStyle`, el SVG exportado
@@ -220,7 +296,8 @@ hacer nada. Conviene mirarlo de verdad.
 4. Para lo que tiene respuesta conocida —la tabla de verdad de un sumador, el Δ de Mason de un lazo
    simple, la proporción de una A4— comparar contra el resultado esperado, no contra la intuición.
 5. Chequear que el JS parsea (el comando está en `CLAUDE.md`).
-6. Correr `cd tests && npm test`. Un bug nuevo se arregla con su prueba en `tests/specs/`; una
+6. Correr `cd tests && npm test`. Si se tocó `src/comun/`, la prueba vale para las tres: `comun.spec.js`
+   corre lo compartido una vez por herramienta. Un bug nuevo se arregla con su prueba en `tests/specs/`; una
    función nueva con al menos una prueba del camino feliz y una del archivo roto.
 
 Si se levantó un servidor con `.claude/launch.json`, borrar el archivo al terminar: no es parte del

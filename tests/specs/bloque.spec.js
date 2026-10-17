@@ -325,3 +325,43 @@ test.describe("mover la hoja", () => {
     expect((await pan(page))[0] - a2[0]).toBeCloseTo(-20, 0);
   });
 });
+
+test.describe("ecuaciones dentro de los bloques", () => {
+  /* El texto tal como se dibuja, con ^{…} y _{…} para lo que sube y lo que baja */
+  const dibujado = (page, label) => page.evaluate((label) => {
+    S.nodes = [makeNode("block", 200, 200, { label })]; S.edges = []; S.sel = []; render();
+    const g = document.querySelector(`[data-id="${S.nodes[0].id}"]`);
+    const base = g.querySelector("rect.n-shape").getBBox();
+    const textos = Array.from(g.querySelectorAll("text")).map((t) => ({ s: t.textContent, y: +t.getAttribute("y") }));
+    const y0 = textos[0].y;                                   // la línea de base: la del primer carácter
+    const dentro = Array.from(g.children).filter((e) => e.tagName !== "rect").every((e) => {
+      const q = e.getBBox(); return q.x >= base.x - 0.5 && q.x + q.width <= base.x + base.width + 0.5 && q.y >= base.y - 0.5 && q.y + q.height <= base.y + base.height + 0.5;
+    });
+    return { textos: textos.map((t) => t.s), alturas: textos.map((t) => Math.round(t.y - y0)), dentro };
+  }, label);
+
+  test("un exponente negativo sin llaves conserva el signo: s^-1 y e^-sT", async ({ page }) => {
+    const a = await dibujado(page, "s^-1");
+    expect(a.textos).toEqual(["s", "−", "1"]);
+    expect(a.alturas[1]).toBeLessThan(0);                     // el − y el 1 van arriba
+    expect(a.alturas[2]).toBeLessThan(0);
+    const b = await dibujado(page, "e^-sT");
+    expect(b.textos).toEqual(["e", "−", "s", "T"]);            // e^{−s}·T, como en LaTeX
+    expect(b.alturas.slice(1, 3).every((h) => h < 0)).toBe(true);
+    expect(b.alturas[3]).toBe(0);
+  });
+  test("un subíndice sin llaves es una sola letra: \\omega_ns es ω_n·s", async ({ page }) => {
+    const a = await dibujado(page, "s^2+2\\zeta\\omega_ns+\\omega_n^2");
+    const i = a.textos.indexOf("n");
+    expect(a.textos.slice(i, i + 2)).toEqual(["n", "s"]);       // la n abajo y la s en la línea
+    expect(a.alturas[i]).toBeGreaterThan(0);
+    expect(a.alturas[i + 1]).toBe(0);
+    const b = await dibujado(page, "H_{ent}");
+    expect(b.textos).toEqual(["H", "ent"]);                    // con llaves, varias letras
+  });
+  test("una fracción adentro de un exponente entra en el bloque", async ({ page }) => {
+    expect((await dibujado(page, "s^{1/(s+1)}")).dentro).toBe(true);
+    expect((await dibujado(page, "s^{2*G_3/\\frac{G1}{2}}")).dentro).toBe(true);
+    expect((await dibujado(page, "s^{\\frac{3.5}{s/s}}")).dentro).toBe(true);
+  });
+});

@@ -238,3 +238,23 @@ test.describe("simplificación (Quine–McCluskey)", () => {
     expect(ms).toBeLessThan(2000);
   });
 });
+
+test("los cables no pasan por encima de la compuerta de la que salen o a la que llegan", async ({ page }) => {
+  // en el latch SR los cables se cruzan de una NOR a la otra: tienen que rodearlas
+  const cruces = await page.evaluate(() => {
+    const malos = [];
+    for (const ej of ["half", "full", "latch", "mux", "cont", "regd"]) {
+      cargarEjemplo(ej); render();
+      for (const w of S.wires) for (const id of [w.from.id, w.to.id]) {
+        const R = rectOf(getNode(id));
+        for (let i = 0; i + 1 < w.pts.length; i++) {
+          const p = w.pts[i], q = w.pts[i + 1];
+          if (Math.max(p.x, q.x) > R.l + 1 && Math.min(p.x, q.x) < R.r - 1 && Math.max(p.y, q.y) > R.t + 1 && Math.min(p.y, q.y) < R.b - 1)
+            malos.push(ej + ": " + w.id);
+        }
+      }
+    }
+    return malos;
+  });
+  expect(cruces).toEqual([]);
+});

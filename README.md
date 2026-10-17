@@ -31,21 +31,31 @@ Lo que tienen en común las tres:
 
 ## Cómo está hecho
 
-Cada herramienta es **un solo archivo HTML autocontenido**: el CSS, el JavaScript y los íconos viven adentro. No hay build, ni `npm`, ni frameworks, ni CDN. Por eso funcionan sin internet y se pueden mandar por mail o llevar en un pendrive. Las notas de arquitectura para quien quiera tocar el código están en [`CLAUDE.md`](CLAUDE.md) y en [`.claude/skills/uni-tools/SKILL.md`](.claude/skills/uni-tools/SKILL.md).
+Cada herramienta que se publica es **un solo archivo HTML autocontenido**: el CSS, el JavaScript y los íconos viven adentro. No hay frameworks, ni CDN, ni dependencias. Por eso funcionan sin internet y se pueden mandar por mail o llevar en un pendrive.
+
+Esos HTML se **arman** a partir de las fuentes de [`src/`](src/): lo que comparten las tres (deshacer, copiar y pegar, teclado, zoom, gestos táctiles, abrir y exportar, autoguardado, colores, área de impresión…) vive una sola vez en `src/comun/`, y lo propio de cada una en `src/bloque/`, `src/simulador/` y `src/senales/`. Después de tocar una fuente:
+
+```bash
+node src/construir.js          # vuelve a armar las páginas de la raíz (Node pelado, sin npm)
+```
+
+Las páginas armadas se commitean junto con sus fuentes, así que el sitio se sigue publicando tal cual y el doble clic sigue andando. Las notas de arquitectura para quien quiera tocar el código están en [`CLAUDE.md`](CLAUDE.md) y en [`.claude/skills/uni-tools/SKILL.md`](.claude/skills/uni-tools/SKILL.md).
 
 ## Pruebas
 
 Hay una suite automática con Playwright en `tests/`. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features` y en cada pull request. Para correrla en tu compu:
 
 ```bash
-cd tests && npm install && npx playwright install chromium && npm test
+cd tests && npm install && npx playwright install chromium firefox && npm test
 ```
+
+Las pruebas corren sobre las páginas armadas, así que primero hay que correr `node src/construir.js`. Si alguna página quedó desactualizada respecto de `src/`, lo avisan tanto las pruebas como el workflow de GitHub.
 
 `npm` se usa **sólo** para las pruebas; las herramientas siguen siendo HTML sueltos. Detalles en [`tests/README.md`](tests/README.md).
 
 ## Contribuir
 
-Los cambios van a la rama `features`; `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Antes de mandar algo, correr las pruebas.
+Los cambios van a la rama `features`; `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Los cambios se hacen en `src/` (nunca a mano en los HTML de la raíz): después correr `node src/construir.js` y las pruebas.
 
 ## Licencia
 

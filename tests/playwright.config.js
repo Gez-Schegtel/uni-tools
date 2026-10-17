@@ -13,9 +13,15 @@ module.exports = defineConfig({
     baseURL: `http://localhost:${PUERTO}`,
     viewport: { width: 1400, height: 850 },
     trace: "retain-on-failure",
-    // CHROMIUM_PATH sirve para usar un Chromium ya instalado (útil sin internet).
-    launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
   },
+  // En Chromium y en Firefox: hubo errores que sólo aparecían en Firefox (el lienzo trabado).
+  // «npx playwright test --project=chromium» corre uno solo.
+  projects: [
+    { name: "chromium", use: { browserName: "chromium",
+      // CHROMIUM_PATH sirve para usar un Chromium ya instalado (útil sin internet).
+      launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {} } },
+    { name: "firefox", use: { browserName: "firefox" } },
+  ],
   webServer: {
     command: "node servidor.js",
     url: `http://localhost:${PUERTO}/index.html`,

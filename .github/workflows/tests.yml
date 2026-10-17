@@ -31,6 +31,9 @@ jobs:
           cache: npm
           cache-dependency-path: tests/package-lock.json
 
+      - name: Las páginas están al día con src/
+        run: node src/construir.js --comprobar
+
       - name: El JavaScript de cada página parsea
         run: |
           node -e "
@@ -46,9 +49,9 @@ jobs:
         working-directory: tests
         run: npm ci
 
-      - name: Instalar Chromium
+      - name: Instalar Chromium y Firefox
         working-directory: tests
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
 
       - name: Correr las pruebas
         working-directory: tests

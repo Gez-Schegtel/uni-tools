@@ -1,7 +1,7 @@
 # Pruebas de uni-tools
 
 Suite automática con [Playwright Test](https://playwright.dev/docs/intro). Abre las páginas reales en
-Chromium, las maneja como un usuario (teclas, clicks, arrastres) y consulta el estado interno (`S`,
+Chromium y en Firefox, las maneja como un usuario (teclas, clicks, arrastres) y consulta el estado interno (`S`,
 `truthTable()`, `analizar()`…) para comprobar resultados.
 
 ## Por qué hay un `package.json` acá y no en la raíz
@@ -16,7 +16,7 @@ pero `node_modules/` no se versiona —ver `.gitignore`— y nada del sitio lo r
 ```bash
 cd tests
 npm install                        # una vez
-npx playwright install chromium    # una vez (en Linux limpio: --with-deps)
+npx playwright install chromium firefox   # una vez (en Linux limpio: --with-deps)
 npm test                           # toda la suite
 npx playwright test bloque         # sólo un archivo (por nombre)
 npx playwright test -g "Mason"     # sólo lo que mencione "Mason"
@@ -38,12 +38,18 @@ Puerto del servidor de prueba: `PUERTO=9000 npm test` (por defecto 8780).
 | `cortar.spec.js` | Ctrl+X en las tres herramientas: borra, el primer pegado vuelve al mismo lugar, conserva nombres, se deshace |
 | `inicio.spec.js` | botón Inicio, aviso antes de salir, autoguardado (recuperar al volver o recargar, archivo roto, una copia por herramienta) y aviso en la portada |
 | `ventanas.spec.js` | con una ventana abierta Ctrl+C copia su texto y los atajos no tocan el diagrama de atrás; Esc la cierra |
+| `comun.spec.js` | lo compartido de `src/comun/`, una vez por herramienta: Ctrl+D sin selección avisa y no toca nada, duplicar es un solo paso de deshacer, `?` abre la ayuda, Shift/Ctrl + rueda, nombres de archivo válidos, al encuadrar la paleta no tapa nada, ventana Abrir |
+| `correccion.spec.js` | exactitud contra referencias independientes (lo esperado no sale del código de la app): Mason contra resolver el sistema lineal de grafos al azar (transferencia, ecuaciones, lazos, trayectorias y el equivalente en bloques), simplificación equivalente y mínima, circuitos al azar (tabla y expresión mostradas), biestables contra el modelo de libro y ecuaciones de bloques (lo dibujado vale lo escrito y entra en el bloque) |
+| `fuentes.spec.js` | las páginas de la raíz coinciden con lo que arma `src/construir.js` y no quedan restos del armado (directivas, `{{parámetros}}`, CRLF, `<script src>`) |
 | `senales.spec.js` | regla de Mason (lazos que se tocan / no se tocan, varias trayectorias, valor numérico), equivalente en bloques abre en `diagrama-bloque`, deshacer/rehacer |
 
-`lienzo.spec.js` repite, en las tres herramientas, el flujo copiar → pegar → mover → deseleccionar → Ctrl+clic / banda, y comprueba que el navegador no pueda seleccionar ni arrastrar el lienzo (causa de un bloqueo que sólo se veía en Firefox). Las pruebas corren sólo en Chromium: lo de Firefox se verifica a mano.
+`lienzo.spec.js` repite, en las tres herramientas, el flujo copiar → pegar → mover → deseleccionar → Ctrl+clic / banda, y comprueba que el navegador no pueda seleccionar ni arrastrar el lienzo (causa de un bloqueo que sólo se veía en Firefox). Desde 2026-10 la suite entera corre también en Firefox (`--project=firefox`).
 
 `ayudas.js` tiene las utilidades comunes (`abrir`, `aPantalla`, `arrastrar`, `abrirTexto`).
 Cada test que usa `abrir()` falla además si la página tiró algún error de consola.
+
+Las pruebas corren contra las páginas **armadas** de la raíz: después de tocar `src/`, correr
+`node src/construir.js` antes de `npm test` (si no, `fuentes.spec.js` lo avisa).
 
 ## Agregar una prueba
 
@@ -57,8 +63,9 @@ Cada test que usa `abrir()` falla además si la página tiró algún error de co
 ## En GitHub Actions
 
 `.github/workflows/tests.yml` corre en push a `main` y `features`, en pull requests y a mano
-(*Actions → Pruebas → Run workflow*). Pasos: verifica que el JS de cada página parsea, instala
-dependencias (`npm ci`, usa `package-lock.json`), instala Chromium y corre la suite. Si algo falla,
+(*Actions → Pruebas → Run workflow*). Pasos: verifica que las páginas estén al día con `src/`
+(`node src/construir.js --comprobar`), que el JS de cada página parsea, instala
+dependencias (`npm ci`, usa `package-lock.json`), instala Chromium y Firefox y corre la suite en los dos. Si algo falla,
 sube el reporte y las trazas como artefacto (`reporte-playwright`, 14 días). **No despliega**: eso
 sigue siendo `static.yml`, que publica al pushear a `main`.
 

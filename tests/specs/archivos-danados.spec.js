@@ -103,3 +103,20 @@ for (const [archivo, doc] of Object.entries(DOCS)) {
     expect(errores).toEqual([]);
   });
 }
+
+/* Un color corto (#123) es válido en CSS pero el selector de color sólo acepta #rrggbb: el panel lo
+   muestra expandido. Uno de 5 cifras no es un color: se descarta y queda el de siempre. */
+for (const archivo of ["diagrama-bloque.html", "simulador-logico.html"]) {
+  test(`${archivo}: colores cortos se muestran bien y los inválidos se descartan`, async ({ page }) => {
+    const errores = await abrir(page, archivo);
+    await page.evaluate(() => {
+      const d = JSON.parse(JSON.stringify(docDatos()));
+      d.tema = { borde: "#123", relleno: "#12345", texto: "#ff000080" };
+      abrirTexto(JSON.stringify(d), "colores.json"); S.sel = []; render();
+    });
+    const t = await page.evaluate(() => [S.tema.borde, S.tema.relleno, S.tema.texto,
+      document.getElementById("t-borde").value, document.getElementById("t-texto").value]);
+    expect(t).toEqual(["#123", "#ffffff", "#ff000080", "#112233", "#ff0000"]);
+    expect(errores).toEqual([]);
+  });
+}

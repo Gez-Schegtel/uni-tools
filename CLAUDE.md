@@ -15,16 +15,35 @@ circuitos lógicos, se simulan y se exportan. Publicado con GitHub Pages desde `
 
 ## La regla que manda sobre todo lo demás
 
-**Cada herramienta es un único archivo HTML autocontenido**: el CSS, el JavaScript y los íconos SVG
-viven adentro. Sin build, sin `npm`, sin dependencias, sin frameworks, sin CDN. Se abre con doble
-clic y funciona, también sin internet.
+**Cada herramienta que se publica es un único archivo HTML autocontenido**: el CSS, el JavaScript y
+los íconos SVG viven adentro. Sin `npm`, sin dependencias, sin frameworks, sin CDN. Se abre con
+doble clic y funciona, también sin internet.
 
 Esto no es casualidad ni provisorio: es lo que hace que la herramienta se pueda mandar por mail,
 abrir en la compu de la facultad o guardar en un pendrive. Cualquier propuesta que rompa esto
-—separar el JS, agregar una librería, meter un bundler— hay que conversarla antes, no darla por
-supuesta.
+—un `<script src>` externo, una librería, un bundler con dependencias— hay que conversarla antes, no
+darla por supuesta.
 
 Las únicas dependencias externas son las tres imágenes del logo, y sólo para mostrarse.
+
+## Las fuentes viven en `src/` y las páginas se arman
+
+Para no repetir código entre las tres herramientas (acordado con el dueño en octubre de 2026), los
+HTML de la raíz **se arman** a partir de `src/` con `node src/construir.js`: Node pelado, sin npm ni
+dependencias. El script pega los pedazos en un solo HTML; no transforma ni minifica nada.
+
+| carpeta | qué tiene |
+|---|---|
+| `src/comun/` | lo compartido: `base.css`, pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y ruteo ortogonal) |
+| `src/bloque/`, `src/simulador/`, `src/senales/` | lo propio de cada una: `pagina.html` (la plantilla, que dice qué se incluye y en qué orden), `estilos.css`, `herramienta.js` (lo que el código común necesita saber de ella) y sus módulos |
+
+- **Nunca se editan a mano los HTML de la raíz**: se edita `src/` y se corre `node src/construir.js`.
+  Las páginas armadas se commitean junto con sus fuentes (Pages publica la raíz tal cual).
+- `node src/construir.js --comprobar` falla si alguna página no coincide con sus fuentes; lo corren
+  el workflow y `tests/specs/fuentes.spec.js`.
+- Todo el JS de una página termina en un único `<script>` clásico, así que los módulos comparten el
+  ámbito global como antes: importa el **orden** de inclusión en `pagina.html` para las
+  `const`/`let` que se usan al cargar.
 
 ## Cómo se trabaja
 
@@ -33,6 +52,7 @@ Las únicas dependencias externas son las tres imágenes del logo, y sólo para 
 - Commitear y pushear **sólo cuando se pide**.
 - El código y los comentarios están **en español**, igual que la interfaz. Los nombres de variables
   y funciones también (`nodos`, `ramas`, `acomodarRamas`, `esMarco`).
+- Los cambios se hacen en `src/` y después `node src/construir.js` (ver arriba).
 - Los archivos usan fin de línea LF. Si un script parchea y el diff sale entero, casi seguro
   convirtió los saltos de línea: hay que respetarlos.
 - **No se rompe lo que anda.** Todo cambio se verifica con la suite de pruebas (ver abajo) antes de
@@ -49,8 +69,9 @@ python -m http.server 8765
 Y al recargar conviene agregar `?v=2` a la URL, porque el navegador cachea el HTML y es fácil pasar
 media hora depurando una versión vieja.
 
-Antes de dar algo por terminado, correr las pruebas (sección siguiente) y chequear que el JS parsea
-(el workflow de Actions hace lo mismo con las tres páginas):
+Antes de dar algo por terminado, armar las páginas (`node src/construir.js`), correr las pruebas
+(sección siguiente) y chequear que el JS parsea (el workflow de Actions hace lo mismo con las tres
+páginas):
 
 ```bash
 node -e "const s=require('fs').readFileSync('diagrama-bloque.html','utf8');new (require('vm').Script)(s.match(/<script>\r?\n([\s\S]*?)<\/script>/)[1]);console.log('OK')"
@@ -63,7 +84,7 @@ Viven en `tests/` (Playwright, Node ≥ 18) y se corren con:
 ```bash
 cd tests
 npm install                       # una sola vez
-npx playwright install chromium   # una sola vez (o usar CHROMIUM_PATH=/ruta/a/chromium)
+npx playwright install chromium firefox   # una sola vez (o usar CHROMIUM_PATH=/ruta/a/chromium)
 npm test
 ```
 
@@ -72,8 +93,8 @@ corren solas con `.github/workflows/tests.yml` en cada push a `main` o `features
 request. Detalle de qué cubre cada spec y cómo agregar pruebas: `tests/README.md`.
 
 **Esto no rompe la regla de arriba:** `npm` existe únicamente dentro de `tests/`, es sólo para
-desarrollo, y las herramientas siguen siendo HTML sueltos sin build ni dependencias. La raíz del
-repo no tiene `package.json`.
+desarrollo, y las herramientas siguen siendo HTML sueltos sin dependencias. La raíz del repo no
+tiene `package.json` (`src/construir.js` es Node sin paquetes).
 
 ## Más detalle
 
