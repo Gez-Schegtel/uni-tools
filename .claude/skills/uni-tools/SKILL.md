@@ -17,7 +17,7 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 
 | archivo | qué tiene |
 |---|---|
-| `lienzo.js` | `"use strict"`, `NS`, `$`, `svg`, `viewport`, el arreglo de Firefox, `capturarPuntero()`, `el()`, `esc()`, `toast()` |
+| `lienzo.js` | `"use strict"`, `NS`, `$`, `svg`, `viewport`, el arreglo de Firefox, `capturarPuntero()`, `el()`, `esc()`, `toast()` (dura según el largo del mensaje y se cierra con la cruz) |
 | `ids.js` | `uid`, `proximoUid`, `sanearIds`, `buscarNodo` |
 | `documento.js` | `esObj`, `num`, `limpiarNombre`, `abrirTexto`, `datosDeSVG`, `download`, `descargarPNG`, el esqueleto del SVG exportado (`svgExportado`, `fondoExportado`, `capasSinSeleccion`) y los botones de Archivo y la ventana Abrir |
 | `historial.js` | `snapshot`, `commit`, `undo`, `redo` |

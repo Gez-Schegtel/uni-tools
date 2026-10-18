@@ -38,7 +38,25 @@ function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
-function toast(m) {
-  const t = $("#toast"); t.textContent = m; t.classList.add("show");
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1900);
+/* El aviso se puede cerrar con su cruz y se va solo pasado un rato: más tiempo
+   cuanto más haya que leer (y un tope), que un mensaje largo no da para dos segundos */
+function ocultarToast() {
+  clearTimeout(toast._t);
+  const t = $("#toast");
+  if (t) t.classList.remove("show");
+}
+function toast(m, ms) {
+  const t = $("#toast");
+  if (!t.firstChild) {                             // el texto y la cruz se arman una sola vez
+    const s = document.createElement("span"); s.className = "txt"; t.appendChild(s);
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "x"; x.title = "Cerrar";
+    x.setAttribute("aria-label", "Cerrar aviso");
+    x.onclick = ocultarToast;
+    t.appendChild(x);
+  }
+  t.firstChild.textContent = m;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(ocultarToast, ms || Math.min(7000, 1700 + 55 * String(m).length));
 }

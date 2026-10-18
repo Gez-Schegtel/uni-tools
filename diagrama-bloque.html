@@ -110,9 +110,16 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
 #status .k{color:var(--ink-2)}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;font-size:12px;padding:8px 14px;border-radius:8px;
+  background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
+  display:flex;align-items:center;gap:8px;
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* la cruz: sólo se puede apretar mientras el aviso está a la vista */
+#toast .x{flex:none;width:18px;height:18px;padding:0;border:0;border-radius:4px;background:transparent;
+  color:rgba(255,255,255,.75);font:inherit;line-height:1;cursor:pointer;pointer-events:none}
+#toast .x::before{content:"✕";font-size:11px}
+#toast.show .x{pointer-events:auto}
+#toast .x:hover{background:rgba(255,255,255,.16);color:#fff}
 /* ---------- ventanas ---------- */
 .overlay{position:fixed;inset:0;background:rgba(18,24,31,.45);display:none;align-items:center;
   justify-content:center;z-index:40;padding:20px}
@@ -520,9 +527,27 @@ function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
-function toast(m) {
-  const t = $("#toast"); t.textContent = m; t.classList.add("show");
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1900);
+/* El aviso se puede cerrar con su cruz y se va solo pasado un rato: más tiempo
+   cuanto más haya que leer (y un tope), que un mensaje largo no da para dos segundos */
+function ocultarToast() {
+  clearTimeout(toast._t);
+  const t = $("#toast");
+  if (t) t.classList.remove("show");
+}
+function toast(m, ms) {
+  const t = $("#toast");
+  if (!t.firstChild) {                             // el texto y la cruz se arman una sola vez
+    const s = document.createElement("span"); s.className = "txt"; t.appendChild(s);
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "x"; x.title = "Cerrar";
+    x.setAttribute("aria-label", "Cerrar aviso");
+    x.onclick = ocultarToast;
+    t.appendChild(x);
+  }
+  t.firstChild.textContent = m;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(ocultarToast, ms || Math.min(7000, 1700 + 55 * String(m).length));
 }
 /* ======================= diagramas de bloques =======================
    Lo que el código común (src/comun) necesita saber de esta herramienta. */

@@ -29,6 +29,41 @@ for (const h of HERRAMIENTAS) {
       expect(despues).toEqual(antes);
     });
 
+    test("el aviso se queda el tiempo suficiente para leerlo y la cruz lo cierra", async ({ page }) => {
+      // Cuánto dura el aviso se mide adentro de la página (con la suite en paralelo, el
+      // driver puede hablar con el navegador más tarde y correr cualquier espera fija)
+      await page.evaluate(() => {
+        const t = document.getElementById("toast");
+        window.__aviso = { aparece: 0, seVa: 0 };
+        const vigilar = () => {
+          const ahora = performance.now();
+          if (t.classList.contains("show") && !window.__aviso.aparece) window.__aviso.aparece = ahora;
+          else if (window.__aviso.aparece && !t.classList.contains("show") && !window.__aviso.seVa) window.__aviso.seVa = ahora;
+          requestAnimationFrame(vigilar);
+        };
+        vigilar();
+      });
+      await page.evaluate(() => { S.sel = []; render(); });
+      await page.keyboard.press("Control+d");
+      const duracion = await page.evaluate(() => new Promise((res) => {
+        const iv = setInterval(() => {
+          if (window.__aviso.seVa) { clearInterval(iv); res(Math.round(window.__aviso.seVa - window.__aviso.aparece)); }
+        }, 50);
+        setTimeout(() => { clearInterval(iv); res(-1); }, 9000);
+      }));
+      expect(duracion).toBeGreaterThanOrEqual(2600);        // el mensaje corto ya dura ~3 s (antes: 1900 ms)
+      // la cruz: con el aviso a la vista se puede apretar y lo cierra; oculta, no se come clics
+      const cruz = await page.evaluate(() => {
+        const t = document.getElementById("toast");
+        toast("Un aviso de prueba", 60000);
+        const x = t.querySelector(".x");
+        const visible = getComputedStyle(x).pointerEvents;
+        x.click();
+        return [visible, getComputedStyle(x).pointerEvents, t.classList.contains("show")];
+      });
+      expect(cruz).toEqual(["auto", "none", false]);
+    });
+
     test("duplicar deja un solo paso en el historial: un Ctrl+Z lo deshace entero", async ({ page }) => {
       const [n0, deshacer0] = await page.evaluate((l) => { S.sel = [S[l][0].id, S[l][1].id]; render(); return [S[l].length, undoStack.length]; }, h.lista);
       // por el botón del panel donde lo hay (bloques y simulador), si no por el teclado
