@@ -1,0 +1,209 @@
+{
+  "proyecto": "uni-tools",
+  "version": "2.0.0-dev",
+  "ultima_actualizacion": "2026-10-18T01:05:00-03:00",
+  "metodologia": "Spec-Driven Development (SDD)",
+  "fuente_de_verdad": "docs/",
+  "resumen": {
+    "total_tareas": 18,
+    "completadas": 4,
+    "en_progreso": 0,
+    "pendientes": 14,
+    "bloqueadas": 0
+  },
+  "fases": [
+    {
+      "id": "fase-0",
+      "nombre": "Fase 0: Configuración y Gobernanza SDD",
+      "estado": "completado",
+      "tareas": [
+        {
+          "id": "T0.1",
+          "titulo": "Relevamiento integral del código base legacy",
+          "archivo_asociado": "docs/resumen_actual.md",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["analisis", "documentacion"]
+        },
+        {
+          "id": "T0.2",
+          "titulo": "Establecer reglas operativas y fuente de verdad en GEMINI.md",
+          "archivo_asociado": "GEMINI.md",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["gobernanza", "reglas"]
+        },
+        {
+          "id": "T0.3",
+          "titulo": "Estructurar directorios temáticos de especificaciones en docs/specs/",
+          "archivo_asociado": "docs/specs/",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["sdd", "specs"]
+        },
+        {
+          "id": "T0.4",
+          "titulo": "Crear bitácora status.md, tablero.json y visualizador CLI",
+          "archivo_asociado": "docs/status.md",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["control", "dashboard"]
+        }
+      ]
+    },
+    {
+      "id": "fase-1",
+      "nombre": "Fase 1: Especificaciones del Rediseño UI/UX",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T1.1",
+          "titulo": "Especificación de nuevo layout, lienzo y navegación natural",
+          "archivo_asociado": "docs/specs/ui/layout.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["ui", "ux", "specs"]
+        },
+        {
+          "id": "T1.2",
+          "titulo": "Especificación del sistema de diseño, tokens y temas claro/oscuro",
+          "archivo_asociado": "docs/specs/ui/design-tokens.spec.md",
+          "estado": "pendiente",
+          "prioridad": "media",
+          "tags": ["ui", "estilos"]
+        },
+        {
+          "id": "T1.3",
+          "titulo": "Especificación de microinteracciones, inspector y atajos",
+          "archivo_asociado": "docs/specs/ui/interactions.spec.md",
+          "estado": "pendiente",
+          "prioridad": "media",
+          "tags": ["ui", "interacciones"]
+        }
+      ]
+    },
+    {
+      "id": "fase-2",
+      "nombre": "Fase 2: Especificaciones del Núcleo Común (Core)",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T2.1",
+          "titulo": "Especificación de esquema de documentos y validación Zod (JSON/SVG)",
+          "archivo_asociado": "docs/specs/core/document-schema.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["core", "schemas"]
+        },
+        {
+          "id": "T2.2",
+          "titulo": "Especificación de máquina de estado e historial inmutable",
+          "archivo_asociado": "docs/specs/core/history.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["core", "estado"]
+        },
+        {
+          "id": "T2.3",
+          "titulo": "Especificación del algoritmo de ruteo ortogonal A*",
+          "archivo_asociado": "docs/specs/core/orthogonal-router.spec.md",
+          "estado": "pendiente",
+          "prioridad": "media",
+          "tags": ["core", "algoritmos"]
+        }
+      ]
+    },
+    {
+      "id": "fase-3",
+      "nombre": "Fase 3: Especificaciones de Motores de Dominio",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T3.1",
+          "titulo": "Especificación del motor de análisis de Mason y síntesis de bloques",
+          "archivo_asociado": "docs/specs/senales/mason-engine.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["senales", "mason", "specs"]
+        },
+        {
+          "id": "T3.2",
+          "titulo": "Especificación del motor de simulación lógica y simplificación Quine-McCluskey",
+          "archivo_asociado": "docs/specs/simulador/simulation-engine.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["simulador", "logica", "specs"]
+        },
+        {
+          "id": "T3.3",
+          "titulo": "Especificación del tipógrafo de ecuaciones LaTeX y layout de cajas",
+          "archivo_asociado": "docs/specs/bloque/math-typographer.spec.md",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["bloque", "matematicas", "specs"]
+        }
+      ]
+    },
+    {
+      "id": "fase-4",
+      "nombre": "Fase 4: Inicialización del Entorno de Desarrollo",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T4.1",
+          "titulo": "Configuración de Vite, Svelte 5, TypeScript strict y Vitest",
+          "archivo_asociado": "package.json",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["setup", "svelte", "typescript"]
+        }
+      ]
+    },
+    {
+      "id": "fase-5",
+      "nombre": "Fase 5: Implementación de Motores Core y Pruebas Vitest",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T5.1",
+          "titulo": "Implementación de Core y validadores con 100% test coverage en Vitest",
+          "archivo_asociado": "src/core/",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["core", "tdd", "vitest"]
+        },
+        {
+          "id": "T5.2",
+          "titulo": "Implementación de motores matemáticos desacoplados del DOM",
+          "archivo_asociado": "src/engines/",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["motores", "tdd", "vitest"]
+        }
+      ]
+    },
+    {
+      "id": "fase-6",
+      "nombre": "Fase 6: Construcción de la Nueva UI y Lienzo Svelte",
+      "estado": "pendiente",
+      "tareas": [
+        {
+          "id": "T6.1",
+          "titulo": "Desarrollo de componentes visuales modernos y lienzo SVG reactivo",
+          "archivo_asociado": "src/ui/",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["ui", "svelte", "canvas"]
+        },
+        {
+          "id": "T6.2",
+          "titulo": "Verificación final E2E y compatibilidad de archivos legacy",
+          "archivo_asociado": "tests/",
+          "estado": "pendiente",
+          "prioridad": "alta",
+          "tags": ["qa", "compatibilidad"]
+        }
+      ]
+    }
+  ]
+}
