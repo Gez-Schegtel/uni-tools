@@ -49,7 +49,9 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 
 - **Los cambios van a la rama `features`.** `main` es lo que se publica en GitHub Pages y sólo se
   toca cuando el dueño ya comprobó que `features` anda bien (pull request o merge suyo).
-- Commitear y pushear **sólo cuando se pide**.
+- **Se puede commitear, pero nunca pushear.** Hacer commits está permitido (en `features`, con mensajes
+  claros y las páginas armadas junto con sus fuentes); `git push`, en cualquiera de sus formas y a
+  cualquier rama, no: lo hace el dueño. Al terminar, avisar qué commits quedaron listos para pushear.
 - El código y los comentarios están **en español**, igual que la interfaz. Los nombres de variables
   y funciones también (`nodos`, `ramas`, `acomodarRamas`, `esMarco`).
 - Los cambios se hacen en `src/` y después `node src/construir.js` (ver arriba).
@@ -88,6 +90,9 @@ npx playwright install chromium firefox   # una sola vez (o usar CHROMIUM_PATH=/
 npm test
 ```
 
+La suite corre en **Chromium y Firefox**. Además de los comportamientos, `tests/specs/correccion.spec.js`
+verifica la exactitud de los resultados (Mason, simplificación, tablas de verdad, biestables y
+ecuaciones) contra referencias independientes: si se toca un cálculo, tiene que seguir pasando.
 `tests/servidor.js` levanta solo el servidor estático; no hace falta abrir nada a mano. En GitHub
 corren solas con `.github/workflows/tests.yml` en cada push a `main` o `features` y en cada pull
 request. Detalle de qué cubre cada spec y cómo agregar pruebas: `tests/README.md`.

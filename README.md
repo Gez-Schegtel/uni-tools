@@ -11,18 +11,18 @@ exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servi
 
 | Herramienta | Para qué sirve |
 |---|---|
-| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones, sumadores y bifurcaciones. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Los recuadros se mueven y cambian de tamaño. |
-| **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión simplificada y tabla de excitación. |
-| **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason. Se puede pasar el resultado a un diagrama de bloques equivalente. |
+| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores y bifurcaciones. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
+| **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión mínima (Quine–McCluskey) y tabla de excitación. Cables que se rutean solos, compuertas giratorias, recuadros, colores y área de impresión. |
+| **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason: ecuaciones, trayectorias, lazos, Δ, cofactores y función de transferencia (simbólica y numérica). Genera el diagrama de bloques equivalente, que se abre en la otra herramienta. |
 
 Lo que tienen en común las tres:
 
 - Atajos de teclado y una leyenda en la barra de estado (el botón **?** los explica todos).
-- Deshacer y rehacer, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.
+- Deshacer y rehacer, copiar, cortar, pegar y duplicar, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.
+- Zoom y desplazamiento con mouse, trackpad o pantalla táctil (un dedo mueve, dos hacen zoom).
 - Ejemplos para arrancar.
 - Botón **Inicio** para volver a la portada, y **autoguardado**: lo que vas haciendo queda guardado en el navegador y al volver a abrir la herramienta seguís donde lo dejaste (no reemplaza a «Guardar»: no viaja a otra compu).
 - Exportación a **SVG, PNG y JSON**; se puede volver a abrir un **JSON** o un **SVG** exportado desde acá (el SVG lleva los datos adentro).
-- Visualización de ecuaciones.
 
 ## Cómo usarlo
 
@@ -30,6 +30,24 @@ Lo que tienen en común las tres:
 - **En tu compu:** descargá el repo y abrí `index.html` con doble clic. No hay nada que compilar. Si querés que se vean los logos, servilo por HTTP, por ejemplo con `python -m http.server` y entrando a `http://localhost:8000`.
 
 ## Cómo está hecho
+
+```
+index.html                  portada
+diagrama-bloque.html        ┐
+simulador-logico.html       ├ las tres herramientas, ARMADAS: no se editan a mano
+diagrama-señales.html       ┘
+src/
+  construir.js              arma los tres HTML de arriba (Node pelado, sin npm)
+  comun/                    lo compartido: historial, ids, copiar/pegar, teclado, zoom,
+                            gestos táctiles, abrir/exportar, autoguardado, colores, área
+                            de impresión, recuadros, ruteo ortogonal, CSS base, pedazos de HTML
+  bloque/ simulador/ senales/
+                            lo propio de cada una: pagina.html (plantilla), estilos.css,
+                            herramienta.js (lo que el código común necesita saber de ella)
+                            y sus módulos (modelo, dibujo, panel, interacción, exportar…)
+tests/                      suite de Playwright (Chromium y Firefox); es lo único con npm
+.github/workflows/          tests.yml (pruebas) y static.yml (publica en GitHub Pages)
+```
 
 Cada herramienta que se publica es **un solo archivo HTML autocontenido**: el CSS, el JavaScript y los íconos viven adentro. No hay frameworks, ni CDN, ni dependencias. Por eso funcionan sin internet y se pueden mandar por mail o llevar en un pendrive.
 
@@ -43,7 +61,7 @@ Las páginas armadas se commitean junto con sus fuentes, así que el sitio se si
 
 ## Pruebas
 
-Hay una suite automática con Playwright en `tests/`. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features` y en cada pull request. Para correrla en tu compu:
+Hay una suite automática con Playwright en `tests/`, que corre en Chromium y en Firefox. Además de los comportamientos, comprueba que los **resultados** sean correctos contra referencias independientes: Mason contra resolver el sistema lineal del grafo, la simplificación contra una búsqueda exhaustiva del mínimo, las tablas de verdad, los biestables y las ecuaciones de los bloques. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features` y en cada pull request. Para correrla en tu compu:
 
 ```bash
 cd tests && npm install && npx playwright install chromium firefox && npm test
@@ -55,7 +73,7 @@ Las pruebas corren sobre las páginas armadas, así que primero hay que correr `
 
 ## Contribuir
 
-Los cambios van a la rama `features`; `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Los cambios se hacen en `src/` (nunca a mano en los HTML de la raíz): después correr `node src/construir.js` y las pruebas.
+Los cambios van a la rama `features` (el flujo de trabajo y las convenciones están en [`CLAUDE.md`](CLAUDE.md)); `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Los cambios se hacen en `src/` (nunca a mano en los HTML de la raíz): después correr `node src/construir.js` y las pruebas.
 
 ## Licencia
 
