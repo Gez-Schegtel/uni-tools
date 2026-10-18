@@ -45,6 +45,9 @@ jobs:
             console.log('OK', f, '(' + bloques.length + ' script)');
           }"
 
+      - name: Pruebas unitarias de los cálculos puros (sin navegador)
+        run: node --test "tests/unidades/*.test.js"
+
       - name: Instalar dependencias de las pruebas
         working-directory: tests
         run: npm ci

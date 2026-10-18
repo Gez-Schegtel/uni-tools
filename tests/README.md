@@ -18,6 +18,7 @@ cd tests
 npm install                        # una vez
 npx playwright install chromium firefox   # una vez (en Linux limpio: --with-deps)
 npm test                           # toda la suite
+npm run test:unidades              # sólo los cálculos puros (rápido, sin navegador ni dependencias)
 npx playwright test bloque         # sólo un archivo (por nombre)
 npx playwright test -g "Mason"     # sólo lo que mencione "Mason"
 npm run test:ui                    # modo interactivo
@@ -53,6 +54,23 @@ La suite corre en **Chromium y en Firefox** (los dos proyectos de `playwright.co
 Las pruebas corren contra las páginas **armadas** de la raíz: después de tocar `src/`, correr
 `node src/construir.js` antes de `npm test` (si no, `fuentes.spec.js` lo avisa).
 
+## Pruebas unitarias de los cálculos puros (`unidades/`)
+
+Mason, la lógica del simulador (compuertas, `simplify`, tablas de verdad) y el analizador de
+ecuaciones de los bloques son código puro: no tocan el DOM. `unidades/` los prueba **sin navegador**
+y en menos de un segundo (necesita Node ≥ 20; el CI usa 22):
+
+```bash
+node --test "unidades/*.test.js"        # desde tests/
+node --test "tests/unidades/*.test.js"  # desde la raíz del repo
+```
+
+`unidades/cargar.js` pega los fragmentos de `src/` en un contexto de Node igual que lo hace la
+página (mismo scope global, mismo orden de inclusión) y los tests llaman a las funciones reales.
+Fijan los mismos resultados que `correccion.spec.js` verifica en el navegador, sin el costo de
+levantar Chromium o Firefox. Si alguno de esos archivos empezara a tocar el DOM al cargarse, estas
+pruebas fallan: es la señal de que dejó de ser puro y hay que probarlo desde `specs/`.
+
 ## Agregar una prueba
 
 1. Elegir el spec de la herramienta (o crear `specs/<algo>.spec.js`).
@@ -66,7 +84,8 @@ Las pruebas corren contra las páginas **armadas** de la raíz: después de toca
 
 `.github/workflows/tests.yml` corre en push a `main` y `features`, en pull requests y a mano
 (*Actions → Pruebas → Run workflow*). Pasos: verifica que las páginas estén al día con `src/`
-(`node src/construir.js --comprobar`), que el JS de cada página parsea, instala
+(`node src/construir.js --comprobar`), que el JS de cada página parsea, corre las unidades
+(`node --test`, sin navegador), instala
 dependencias (`npm ci`, usa `package-lock.json`), instala Chromium y Firefox y corre la suite en los dos. Si algo falla,
 sube el reporte y las trazas como artefacto (`reporte-playwright`, 14 días). **No despliega**: eso
 sigue siendo `static.yml`, que publica al pushear a `main`.

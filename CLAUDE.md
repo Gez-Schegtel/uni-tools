@@ -97,6 +97,8 @@ ecuaciones) contra referencias independientes: si se toca un cálculo, tiene que
 corren solas con `.github/workflows/tests.yml` en cada push a `main` o `features` y en cada pull
 request. Detalle de qué cubre cada spec y cómo agregar pruebas: `tests/README.md`.
 
+Los cálculos puros (Mason, la lógica del simulador y el analizador de ecuaciones de los bloques) también tienen pruebas unitarias que corren sin navegador ni dependencias: `node --test "tests/unidades/*.test.js"` (Node ≥ 20). Cargan esos archivos de `src/` en un contexto de Node, así que no pueden empezar a tocar el DOM al cargarse.
+
 **Esto no rompe la regla de arriba:** `npm` existe únicamente dentro de `tests/`, es sólo para
 desarrollo, y las herramientas siguen siendo HTML sueltos sin dependencias. La raíz del repo no
 tiene `package.json` (`src/construir.js` es Node sin paquetes).

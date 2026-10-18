@@ -252,6 +252,10 @@ elemento suelto va por `style`, que sí le gana a la clase.
 - **Los archivos usan LF.** Un script de parcheo no tiene que convertir los saltos de línea, o el
   diff sale entero. (Esta nota decía CRLF; no era cierto.) `src/construir.js` rechaza una fuente con
   CRLF.
+- **Los cálculos puros se prueban sin navegador** (`tests/unidades/`, `node --test "tests/unidades/*.test.js"`):
+  `unidades/cargar.js` los pega en un contexto de Node, como la página. Cargan `senales/modelo.js`+`mason.js`,
+  `comun/recuadros.js`+`simulador/tipos.js`+`modelo.js`+`logica.js` y `bloque/ecuaciones.js`: esos
+  archivos tienen que seguir sin tocar el DOM al cargarse, o hay que probarlos desde el navegador.
 - **Un cambio en `src/` no se ve hasta armar.** Después de editar, `node src/construir.js`; si no,
   se prueba (y se commitea) la página vieja. `tests/specs/fuentes.spec.js` lo detecta.
 - **El orden de `pagina.html` importa.** Es un solo `<script>`: una `const` usada al cargar (por
@@ -301,7 +305,8 @@ hacer nada. Conviene mirarlo de verdad.
 4. Para lo que tiene respuesta conocida —la tabla de verdad de un sumador, el Δ de Mason de un lazo
    simple, la proporción de una A4— comparar contra el resultado esperado, no contra la intuición.
 5. Chequear que el JS parsea (el comando está en `CLAUDE.md`).
-6. Correr `cd tests && npm test`. Si se tocó `src/comun/`, la prueba vale para las tres: `comun.spec.js`
+6. Correr `cd tests && npm test` y, si se tocó un cálculo puro, `node --test "tests/unidades/*.test.js"`
+   (rápidas, sin navegador). Si se tocó `src/comun/`, la prueba vale para las tres: `comun.spec.js`
    corre lo compartido una vez por herramienta. Un bug nuevo se arregla con su prueba en `tests/specs/`; una
    función nueva con al menos una prueba del camino feliz y una del archivo roto.
 

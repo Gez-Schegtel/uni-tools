@@ -45,7 +45,8 @@ src/
                             lo propio de cada una: pagina.html (plantilla), estilos.css,
                             herramienta.js (lo que el código común necesita saber de ella)
                             y sus módulos (modelo, dibujo, panel, interacción, exportar…)
-tests/                      suite de Playwright (Chromium y Firefox); es lo único con npm
+tests/                      suite de Playwright (Chromium y Firefox) y unidades de los
+                            cálculos puros; es lo único con npm
 .github/workflows/          tests.yml (pruebas) y static.yml (publica en GitHub Pages)
 ```
 
@@ -68,6 +69,8 @@ cd tests && npm install && npx playwright install chromium firefox && npm test
 ```
 
 Las pruebas corren sobre las páginas armadas, así que primero hay que correr `node src/construir.js`. Si alguna página quedó desactualizada respecto de `src/`, lo avisan tanto las pruebas como el workflow de GitHub.
+
+Los cálculos puros (la regla de Mason, la lógica de las compuertas y el analizador de ecuaciones de los bloques) tienen además pruebas unitarias que corren sin navegador ni dependencias: `node --test "tests/unidades/*.test.js"`.
 
 `npm` se usa **sólo** para las pruebas; las herramientas siguen siendo HTML sueltos. Detalles en [`tests/README.md`](tests/README.md).
 
