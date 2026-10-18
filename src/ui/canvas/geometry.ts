@@ -270,17 +270,62 @@ export function getPinWorldPosition(
 }
 
 /**
- * Ruteo ortogonal en ángulo recto entre dos puntos respetando las direcciones de salida/entrada
+ * Limpia puntos duplicados o colineales consecutivos en un trazado ortogonal
  */
-export function computeOrthogonalRoute(
+export function cleanOrthogonalPoints(pts: Punto[]): Punto[] {
+  if (!pts || pts.length < 2) return pts || [];
+  const out: Punto[] = [pts[0]];
+
+  for (let i = 1; i < pts.length; i++) {
+    const prev = out[out.length - 1];
+    const curr = pts[i];
+    // Evitar puntos duplicados
+    if (Math.abs(prev.x - curr.x) < 0.5 && Math.abs(prev.y - curr.y) < 0.5) {
+      continue;
+    }
+    out.push(curr);
+  }
+
+  // Eliminar puntos colineales redundantes en medio de tramos rectos
+  const res: Punto[] = [];
+  for (let i = 0; i < out.length; i++) {
+    if (i > 0 && i < out.length - 1) {
+      const a = out[i - 1];
+      const b = out[i];
+      const c = out[i + 1];
+      const colinearX = Math.abs(a.x - b.x) < 0.5 && Math.abs(b.x - c.x) < 0.5;
+      const colinearY = Math.abs(a.y - b.y) < 0.5 && Math.abs(b.y - c.y) < 0.5;
+      if (colinearX || colinearY) continue;
+    }
+    res.push(out[i]);
+  }
+
+  return res;
+}
+
+export interface WireSegment {
+  index: number;
+  p1: Punto;
+  p2: Punto;
+  mid: Punto;
+  isVertical: boolean;
+  len: number;
+}
+
+/**
+ * Calcula los vértices ortogonales a 90° cuadrados para una conexión
+ */
+export function computeOrthogonalPoints(
   p1: Punto,
   p2: Punto,
   dir1: { x: number; y: number } = { x: 1, y: 0 },
-  dir2: { x: number; y: number } = { x: -1, y: 0 }
-): string {
+  dir2: { x: number; y: number } = { x: -1, y: 0 },
+  manualMidX?: number,
+  manualMidY?: number
+): Punto[] {
   const pts: Punto[] = [p1];
 
-  // Distancia mínima de salida del puerto
+  // Distancia mínima de salida del puerto (stub)
   const stubLen = 14;
   const start = { x: p1.x + dir1.x * stubLen, y: p1.y + dir1.y * stubLen };
   const end = { x: p2.x + dir2.x * stubLen, y: p2.y + dir2.y * stubLen };
@@ -289,28 +334,30 @@ export function computeOrthogonalRoute(
 
   if (dir1.x === 1 && dir2.x === -1) {
     if (start.x + 8 < end.x) {
-      // Caso directo hacia adelante: quiebre a la mitad
-      const midX = (start.x + end.x) / 2;
+      // Caso directo hacia adelante: quiebre vertical
+      const midX = manualMidX !== undefined ? manualMidX : Math.round((start.x + end.x) / 40) * 20;
       pts.push({ x: midX, y: start.y });
       pts.push({ x: midX, y: end.y });
     } else {
       // Retorno hacia atrás / realimentación: esquiva por arriba o abajo
-      const detourY = Math.abs(start.y - end.y) < 30
+      const defaultDetourY = Math.abs(start.y - end.y) < 30
         ? start.y + 44
         : (start.y > end.y ? start.y + 36 : start.y - 36);
-      pts.push({ x: start.x + 16, y: start.y });
-      pts.push({ x: start.x + 16, y: detourY });
+      const detourY = manualMidY !== undefined ? manualMidY : defaultDetourY;
+      const x1 = manualMidX !== undefined ? manualMidX : start.x + 16;
+      pts.push({ x: x1, y: start.y });
+      pts.push({ x: x1, y: detourY });
       pts.push({ x: end.x - 16, y: detourY });
       pts.push({ x: end.x - 16, y: end.y });
     }
   } else {
-    // Otros alineamientos (ej: sumador con puertos verticales)
+    // Otros alineamientos
     if (dir1.x !== 0 && dir2.y !== 0) {
       pts.push({ x: end.x, y: start.y });
     } else if (dir1.y !== 0 && dir2.x !== 0) {
       pts.push({ x: start.x, y: end.y });
     } else {
-      const midX = (start.x + end.x) / 2;
+      const midX = manualMidX !== undefined ? manualMidX : (start.x + end.x) / 2;
       pts.push({ x: midX, y: start.y });
       pts.push({ x: midX, y: end.y });
     }
@@ -319,7 +366,60 @@ export function computeOrthogonalRoute(
   pts.push(end);
   pts.push(p2);
 
-  return pathD(pts, 6);
+  return cleanOrthogonalPoints(pts);
+}
+
+/**
+ * Obtiene los segmentos individuales (tramos) de un cable para permitir su arrastre
+ */
+export function getWireSegments(pts: Punto[]): WireSegment[] {
+  const segments: WireSegment[] = [];
+  if (!pts || pts.length < 2) return segments;
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const isVertical = Math.abs(a.x - b.x) < 0.5;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    segments.push({
+      index: i,
+      p1: a,
+      p2: b,
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      isVertical,
+      len
+    });
+  }
+
+  return segments;
+}
+
+/**
+ * Obtiene los vértices intermedios (esquinas a 90°) donde es posible abrir bifurcaciones
+ */
+export function getWireCorners(pts: Punto[]): { pt: Punto; index: number }[] {
+  if (!pts || pts.length <= 2) return [];
+  const corners: { pt: Punto; index: number }[] = [];
+  for (let i = 1; i < pts.length - 1; i++) {
+    corners.push({ pt: pts[i], index: i });
+  }
+  return corners;
+}
+
+/**
+ * Ruteo ortogonal en ángulo recto estrictamente cuadrado (radio 0)
+ */
+export function computeOrthogonalRoute(
+  p1: Punto,
+  p2: Punto,
+  dir1: { x: number; y: number } = { x: 1, y: 0 },
+  dir2: { x: number; y: number } = { x: -1, y: 0 },
+  manualMidX?: number,
+  manualMidY?: number
+): string {
+  const pts = computeOrthogonalPoints(p1, p2, dir1, dir2, manualMidX, manualMidY);
+  // Radio 0 = esquinas 100% cuadradas a 90° sin curvas redondeadas
+  return pathD(pts, 0);
 }
 
 /**

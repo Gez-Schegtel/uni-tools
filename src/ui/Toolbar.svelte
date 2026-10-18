@@ -75,6 +75,11 @@
       <button class="tool-btn" onclick={() => onAgregarElemento('out')} title="Sonda LED de Salida">
         <span class="icon-label">OUT</span>
       </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('node')} title="Punto de Bifurcación / Derivación">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <circle cx="12" cy="12" r="6" />
+        </svg>
+      </button>
 
       <div class="divider"></div>
 

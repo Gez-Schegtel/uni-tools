@@ -96,15 +96,19 @@
       conexiones = [{ id: "c1", from: { id: "b1" }, to: { id: "s1" } }];
     } else if (h === "simulador") {
       nodos = [
-        { id: "in1", type: "in", x: 140, y: 160, label: "A", on: true },
-        { id: "in2", type: "in", x: 140, y: 240, label: "B", on: false },
-        { id: "and1", type: "and", x: 280, y: 200, label: "AND", pins: 2 },
-        { id: "out1", type: "out", x: 420, y: 200, label: "S" }
+        { id: "in1", type: "in", x: 120, y: 160, label: "A", on: true },
+        { id: "in2", type: "in", x: 120, y: 260, label: "B", on: false },
+        { id: "and1", type: "and", x: 260, y: 200, label: "AND", pins: 2 },
+        { id: "not1", type: "not", x: 260, y: 320, label: "NOT", pins: 1 },
+        { id: "out1", type: "out", x: 400, y: 200, label: "S1" },
+        { id: "out2", type: "out", x: 400, y: 320, label: "S2" }
       ];
       conexiones = [
         { id: "w1", from: { id: "in1", pin: "o" }, to: { id: "and1", pin: 0 } },
         { id: "w2", from: { id: "in2", pin: "o" }, to: { id: "and1", pin: 1 } },
-        { id: "w3", from: { id: "and1", pin: "o" }, to: { id: "out1", pin: 0 } }
+        { id: "w3", from: { id: "and1", pin: "o" }, to: { id: "out1", pin: 0 } },
+        { id: "w4", from: { id: "in2", pin: "o" }, to: { id: "not1", pin: 0 }, branchFrom: "w2", branchPt: { x: 180, y: 260 } },
+        { id: "w5", from: { id: "not1", pin: "o" }, to: { id: "out2", pin: 0 } }
       ];
     } else if (h === "senales") {
       nodos = [
@@ -152,6 +156,8 @@
       } else if (tipo === "out") {
         nuevo.type = "out";
         nuevo.label = "OUT";
+      } else if (tipo === "node") {
+        nuevo.type = "node";
       } else {
         nuevo.type = tipo;
         nuevo.label = tipo.toUpperCase();
@@ -196,8 +202,14 @@
     }
   }
 
-  function handleCrearConexion(desdeId: string, hastaId: string, desdePin?: string | number, hastaPin?: string | number) {
-    const nuevaConexion = {
+  function handleCrearConexion(
+    desdeId: string,
+    hastaId: string,
+    desdePin?: string | number,
+    hastaPin?: string | number,
+    extra?: { branchFrom?: string; branchPt?: { x: number; y: number } }
+  ) {
+    const nuevaConexion: any = {
       id: "conn_" + ++uidCounter,
       from: { id: desdeId, pin: desdePin ?? "o" },
       to: { id: hastaId, pin: hastaPin ?? 0 },
@@ -206,8 +218,19 @@
       g: "1",
       label: ""
     };
+    if (extra?.branchFrom) nuevaConexion.branchFrom = extra.branchFrom;
+    if (extra?.branchPt) nuevaConexion.branchPt = extra.branchPt;
     conexiones = [...conexiones, nuevaConexion];
     commitState();
+  }
+
+  function handleModificarConexion(id: string, prop: string, valor: any) {
+    const c = conexiones.find(item => item.id === id);
+    if (c) {
+      c[prop] = valor;
+      conexiones = [...conexiones];
+      commitState();
+    }
   }
 
   function handleToggleNodo(id: string) {
@@ -231,6 +254,14 @@
   function handleKeyDown(e: KeyboardEvent) {
     if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "SELECT") {
       return;
+    }
+
+    if (e.key === " " || e.code === "Space") {
+      if (elementoSeleccionado?.type === "in" || elementoSeleccionado?.type === "clk") {
+        e.preventDefault();
+        handleToggleNodo(elementoSeleccionado.id);
+        return;
+      }
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
@@ -310,6 +341,7 @@
       onActualizarVista={(p, z) => { pan = p; zoom = z; }}
       onCrearConexion={handleCrearConexion}
       onToggleNodo={handleToggleNodo}
+      onModificarConexion={handleModificarConexion}
     />
 
     <Inspector

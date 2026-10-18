@@ -43,6 +43,7 @@ export const nIn = (n: SimuladorNodo): number => {
   if (n.type === "ff") return n.pins || 2;
   if (n.type === "marco") return 0;
   if (n.type === "out") return 1;
+  if (n.type === "node") return 1;
   if (n.type === "not" || n.type === "buf") return 1;
   if (n.type === "half-adder") return 2;
   if (n.type === "full-adder") return 3;
@@ -52,6 +53,7 @@ export const nIn = (n: SimuladorNodo): number => {
 export const nOut = (n: SimuladorNodo): number => {
   if (n.type === "ff" || n.type === "half-adder" || n.type === "full-adder") return 2;
   if (n.type === "out" || n.type === "label" || n.type === "marco") return 0;
+  if (n.type === "node") return 1;
   return 1;
 };
 
@@ -87,6 +89,7 @@ export function evalGate(t: string, v: number[]): number {
       return v[0] === 1 ? 0 : 1;
     case "buf":
     case "out":
+    case "node":
       return v[0] === 1 ? 1 : 0;
     default:
       return 0;
@@ -147,7 +150,8 @@ export function simulate(
   }
 
   const comb = nodes.filter(n => !/^(in|clk|ff|label|marco)$/.test(n.type));
-  const asincronos = nodes.filter(n => n.type === "ff" && n.conClk === false);
+  const tieneRelojConectado = (n: SimuladorNodo) => src.has(n.id + ":1");
+  const asincronos = nodes.filter(n => n.type === "ff" && (n.conClk === false || !tieneRelojConectado(n)));
 
   const asentar = (): boolean => {
     for (let pass = 0; ; pass++) {
@@ -167,7 +171,7 @@ export function simulate(
         }
       }
       for (const n of asincronos) {
-        // Biestables sin reloj: actúan como latches
+        // Biestables sin reloj o sin pin CLK cableado: actúan según sus entradas de control
         const datos: number[] = [];
         for (let i = 0; i < nIn(n); i++) datos.push(entrada(n, i));
         const nq = proximoQ(n.kind || "d", datos, n.q ? 1 : 0);
@@ -184,7 +188,7 @@ export function simulate(
   };
 
   let osc = asentar();
-  const ffs = nodes.filter(n => n.type === "ff" && n.conClk !== false);
+  const ffs = nodes.filter(n => n.type === "ff" && n.conClk !== false && tieneRelojConectado(n));
 
   if (ffs.length) {
     for (let vuelta = 0; vuelta < 16; vuelta++) {

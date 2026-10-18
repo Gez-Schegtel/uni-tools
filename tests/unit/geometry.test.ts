@@ -4,6 +4,9 @@ import {
   getComponentPins,
   getPinWorldPosition,
   computeOrthogonalRoute,
+  computeOrthogonalPoints,
+  getWireSegments,
+  getWireCorners,
   getGateSvgPath,
   getXorBackArc
 } from "../../src/ui/canvas/geometry.ts";
@@ -58,14 +61,37 @@ describe("Geometría de Componentes y Ruteo Ortogonal", () => {
     expect(in0Pos.dir).toEqual({ x: -1, y: 0 });
   });
 
-  it("rutea conexiones de forma ortogonal en ángulo recto con esquinas curvadas", () => {
+  it("rutea conexiones de forma ortogonal en ángulo recto estrictamente cuadrada (sin curvas)", () => {
     const p1 = { x: 100, y: 100 };
     const p2 = { x: 300, y: 200 };
     const ruta = computeOrthogonalRoute(p1, p2, { x: 1, y: 0 }, { x: -1, y: 0 });
 
     expect(ruta).toMatch(/^M 100 100/);
-    expect(ruta).toContain("Q"); // Verifica esquinas redondeadas
+    expect(ruta).not.toContain("Q"); // Sin curvas redondeadas
+    expect(ruta).not.toContain("A");
     expect(ruta).toMatch(/L 300 200$/);
+  });
+
+  it("permite manipular el quiebre de tramos mediante manualMidX y manualMidY", () => {
+    const p1 = { x: 100, y: 100 };
+    const p2 = { x: 300, y: 200 };
+    const pts = computeOrthogonalPoints(p1, p2, { x: 1, y: 0 }, { x: -1, y: 0 }, 250);
+
+    // El quiebre vertical debe posicionarse exactamente en X=250
+    expect(pts.some(p => p.x === 250)).toBe(true);
+  });
+
+  it("calcula los segmentos y esquinas disponibles para arrastre y bifurcación", () => {
+    const p1 = { x: 100, y: 100 };
+    const p2 = { x: 300, y: 200 };
+    const pts = computeOrthogonalPoints(p1, p2, { x: 1, y: 0 }, { x: -1, y: 0 });
+    const segments = getWireSegments(pts);
+    const corners = getWireCorners(pts);
+
+    expect(segments.length).toBeGreaterThanOrEqual(3);
+    expect(segments.some(s => s.isVertical)).toBe(true);
+    expect(segments.some(s => !s.isVertical)).toBe(true);
+    expect(corners.length).toBeGreaterThanOrEqual(2);
   });
 
   it("produce rutas de esquiva para bucles de realimentación hacia atrás", () => {
@@ -74,17 +100,17 @@ describe("Geometría de Componentes y Ruteo Ortogonal", () => {
     const rutaFeedback = computeOrthogonalRoute(p1, p2, { x: 1, y: 0 }, { x: -1, y: 0 });
 
     expect(rutaFeedback).toMatch(/^M 300 100/);
-    expect(rutaFeedback).toContain("Q");
+    expect(rutaFeedback).not.toContain("Q");
     expect(rutaFeedback).toMatch(/L 100 100$/);
   });
 
   it("genera comandos SVG ANSI válidos para compuertas", () => {
     const andPath = getGateSvgPath("and", 60, 44);
-    expect(andPath).toContain("A"); // Arco semicircular
+    expect(andPath).toContain("A"); // Arco semicircular de la compuerta AND
     expect(andPath).toContain("Z");
 
     const orPath = getGateSvgPath("or", 62, 46);
-    expect(orPath).toContain("C"); // Curvas Bezier
+    expect(orPath).toContain("C"); // Curvas Bezier del símbolo OR
     expect(orPath).toContain("Q");
 
     const xorArc = getXorBackArc(66, 46);

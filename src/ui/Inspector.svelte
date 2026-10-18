@@ -193,18 +193,95 @@
       <!-- Opciones de Conmutador IN -->
       {#if elementoSeleccionado.type === 'in'}
         <div class="inspector-card">
-          <span class="card-title">Estado Lógico</span>
-          <div class="field-group">
-            <label for="in-state" class="field-label">Nivel de Entrada</label>
-            <select
-              id="in-state"
-              class="field-select"
-              value={elementoSeleccionado.on ? '1' : '0'}
-              onchange={(e) => onModificarElemento('on', (e.target as HTMLSelectElement).value === '1')}
-            >
-              <option value="0">0 (Nivel Bajo / Low)</option>
-              <option value="1">1 (Nivel Alto / High)</option>
-            </select>
+          <span class="card-title">Estado e Interruptor</span>
+          <div class="grid-row">
+            <div class="field-group">
+              <label for="in-state" class="field-label">Nivel Actual</label>
+              <select
+                id="in-state"
+                class="field-select"
+                value={elementoSeleccionado.on ? '1' : '0'}
+                onchange={(e) => onModificarElemento('on', (e.target as HTMLSelectElement).value === '1')}
+              >
+                <option value="0">0 (Nivel Bajo / Low)</option>
+                <option value="1">1 (Nivel Alto / High)</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="in-modo" class="field-label">Modo</label>
+              <select
+                id="in-modo"
+                class="field-select"
+                value={elementoSeleccionado.modo || 'toggle'}
+                onchange={(e) => onModificarElemento('modo', (e.target as HTMLSelectElement).value)}
+              >
+                <option value="toggle">Conmutador</option>
+                <option value="pulso">Pulsador</option>
+              </select>
+            </div>
+          </div>
+          <button
+            class="action-btn"
+            style="margin-top: 8px; width: 100%; justify-content: center;"
+            onclick={() => onModificarElemento('on', !elementoSeleccionado.on)}
+          >
+            <span>Alternar Estado (Espacio)</span>
+          </button>
+        </div>
+      {/if}
+
+      <!-- Opciones de Sonda OUT -->
+      {#if elementoSeleccionado.type === 'out'}
+        <div class="inspector-card">
+          <span class="card-title">Sonda de Salida</span>
+          <div class="field-hint">
+            Muestra el estado lógico calculado en tiempo real. Se ilumina con luz verde esmeralda ante nivel alto (1).
+          </div>
+        </div>
+      {/if}
+
+      <!-- Opciones de Cable / Conexión -->
+      {#if elementoSeleccionado.from && elementoSeleccionado.to}
+        <div class="inspector-card">
+          <span class="card-title">Propiedades de Conexión</span>
+          <div class="field-hint" style="line-height: 1.6;">
+            <strong>Desde:</strong> #{elementoSeleccionado.from.id}:{elementoSeleccionado.from.pin ?? 'o'}<br />
+            <strong>Hacia:</strong> #{elementoSeleccionado.to.id}:{elementoSeleccionado.to.pin ?? 0}
+            {#if elementoSeleccionado.branchPt}
+              <br /><strong>Bifurcación en:</strong> ({Math.round(elementoSeleccionado.branchPt.x)}, {Math.round(elementoSeleccionado.branchPt.y)})
+            {/if}
+          </div>
+          <div class="grid-row" style="margin-top: 8px;">
+            <div class="field-group">
+              <label for="mid-x" class="field-label">Quiebre X</label>
+              <input
+                id="mid-x"
+                type="number"
+                class="field-input"
+                step="10"
+                value={elementoSeleccionado.manualMidX ?? ''}
+                placeholder="Auto"
+                onchange={(e) => {
+                  const val = (e.target as HTMLInputElement).value;
+                  onModificarElemento('manualMidX', val === '' ? undefined : +val);
+                }}
+              />
+            </div>
+            <div class="field-group">
+              <label for="mid-y" class="field-label">Desvío Y</label>
+              <input
+                id="mid-y"
+                type="number"
+                class="field-input"
+                step="10"
+                value={elementoSeleccionado.manualMidY ?? ''}
+                placeholder="Auto"
+                onchange={(e) => {
+                  const val = (e.target as HTMLInputElement).value;
+                  onModificarElemento('manualMidY', val === '' ? undefined : +val);
+                }}
+              />
+            </div>
           </div>
         </div>
       {/if}

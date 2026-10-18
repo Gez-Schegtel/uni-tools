@@ -4,9 +4,13 @@
     getComponentPins,
     getPinWorldPosition,
     computeOrthogonalRoute,
+    computeOrthogonalPoints,
+    getWireSegments,
+    getWireCorners,
     getGateSvgPath,
     getXorBackArc,
-    type PinInfo
+    type PinInfo,
+    type WireSegment
   } from "./canvas/geometry.ts";
   import { simulate, idxSalida } from "../core/logic/simulator.ts";
   import type { Punto } from "../core/routing/orthogonal.ts";
@@ -22,8 +26,15 @@
     onSeleccionarElemento: (elem: any | null) => void;
     onMoverElemento: (id: string, x: number, y: number) => void;
     onActualizarVista: (pan: { x: number; y: number }, zoom: number) => void;
-    onCrearConexion: (desdeId: string, hastaId: string, desdePin?: string | number, hastaPin?: string | number) => void;
+    onCrearConexion: (
+      desdeId: string,
+      hastaId: string,
+      desdePin?: string | number,
+      hastaPin?: string | number,
+      extra?: { branchFrom?: string; branchPt?: Punto }
+    ) => void;
     onToggleNodo?: (id: string) => void;
+    onModificarConexion?: (id: string, prop: string, valor: any) => void;
   }
 
   let {
@@ -38,7 +49,8 @@
     onMoverElemento,
     onActualizarVista,
     onCrearConexion,
-    onToggleNodo
+    onToggleNodo,
+    onModificarConexion
   }: Props = $props();
 
   // Estados de interacción
@@ -47,17 +59,28 @@
   let inicioArrastre = { x: 0, y: 0 };
   let offsetNodo = { x: 0, y: 0 };
 
-  // Pines y trazado interactivo de cables
+  // Manipulación de tramos de cable
+  let arrastrandoSegmento: {
+    conexionId: string;
+    isVertical: boolean;
+    inicioMouseW: Punto;
+    inicioVal: number;
+  } | null = $state(null);
+
+  // Pines, esquinas y bifurcaciones
   let hoverNodoId: string | null = $state(null);
+  let hoverWireId: string | null = $state(null);
   let hoverPin: { nodeId: string; pin: PinInfo } | null = $state(null);
   let conectando: {
     nodoId: string;
     pin: PinInfo;
     origenPt: Punto;
     actualPt: Punto;
+    branchFrom?: string;
+    branchPt?: Punto;
   } | null = $state(null);
 
-  // Simulación en tiempo real para el modo simulador
+  // Simulación en tiempo real
   const simResultado = $derived.by(() => {
     if (herramientaActiva === "simulador") {
       try {
@@ -120,11 +143,31 @@
     const svg = (e.currentTarget as SVGElement).getBoundingClientRect();
     const mouseW = toWorld(e.clientX, e.clientY, svg);
 
+    // 1. Moviendo segmento de cable (quiebre ortogonal)
+    if (arrastrandoSegmento) {
+      const conn = conexiones.find(c => c.id === arrastrandoSegmento!.conexionId);
+      if (conn) {
+        if (arrastrandoSegmento.isVertical) {
+          const deltaX = mouseW.x - arrastrandoSegmento.inicioMouseW.x;
+          conn.manualMidX = Math.round((arrastrandoSegmento.inicioVal + deltaX) / 10) * 10;
+        } else {
+          const deltaY = mouseW.y - arrastrandoSegmento.inicioMouseW.y;
+          conn.manualMidY = Math.round((arrastrandoSegmento.inicioVal + deltaY) / 10) * 10;
+        }
+        if (onModificarConexion) {
+          onModificarConexion(conn.id, arrastrandoSegmento.isVertical ? "manualMidX" : "manualMidY", arrastrandoSegmento.isVertical ? conn.manualMidX : conn.manualMidY);
+        }
+      }
+      return;
+    }
+
+    // 2. Trazando cable o bifurcación
     if (conectando) {
       conectando.actualPt = mouseW;
       return;
     }
 
+    // 3. Arrastrando nodo
     if (arrastrandoNodo) {
       const nuevoX = Math.round((mouseW.x - offsetNodo.x) / 20) * 20;
       const nuevoY = Math.round((mouseW.y - offsetNodo.y) / 20) * 20;
@@ -135,11 +178,17 @@
   function handlePointerUp() {
     arrastrandoLienzo = false;
     arrastrandoNodo = null;
+    arrastrandoSegmento = null;
 
     if (conectando) {
-      // Si soltó el arrastre sobre un pin válido
       if (hoverPin && hoverPin.nodeId !== conectando.nodoId) {
-        crearEnlaceEntrePines(conectando.nodoId, conectando.pin, hoverPin.nodeId, hoverPin.pin);
+        crearEnlaceEntrePines(
+          conectando.nodoId,
+          conectando.pin,
+          hoverPin.nodeId,
+          hoverPin.pin,
+          conectando.branchFrom ? { branchFrom: conectando.branchFrom, branchPt: conectando.branchPt } : undefined
+        );
       }
       conectando = null;
     }
@@ -165,7 +214,13 @@
         const pins = getComponentPins(n);
         const inPin = pins.find(p => p.type === "in") || pins[0];
         if (inPin) {
-          crearEnlaceEntrePines(conectando.nodoId, conectando.pin, n.id, inPin);
+          crearEnlaceEntrePines(
+            conectando.nodoId,
+            conectando.pin,
+            n.id,
+            inPin,
+            conectando.branchFrom ? { branchFrom: conectando.branchFrom, branchPt: conectando.branchPt } : undefined
+          );
         }
         conectando = null;
       }
@@ -194,16 +249,47 @@
     };
   }
 
-  function crearEnlaceEntrePines(idA: string, pinA: PinInfo, idB: string, pinB: PinInfo) {
-    // Si pinA es salida y pinB es entrada
+  function handleCornerPointerDown(e: PointerEvent, conn: any, cornerPt: Punto) {
+    e.stopPropagation();
+    const svg = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect();
+    const mouseW = toWorld(e.clientX, e.clientY, svg);
+
+    conectando = {
+      nodoId: conn.from?.id || conn.de,
+      pin: { id: "out:" + (conn.from?.pin || "o"), type: "out", index: conn.from?.pin || "o", x: 0, y: 0 },
+      branchFrom: conn.id,
+      branchPt: cornerPt,
+      origenPt: cornerPt,
+      actualPt: mouseW
+    };
+  }
+
+  function handleSegmentPointerDown(e: PointerEvent, conn: any, seg: WireSegment) {
+    e.stopPropagation();
+    const svg = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect();
+    const mouseW = toWorld(e.clientX, e.clientY, svg);
+
+    arrastrandoSegmento = {
+      conexionId: conn.id,
+      isVertical: seg.isVertical,
+      inicioMouseW: mouseW,
+      inicioVal: seg.isVertical ? (conn.manualMidX ?? seg.mid.x) : (conn.manualMidY ?? seg.mid.y)
+    };
+  }
+
+  function crearEnlaceEntrePines(
+    idA: string,
+    pinA: PinInfo,
+    idB: string,
+    pinB: PinInfo,
+    extra?: { branchFrom?: string; branchPt?: Punto }
+  ) {
     if (pinA.type === "out" && pinB.type !== "out") {
-      onCrearConexion(idA, idB, pinA.index, pinB.index);
+      onCrearConexion(idA, idB, pinA.index, pinB.index, extra);
     } else if (pinB.type === "out" && pinA.type !== "out") {
-      // Si se arrastró de entrada a salida, invertir
-      onCrearConexion(idB, idA, pinB.index, pinA.index);
+      onCrearConexion(idB, idA, pinB.index, pinA.index, extra);
     } else {
-      // Conexión genérica
-      onCrearConexion(idA, idB, pinA.index, pinB.index);
+      onCrearConexion(idA, idB, pinA.index, pinB.index, extra);
     }
   }
 
@@ -213,7 +299,7 @@
       onToggleNodo(n.id);
     } else {
       n.on = !n.on;
-      onMoverElemento(n.id, n.x, n.y); // Disparar reactividad
+      onMoverElemento(n.id, n.x, n.y);
     }
   }
 </script>
@@ -267,27 +353,33 @@
 
     <!-- Capa de transformación mundo (Pan & Zoom) -->
     <g transform="translate({pan.x}, {pan.y}) scale({zoom})">
-      <!-- Capa de Conexiones / Cables Ortogonales -->
+      <!-- Capa de Conexiones / Cables Ortogonales Cuadrados -->
       <g class="layer-wires">
         {#each conexiones as c}
           {@const n1 = nodos.find(n => n.id === (c.from?.id || c.de))}
           {@const n2 = nodos.find(n => n.id === (c.to?.id || c.a))}
           {#if n1 && n2}
-            {@const p1Info = getPinWorldPosition(n1, c.from?.pin ?? c.from?.port, "out")}
             {@const p2Info = getPinWorldPosition(n2, c.to?.pin ?? c.to?.port, "in")}
-            {@const routeD = computeOrthogonalRoute(p1Info.pt, p2Info.pt, p1Info.dir, p2Info.dir)}
+            {@const p1Info = c.branchPt ? { pt: c.branchPt, dir: { x: p2Info.pt.x >= c.branchPt.x ? 1 : -1, y: 0 } } : getPinWorldPosition(n1, c.from?.pin ?? c.from?.port, "out")}
+            {@const wirePts = computeOrthogonalPoints(p1Info.pt, p2Info.pt, p1Info.dir, p2Info.dir, c.manualMidX, c.manualMidY)}
+            {@const routeD = computeOrthogonalRoute(p1Info.pt, p2Info.pt, p1Info.dir, p2Info.dir, c.manualMidX, c.manualMidY)}
             {@const selWire = elementoSeleccionado?.id === c.id}
+            {@const isHoveredWire = hoverWireId === c.id || selWire}
             {@const outIdx = idxSalida(c.from?.pin || "o")}
             {@const sigVal = simResultado?.val.get(n1.id + "#" + outIdx) ?? 0}
             {@const isHigh = herramientaActiva === 'simulador' && sigVal === 1}
+            {@const segments = getWireSegments(wirePts)}
+            {@const corners = getWireCorners(wirePts)}
 
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <g
               class="wire-group {selWire ? 'selected' : ''}"
               onclick={(e) => { e.stopPropagation(); onSeleccionarElemento(c); }}
+              onpointerenter={() => hoverWireId = c.id}
+              onpointerleave={() => { if (hoverWireId === c.id) hoverWireId = null; }}
             >
-              <!-- Hitbox transparente amplio para selección táctil fácil -->
+              <!-- Hitbox amplio transparente para clic -->
               <path
                 d={routeD}
                 fill="none"
@@ -304,22 +396,81 @@
                   stroke="var(--accent)"
                   stroke-width="6"
                   stroke-opacity="0.35"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
                 />
               {/if}
 
-              <!-- Cable ortogonal visible con estado High/Low -->
+              <!-- Cable ortogonal cuadrado a 90° sin curvas redondeadas -->
               <path
                 d={routeD}
                 fill="none"
                 stroke={isHigh ? "var(--color-success)" : selWire ? "var(--accent)" : "var(--diagram-wire)"}
                 stroke-width={isHigh ? "2.6" : "2"}
-                stroke-linecap="round"
-                stroke-linejoin="round"
                 marker-end={herramientaActiva !== 'simulador' ? (isHigh ? "url(#arrowhead-active)" : "url(#arrowhead)") : undefined}
                 class="wire-path {isHigh ? 'energized' : ''}"
               />
+
+              <!-- Punto de soldadura si este cable nace de una bifurcación -->
+              {#if c.branchPt}
+                <circle
+                  cx={c.branchPt.x}
+                  cy={c.branchPt.y}
+                  r="4.5"
+                  fill={isHigh ? "var(--color-success)" : "var(--diagram-wire)"}
+                  stroke="var(--bg-surface)"
+                  stroke-width="1.5"
+                />
+              {/if}
+
+              <!-- Manijas interactivas en el centro de cada tramo (mover líneas) -->
+              {#if isHoveredWire}
+                {#each segments as seg}
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <g
+                    class="segment-handle"
+                    transform="translate({seg.mid.x}, {seg.mid.y})"
+                    onpointerdown={(e) => handleSegmentPointerDown(e, c, seg)}
+                  >
+                    {#if seg.isVertical}
+                      <rect
+                        x="-4"
+                        y="-12"
+                        width="8"
+                        height="24"
+                        rx="3"
+                        fill="var(--accent)"
+                        cursor="ew-resize"
+                      />
+                    {:else}
+                      <rect
+                        x="-12"
+                        y="-4"
+                        width="24"
+                        height="8"
+                        rx="3"
+                        fill="var(--accent)"
+                        cursor="ns-resize"
+                      />
+                    {/if}
+                  </g>
+                {/each}
+
+                <!-- Manijas de esquinas a 90° (para arrastrar y abrir bifurcaciones) -->
+                {#each corners as corn}
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <circle
+                    cx={corn.pt.x}
+                    cy={corn.pt.y}
+                    r="5.5"
+                    fill="var(--accent)"
+                    stroke="#ffffff"
+                    stroke-width="1.5"
+                    cursor="crosshair"
+                    class="corner-branch-dot"
+                    title="Arrastra desde esta esquina para abrir una bifurcación"
+                    onpointerdown={(e) => handleCornerPointerDown(e, c, corn.pt)}
+                  />
+                {/each}
+              {/if}
 
               <!-- Etiqueta de función o valor -->
               {#if c.g || c.label}
@@ -350,7 +501,7 @@
           {/if}
         {/each}
 
-        <!-- Previsualización dinámica de cable en trazado -->
+        <!-- Previsualización dinámica de cable o bifurcación en trazado (100% cuadrada) -->
         {#if conectando}
           <path
             d={computeOrthogonalRoute(
@@ -365,6 +516,14 @@
             stroke-dasharray="5 4"
             class="connecting-guide"
           />
+          {#if conectando.branchPt}
+            <circle
+              cx={conectando.branchPt.x}
+              cy={conectando.branchPt.y}
+              r="5"
+              fill="var(--accent)"
+            />
+          {/if}
         {/if}
       </g>
 
@@ -398,15 +557,20 @@
               {#if n.signs?.t}<text x="0" y="-12" font-size="11" text-anchor="middle" dominant-baseline="central" fill="var(--text-main)">{n.signs.t}</text>{/if}
               {#if n.signs?.b}<text x="0" y="12" font-size="11" text-anchor="middle" dominant-baseline="central" fill="var(--text-main)">{n.signs.b}</text>{/if}
 
-            <!-- 2. BIFURCACIÓN / PUNTO DE RAMIFICACIÓN -->
+            <!-- 2. BIFURCACIÓN / PUNTO DE RAMIFICACIÓN DISCRETO -->
             {:else if n.type === 'node'}
+              {@const valNode = simResultado?.val.get(n.id + "#0") ?? 0}
               <circle
-                r="6"
-                fill={sel ? "var(--accent)" : "var(--diagram-node-stroke)"}
+                r="7"
+                fill={valNode === 1 ? "var(--color-success)" : "var(--diagram-node-stroke)"}
+                stroke={sel ? "var(--accent)" : "transparent"}
+                stroke-width="2"
               />
 
             <!-- 3. INTERRUPTOR DE ENTRADA TOGGLE (Simulador) -->
             {:else if n.type === 'in'}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
               <rect
                 x={-dims.w / 2}
                 y={-dims.h / 2}
@@ -416,8 +580,10 @@
                 fill="var(--bg-surface)"
                 stroke={sel ? "var(--accent)" : "var(--diagram-node-stroke)"}
                 stroke-width={sel ? "2.5" : "1.8"}
+                cursor="pointer"
+                onclick={(e) => handleToggleSwitch(e, n)}
               />
-              <!-- Track conmutador -->
+              <!-- Track conmutador grande y sensible -->
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
               <rect
@@ -426,10 +592,11 @@
                 width={dims.w - 10}
                 height={dims.h - 10}
                 rx="11"
-                fill={n.on ? "var(--color-success)" : "var(--bg-subtle)"}
+                fill={n.on ? "var(--color-success)" : "#334155"}
                 stroke={n.on ? "#16a34a" : "var(--border-subtle)"}
                 stroke-width="1.5"
                 class="switch-track"
+                cursor="pointer"
                 onclick={(e) => handleToggleSwitch(e, n)}
               />
               <!-- Knob botón deslizante -->
@@ -438,19 +605,20 @@
               <circle
                 cx={n.on ? (dims.w / 2 - 16) : (-dims.w / 2 + 16)}
                 cy="0"
-                r="7"
+                r="8"
                 fill="#ffffff"
                 class="switch-knob"
+                cursor="pointer"
                 onclick={(e) => handleToggleSwitch(e, n)}
               />
               <text
                 x={n.on ? (-dims.w / 2 + 15) : (dims.w / 2 - 15)}
                 y="1"
-                font-size="10"
+                font-size="11"
                 font-weight="bold"
                 text-anchor="middle"
                 dominant-baseline="central"
-                fill={n.on ? "#ffffff" : "var(--text-muted)"}
+                fill="#ffffff"
                 pointer-events="none"
               >
                 {n.on ? '1' : '0'}
@@ -470,25 +638,25 @@
             {:else if n.type === 'out'}
               {@const val = simResultado?.val.get(n.id + "#0") ?? 0}
               <circle
-                r="17"
-                fill={val === 1 ? "var(--color-success)" : "#1e293b"}
+                r="18"
+                fill={val === 1 ? "var(--color-success)" : "#0f172a"}
                 stroke={sel ? "var(--accent)" : val === 1 ? "#16a34a" : "var(--diagram-node-stroke)"}
                 stroke-width={sel ? "2.5" : "2"}
                 class="led-probe {val === 1 ? 'active' : ''}"
               />
               <text
                 y="1"
-                font-size="13"
+                font-size="14"
                 font-weight="bold"
                 text-anchor="middle"
                 dominant-baseline="central"
-                fill={val === 1 ? "#ffffff" : "#94a3b8"}
+                fill={val === 1 ? "#ffffff" : "#64748b"}
               >
                 {val}
               </text>
               <text
                 x="0"
-                y="28"
+                y="30"
                 font-size="11"
                 font-weight="600"
                 text-anchor="middle"
@@ -499,6 +667,8 @@
 
             <!-- 5. GENERADOR DE RELOJ (Simulador) -->
             {:else if n.type === 'clk'}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
               <rect
                 x={-dims.w / 2}
                 y={-dims.h / 2}
@@ -508,12 +678,15 @@
                 fill="var(--bg-surface)"
                 stroke={sel ? "var(--accent)" : "var(--diagram-node-stroke)"}
                 stroke-width={sel ? "2.5" : "1.8"}
+                cursor="pointer"
+                onclick={(e) => handleToggleSwitch(e, n)}
               />
               <path
                 d="M -16 6 L -16 -6 L 0 -6 L 0 6 L 16 6 L 16 -6"
                 fill="none"
-                stroke="var(--accent)"
+                stroke={n.on ? "var(--color-success)" : "var(--accent)"}
                 stroke-width="2"
+                pointer-events="none"
               />
               <text
                 x="0"
@@ -697,10 +870,8 @@
                 onpointerenter={() => hoverPin = { nodeId: n.id, pin: p }}
                 onpointerleave={() => { if (hoverPin?.nodeId === n.id && hoverPin?.pin.id === p.id) hoverPin = null; }}
               >
-                <!-- Área amplia de captura para facilitar clic y arrastre -->
                 <circle r="12" fill="transparent" cursor="crosshair" />
 
-                <!-- Halo visual en hover o modo conectar -->
                 {#if isHoveredNode || isHoveredPin}
                   <circle
                     r={isHoveredPin ? 7.5 : 5.5}
@@ -766,18 +937,16 @@
   }
 
   .switch-track {
-    cursor: pointer;
-    transition: fill 0.2s ease;
+    transition: fill 0.15s ease;
   }
 
   .switch-knob {
-    cursor: pointer;
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
-    transition: cx 0.2s ease;
+    transition: cx 0.15s ease;
   }
 
   .led-probe.active {
-    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.75));
+    filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.85));
   }
 
   .pin-terminal {
@@ -793,11 +962,30 @@
   }
 
   .wire-path {
-    transition: stroke 0.15s ease, stroke-width 0.15s ease;
+    transition: stroke 0.1s ease;
   }
 
   .wire-path.energized {
     filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.6));
+  }
+
+  .segment-handle {
+    opacity: 0.85;
+    transition: opacity 0.15s ease;
+  }
+
+  .segment-handle:hover {
+    opacity: 1;
+    filter: drop-shadow(0 0 4px var(--accent));
+  }
+
+  .corner-branch-dot {
+    transition: r 0.15s ease;
+  }
+
+  .corner-branch-dot:hover {
+    r: 7.5;
+    filter: drop-shadow(0 0 5px var(--accent));
   }
 
   .connecting-guide {

@@ -158,6 +158,9 @@ export function scorePath(
  */
 export function pathD(pts: Punto[], r: number = 6): string {
   if (!pts || pts.length < 2) return "";
+  if (r <= 0) {
+    return pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  }
   let d = `M ${pts[0].x} ${pts[0].y}`;
   for (let i = 1; i < pts.length - 1; i++) {
     const p = pts[i];

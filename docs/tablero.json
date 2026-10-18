@@ -1,12 +1,12 @@
 {
   "proyecto": "uni-tools",
   "version": "2.0.0-dev",
-  "ultima_actualizacion": "2026-10-18T13:50:00-03:00",
+  "ultima_actualizacion": "2026-10-18T14:30:00-03:00",
   "metodologia": "Spec-Driven Development (SDD)",
   "fuente_de_verdad": "docs/",
   "resumen": {
-    "total_tareas": 19,
-    "completadas": 14,
+    "total_tareas": 20,
+    "completadas": 15,
     "en_progreso": 1,
     "pendientes": 4,
     "bloqueadas": 0
@@ -87,6 +87,14 @@
           "estado": "completado",
           "prioridad": "alta",
           "tags": ["simulador", "ansi", "specs", "routing"]
+        },
+        {
+          "id": "T1.5",
+          "titulo": "Líneas de conexión cuadradas a 90°, manipulación de tramos y bifurcaciones desde esquinas",
+          "archivo_asociado": "docs/specs/simulador/components.spec.md",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["simulador", "cad", "bifurcaciones", "cables"]
         }
       ]
     },
