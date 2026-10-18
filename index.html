@@ -164,7 +164,9 @@ a.boton .flecha{
   </a>
 
   <script>
-  /* Si una herramienta tiene un diagrama autoguardado en este navegador, se avisa en su botón */
+  /* Si una herramienta tiene un diagrama autoguardado en este navegador, se avisa en su botón.
+     La clave es la misma que arma src/comun/autoguardado.js ("uni-tools-autoguardado-" + la clave
+     de la herramienta): los data-auto de los botones de arriba tienen que coincidir. */
   document.querySelectorAll("[data-auto]").forEach(b => {
     try {
       const g = JSON.parse(localStorage.getItem("uni-tools-autoguardado-" + b.dataset.auto) || "null");

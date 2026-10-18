@@ -2,6 +2,9 @@
 node_modules/
 tests/test-results/
 tests/playwright-report/
+# (si alguien corre Playwright desde la raíz por error, deja estas carpetas)
+/test-results/
+/playwright-report/
 
 # --- Claude Code: configuración local de cada máquina (la skill sí se versiona) ---
 .claude/launch.json
