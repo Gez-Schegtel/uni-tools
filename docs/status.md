@@ -58,13 +58,22 @@ El proyecto se encuentra en el punto de inflexión donde se ha completado el an�
   - Redacción de [docs/specs/ui/design-tokens.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/design-tokens.spec.md): paletas cromáticas, variables semánticas, temas claro y oscuro, sombras y tipografía.
   - Redacción de [docs/specs/ui/layout.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/layout.spec.md): arquitectura de pantalla completa (Header con tool switcher, lienzo infinito con grilla sutil, toolbar flotante, inspector contextual colapsable y barra de estado).
   - Redacción de [docs/specs/ui/interactions.spec.md](file:///home/n1krov/projects/ui/interactions.spec.md): modos de cursor, doble clic para edición de texto in-situ, gestos táctiles y atajos de teclado universales.
-- **Verificación Automática:** 19 pruebas unitarias creadas en `tests/unit/` ejecutándose al 100% en menos de 800ms con Vitest. Todo el CSS legacy fue desvinculado del Core, dejándolo listo para la nueva UI.
+- **Fase 6: Construcción de la Nueva UI en Svelte 5 (En Progreso - T6.1 Completada):**
+  - Implementación del sistema de diseño en `src/ui/theme.css` con variables CSS semánticas, temas claro/oscuro y reseteo moderno.
+  - Creación de componentes modulares de Svelte 5:
+    - [`Header.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Header.svelte): selector de herramientas (Bloques, Simulador, Señales), nombre editable in-situ, acciones de deshacer/rehacer, exportación y alternador de tema.
+    - [`Toolbar.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Toolbar.svelte): barra flotante con cursores (`V`, `C`), agregado rápido de componentes según herramienta y borrado.
+    - [`Canvas.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Canvas.svelte): lienzo SVG con grilla de puntos, paneo fluido, zoom centrado, selección visual y creación de conexiones.
+    - [`Inspector.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Inspector.svelte): panel lateral derecho contextual con edición de etiquetas LaTeX, coordenadas $X/Y$, encaje en grilla, signos y colores.
+    - [`StatusBar.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/StatusBar.svelte): barra inferior con estadísticas, nivel de zoom y estado de autoguardado.
+    - [`App.svelte`](file:///home/n1krov/projects/uni-tools/src/App.svelte): integración completa y gestión de estado con Svelte 5 runes (`$state`, `$effect`).
+- **Verificación Automática:** 19 pruebas unitarias pasando al 100% y build de producción verificado con Vite (`npm run build` en ~390ms).
 
 ---
 
 ## 4. Próximos Pasos Inmediatos
 
-1. **Fase 6 (Construcción de la Nueva UI y Lienzo Svelte 5):**
-   - Implementar el sistema de diseño y CSS limpio en `src/ui/theme.css`.
-   - Desarrollar los componentes modulares de Svelte 5: `Header.svelte`, `Toolbar.svelte`, `Canvas.svelte`, `Inspector.svelte` y `StatusBar.svelte`.
-   - Conectar la UI con los motores matemáticos desacoplados de `src/core/`.
+1. **Fase 6 (Finalización):**
+   - Incorporar diálogos modales modernos (Tabla de Verdad con simplificación, Análisis de Mason con árbol paso a paso, Importación/Apertura con Drag & Drop).
+2. **Fase 3 (Especificaciones detalladas de Motores de Dominio):**
+   - Completar las specs formales pendientes en `docs/specs/`.

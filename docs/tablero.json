@@ -6,9 +6,9 @@
   "fuente_de_verdad": "docs/",
   "resumen": {
     "total_tareas": 18,
-    "completadas": 11,
+    "completadas": 12,
     "en_progreso": 0,
-    "pendientes": 7,
+    "pendientes": 6,
     "bloqueadas": 0
   },
   "fases": [
@@ -185,13 +185,13 @@
     {
       "id": "fase-6",
       "nombre": "Fase 6: Construcción de la Nueva UI y Lienzo Svelte",
-      "estado": "pendiente",
+      "estado": "en_progreso",
       "tareas": [
         {
           "id": "T6.1",
           "titulo": "Desarrollo de componentes visuales modernos y lienzo SVG reactivo",
           "archivo_asociado": "src/ui/",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["ui", "svelte", "canvas"]
         },

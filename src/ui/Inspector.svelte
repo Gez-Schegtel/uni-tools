@@ -1,0 +1,322 @@
+<script lang="ts">
+  interface Props {
+    elementoSeleccionado: any | null;
+    herramientaActiva: "bloque" | "simulador" | "senales";
+    onModificarElemento: (prop: string, valor: any) => void;
+    onDuplicar: () => void;
+    onBorrar: () => void;
+    onAlinearGrilla: () => void;
+  }
+
+  let {
+    elementoSeleccionado,
+    herramientaActiva,
+    onModificarElemento,
+    onDuplicar,
+    onBorrar,
+    onAlinearGrilla
+  }: Props = $props();
+
+  const COLORES_PRESET = [
+    "#ffffff", "#f8fafc", "#fef3c7", "#dcfce7", "#e0e7ff", "#fce7f3", "#fee2e2", "#101418"
+  ];
+</script>
+
+<aside class="contextual-inspector">
+  {#if elementoSeleccionado}
+    <div class="inspector-header">
+      <div class="elem-badge">
+        <span class="badge-type">{elementoSeleccionado.type || elementoSeleccionado.tipo || 'Elemento'}</span>
+        <span class="badge-id">#{elementoSeleccionado.id}</span>
+      </div>
+      <button class="ghost close-btn" onclick={() => elementoSeleccionado = null}>✕</button>
+    </div>
+
+    <div class="inspector-content">
+      <!-- Etiqueta / Ecuación LaTeX -->
+      <div class="inspector-card">
+        <label for="label-inp" class="field-label">Etiqueta / Función</label>
+        <input
+          id="label-inp"
+          type="text"
+          class="field-input"
+          value={elementoSeleccionado.label ?? elementoSeleccionado.nombre ?? elementoSeleccionado.g ?? ''}
+          placeholder="ej: G1, K/(s+1), \omega_n"
+          oninput={(e) => {
+            const val = (e.target as HTMLInputElement).value;
+            if (elementoSeleccionado.label !== undefined) onModificarElemento('label', val);
+            else if (elementoSeleccionado.nombre !== undefined) onModificarElemento('nombre', val);
+            else if (elementoSeleccionado.g !== undefined) onModificarElemento('g', val);
+          }}
+        />
+        <span class="field-hint">Soporta sintaxis LaTeX: K/(s+1), \omega_n, s^2</span>
+      </div>
+
+      <!-- Posición y Dimensiones -->
+      {#if elementoSeleccionado.x !== undefined}
+        <div class="inspector-card">
+          <span class="card-title">Geometría</span>
+          <div class="grid-row">
+            <div class="field-group">
+              <label for="x-inp" class="field-label">X</label>
+              <input
+                id="x-inp"
+                type="number"
+                class="field-input"
+                step="20"
+                value={Math.round(elementoSeleccionado.x)}
+                onchange={(e) => onModificarElemento('x', +(e.target as HTMLInputElement).value)}
+              />
+            </div>
+            <div class="field-group">
+              <label for="y-inp" class="field-label">Y</label>
+              <input
+                id="y-inp"
+                type="number"
+                class="field-input"
+                step="20"
+                value={Math.round(elementoSeleccionado.y)}
+                onchange={(e) => onModificarElemento('y', +(e.target as HTMLInputElement).value)}
+              />
+            </div>
+          </div>
+
+          <button class="ghost snap-btn" onclick={onAlinearGrilla}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" />
+            </svg>
+            <span>Encajar en grilla (20px)</span>
+          </button>
+        </div>
+      {/if}
+
+      <!-- Opciones de Sumador (Bloques) -->
+      {#if elementoSeleccionado.type === 'sum'}
+        <div class="inspector-card">
+          <span class="card-title">Signos de Entrada</span>
+          <div class="grid-row">
+            {#each ['l', 't', 'r', 'b'] as pos}
+              <div class="field-group">
+                <label for={"sign-" + pos} class="field-label">{pos.toUpperCase()}</label>
+                <select
+                  id={"sign-" + pos}
+                  class="field-select"
+                  value={elementoSeleccionado.signs?.[pos] || ''}
+                  onchange={(e) => {
+                    const signs = { ...elementoSeleccionado.signs, [pos]: (e.target as HTMLSelectElement).value };
+                    onModificarElemento('signs', signs);
+                  }}
+                >
+                  <option value="">Vacío</option>
+                  <option value="+">+</option>
+                  <option value="−">−</option>
+                </select>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Paleta de Color -->
+      <div class="inspector-card">
+        <span class="card-title">Color de Resalte</span>
+        <div class="color-palette">
+          {#each COLORES_PRESET as col}
+            <button
+              class="color-dot {elementoSeleccionado.color === col ? 'selected' : ''}"
+              style="background-color: {col}"
+              onclick={() => onModificarElemento('color', col === '#ffffff' ? undefined : col)}
+              title={col}
+            ></button>
+          {/each}
+        </div>
+      </div>
+
+      <!-- Acciones de Elemento -->
+      <div class="inspector-actions">
+        <button class="action-btn" onclick={onDuplicar} title="Duplicar (Ctrl+D)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          <span>Duplicar</span>
+        </button>
+        <button class="action-btn danger" onclick={onBorrar} title="Borrar (Supr)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+          </svg>
+          <span>Borrar</span>
+        </button>
+      </div>
+    </div>
+  {:else}
+    <div class="inspector-empty">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <p class="empty-title">Sin selección</p>
+      <p class="empty-desc">
+        Hacé clic en cualquier elemento, compuerta o conexión para editar sus propiedades.
+      </p>
+    </div>
+  {/if}
+</aside>
+
+<style>
+  .contextual-inspector {
+    width: 280px;
+    height: 100%;
+    background-color: var(--bg-surface);
+    border-left: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    z-index: 30;
+    user-select: none;
+    overflow-y: auto;
+  }
+
+  .inspector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .elem-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .badge-type {
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: capitalize;
+  }
+
+  .badge-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: ui-monospace, monospace;
+  }
+
+  .close-btn {
+    padding: 2px 6px;
+  }
+
+  .inspector-content {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .inspector-card {
+    background-color: var(--bg-app);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .field-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .field-input, .field-select {
+    width: 100%;
+  }
+
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-subtle);
+  }
+
+  .grid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .snap-btn {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 11px;
+    padding: 4px;
+  }
+
+  .color-palette {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .color-dot {
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    cursor: pointer;
+  }
+
+  .color-dot.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .inspector-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+
+  .inspector-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .empty-icon {
+    color: var(--text-subtle);
+    margin-bottom: 12px;
+  }
+
+  .empty-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+    margin-bottom: 4px;
+  }
+
+  .empty-desc {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+</style>
