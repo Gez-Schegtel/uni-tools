@@ -54,14 +54,17 @@ El proyecto se encuentra en el punto de inflexión donde se ha completado el an�
   - Se movieron `CLAUDE.md` y `.claude/` a `legacy/claude/`.
   - Se organizaron las imágenes en `public/`.
   - Se configuró el nuevo `index.html`, `src/App.svelte` y `src/main.ts` con compilación verificada en producción (`npm run build`).
+- **Fase 1: Especificaciones del Rediseño UI/UX (Completada):**
+  - Redacción de [docs/specs/ui/design-tokens.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/design-tokens.spec.md): paletas cromáticas, variables semánticas, temas claro y oscuro, sombras y tipografía.
+  - Redacción de [docs/specs/ui/layout.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/layout.spec.md): arquitectura de pantalla completa (Header con tool switcher, lienzo infinito con grilla sutil, toolbar flotante, inspector contextual colapsable y barra de estado).
+  - Redacción de [docs/specs/ui/interactions.spec.md](file:///home/n1krov/projects/ui/interactions.spec.md): modos de cursor, doble clic para edición de texto in-situ, gestos táctiles y atajos de teclado universales.
 - **Verificación Automática:** 19 pruebas unitarias creadas en `tests/unit/` ejecutándose al 100% en menos de 800ms con Vitest. Todo el CSS legacy fue desvinculado del Core, dejándolo listo para la nueva UI.
 
 ---
 
 ## 4. Próximos Pasos Inmediatos
 
-1. **Fase 1 (Rediseño UI/UX):**
-   - Especificar en `docs/specs/ui/layout.spec.md` la nueva interfaz moderna, fluida y natural (header, lienzo infinito, barra de herramientas flotante, panel inspector contextual colapsable y diálogos modales).
-   - Especificar tokens de diseño y temas claro/oscuro en `docs/specs/ui/design-tokens.spec.md`.
-2. **Fase 6 (Implementación UI Svelte 5):**
-   - Crear los componentes visuales de la nueva UI en `src/ui/` con el nuevo CSS desde cero.
+1. **Fase 6 (Construcción de la Nueva UI y Lienzo Svelte 5):**
+   - Implementar el sistema de diseño y CSS limpio en `src/ui/theme.css`.
+   - Desarrollar los componentes modulares de Svelte 5: `Header.svelte`, `Toolbar.svelte`, `Canvas.svelte`, `Inspector.svelte` y `StatusBar.svelte`.
+   - Conectar la UI con los motores matemáticos desacoplados de `src/core/`.

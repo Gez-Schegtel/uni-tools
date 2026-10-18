@@ -6,9 +6,9 @@
   "fuente_de_verdad": "docs/",
   "resumen": {
     "total_tareas": 18,
-    "completadas": 8,
+    "completadas": 11,
     "en_progreso": 0,
-    "pendientes": 10,
+    "pendientes": 7,
     "bloqueadas": 0
   },
   "fases": [
@@ -54,13 +54,13 @@
     {
       "id": "fase-1",
       "nombre": "Fase 1: Especificaciones del Rediseño UI/UX",
-      "estado": "pendiente",
+      "estado": "completado",
       "tareas": [
         {
           "id": "T1.1",
           "titulo": "Especificación de nuevo layout, lienzo y navegación natural",
           "archivo_asociado": "docs/specs/ui/layout.spec.md",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["ui", "ux", "specs"]
         },
@@ -68,7 +68,7 @@
           "id": "T1.2",
           "titulo": "Especificación del sistema de diseño, tokens y temas claro/oscuro",
           "archivo_asociado": "docs/specs/ui/design-tokens.spec.md",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "media",
           "tags": ["ui", "estilos"]
         },
@@ -76,7 +76,7 @@
           "id": "T1.3",
           "titulo": "Especificación de microinteracciones, inspector y atajos",
           "archivo_asociado": "docs/specs/ui/interactions.spec.md",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "media",
           "tags": ["ui", "interacciones"]
         }
