@@ -11,7 +11,7 @@ exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servi
 
 | Herramienta | Para qué sirve |
 |---|---|
-| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores y bifurcaciones. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
+| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores y bifurcaciones. Un bloque admite una sola entrada: la segunda flecha avisa y no se crea. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
 | **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión mínima (Quine–McCluskey) y tabla de excitación. Cables que se rutean solos, compuertas giratorias, recuadros, colores y área de impresión. |
 | **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason: ecuaciones, trayectorias, lazos, Δ, cofactores y función de transferencia (simbólica y numérica). Genera el diagrama de bloques equivalente, que se abre en la otra herramienta. |
 
