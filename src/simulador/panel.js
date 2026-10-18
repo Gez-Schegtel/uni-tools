@@ -7,8 +7,7 @@ function renderInspector() {
   if (wsel.length) {
     h += `<div class="sec"><h3>Cable (${wsel.length})</h3>
       <div class="iconbar"><button class="btn" id="w-alt">Ruta alternativa</button>
-      <button class="btn" id="w-reset">Ruta automática</button>
-      <button class="btn" id="w-del">Borrar</button></div>
+      <button class="btn" id="w-reset">Ruta automática</button></div>
       <div class="hint" style="margin-top:8px">Los cables se rutean solos esquivando compuertas; los que salen de la misma salida comparten tronco.</div></div>`;
     h += seccionColorPropio(wsel[0], "wc-", ["cable"]);
   }
@@ -43,8 +42,9 @@ function renderInspector() {
     h += `<div class="row"><label>Posición</label><div class="fill" style="display:flex;gap:6px">
       <input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}">
       <input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>`;
-    h += `<div class="iconbar" style="margin-top:10px">
-      <button class="btn" id="n-dup">Duplicar</button><button class="btn" id="n-del">Borrar</button></div></div>`;
+    h += `<div class="row" style="margin-top:10px"><div class="fill">
+      <button class="btn" id="n-dup" style="width:100%;display:flex;align-items:center;justify-content:space-between" title="Duplicar selección (Ctrl+D)"><span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Duplicar</span><kbd>Ctrl+D</kbd></button>
+    </div></div></div>`;
     if (esMarco(n)) {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "las compuertas")}
         <div class="grid4">
@@ -164,8 +164,6 @@ function wireInspector(nsel, wsel) {
   };
   alClic("n-toggle", () => nsel.forEach(n => { if (n.type === "in") n.on = !n.on; }));
   if ($("#n-dup")) $("#n-dup").onclick = duplicar;        // duplicar() ya guarda y redibuja
-  alClic("n-del", borrar);
-  alClic("w-del", borrar);
   alClic("w-alt", () => wsel.forEach(w => w.variant = (w.variant || 0) + 1));
   alClic("w-reset", () => wsel.forEach(rutaAuto));
   document.querySelectorAll(".pin-name").forEach(inp => {

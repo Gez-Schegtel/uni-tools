@@ -59,7 +59,18 @@ function renderInspector() {
     }
     if (n.type === "marco") {
       h += `<div class="hint">Sirve para encuadrar un grupo de elementos y ponerle nombre.
-        No se cablea ni desvía las flechas.</div></div>`;
+        No se cablea ni desvía las flechas.</div>`;
+    } else if (n.type !== "node") {
+      h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
+      <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
+      <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
+      <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
+    }
+    h += `<div class="row" style="margin-top:10px"><div class="fill">
+      <button class="btn" id="n-dup" style="width:100%;display:flex;align-items:center;justify-content:space-between" title="Duplicar selección (Ctrl+D)"><span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Duplicar</span><kbd>Ctrl+D</kbd></button>
+    </div></div></div>`;
+
+    if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
         <div class="grid4">
           <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${n.w}"></div></div>
@@ -71,11 +82,6 @@ function renderInspector() {
           izquierda (anda siempre), del borde o de cualquier parte vacía de adentro. Los elementos que
           tiene adentro no se mueven con él.</div></div>`;
     }
-    else
-    h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
-      <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
-      <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
-      <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div></div>`;
 
     if (n.type === "sum") {
       h += `<div class="sec"><h3>Signos del sumador</h3>
@@ -106,11 +112,6 @@ function renderInspector() {
       </div>`;
     }
     h += seccionColorPropio(n, "nc-", clavesColor(n));
-    h += `<div class="sec"><h3>Acciones</h3><div class="iconbar">
-      <button class="btn" id="n-dup">Duplicar</button>
-      <button class="btn" id="n-del">Borrar</button>
-      <button class="btn" id="n-snap">Imantar</button>
-    </div></div>`;
   }
   h += seccionHoja() + seccionTema() + seccionPaleta();
   box.innerHTML = h;
@@ -149,8 +150,6 @@ function wireInspector(nsel, esel) {
     sel.onchange = () => { nsel.forEach(n => { if (n.signs) n.signs[sel.dataset.side] = sel.value; }); commit(); render(); };
   });
   if ($("#n-dup")) $("#n-dup").onclick = duplicar;        // duplicar() ya guarda y redibuja
-  alClic("n-del", borrar);
-  alClic("n-snap", () => nsel.forEach(n => { n.x = Math.round(n.x / S.grid) * S.grid; n.y = Math.round(n.y / S.grid) * S.grid; }));
 
   live("e-label", v => esel.forEach(e => e.label = v));
   live("e-width", v => esel.forEach(e => e.width = +v || 1.6));
