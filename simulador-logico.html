@@ -267,7 +267,7 @@ svg#canvas{
     <button class="btn ghost" id="b-redo" title="Rehacer (Ctrl+Y)">
       <svg viewBox="0 0 24 24"><path d="M15 14l4-4-4-4"/><path d="M19 10h-9a5 5 0 000 10h3"/></svg></button>
     <button class="btn ghost" id="b-dup" title="Duplicar (Ctrl+D)">
-      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg></button>
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg><span>Duplicar</span> <kbd>Ctrl+D</kbd></button>
     <button class="btn ghost" id="b-del" title="Borrar (Supr)">
       <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
   </div>
@@ -362,6 +362,14 @@ svg#canvas{
   <span><span class="k">Cables</span> <span id="st-e">0</span></span>
   <span><span class="k">Selección</span> <span id="st-s">—</span></span>
   <span id="st-warn"></span>
+  <span style="display:flex;gap:8px;align-items:center;margin-left:8px;color:var(--ink-2)">
+    <span class="k">Atajos:</span>
+    <span><kbd>Ctrl+D</kbd> Duplicar</span>
+    <span><kbd>R</kbd> Girar</span>
+    <span><kbd>Supr</kbd> Borrar</span>
+    <span><kbd>F</kbd> Encuadrar</span>
+    <span><kbd>?</kbd> Ayuda</span>
+  </span>
   <span id="st-hint" style="margin-left:auto"></span>
 </div>
 
@@ -2046,8 +2054,7 @@ function renderInspector() {
   if (wsel.length) {
     h += `<div class="sec"><h3>Cable (${wsel.length})</h3>
       <div class="iconbar"><button class="btn" id="w-alt">Ruta alternativa</button>
-      <button class="btn" id="w-reset">Ruta automática</button>
-      <button class="btn" id="w-del">Borrar</button></div>
+      <button class="btn" id="w-reset">Ruta automática</button></div>
       <div class="hint" style="margin-top:8px">Los cables se rutean solos esquivando compuertas; los que salen de la misma salida comparten tronco.</div></div>`;
     h += seccionColorPropio(wsel[0], "wc-", ["cable"]);
   }
@@ -2082,8 +2089,9 @@ function renderInspector() {
     h += `<div class="row"><label>Posición</label><div class="fill" style="display:flex;gap:6px">
       <input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}">
       <input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>`;
-    h += `<div class="iconbar" style="margin-top:10px">
-      <button class="btn" id="n-dup">Duplicar</button><button class="btn" id="n-del">Borrar</button></div></div>`;
+    h += `<div class="row" style="margin-top:10px"><div class="fill">
+      <button class="btn" id="n-dup" style="width:100%;display:flex;align-items:center;justify-content:space-between" title="Duplicar selección (Ctrl+D)"><span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Duplicar</span><kbd>Ctrl+D</kbd></button>
+    </div></div></div>`;
     if (esMarco(n)) {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "las compuertas")}
         <div class="grid4">
@@ -2203,8 +2211,6 @@ function wireInspector(nsel, wsel) {
   };
   alClic("n-toggle", () => nsel.forEach(n => { if (n.type === "in") n.on = !n.on; }));
   if ($("#n-dup")) $("#n-dup").onclick = duplicar;        // duplicar() ya guarda y redibuja
-  alClic("n-del", borrar);
-  alClic("w-del", borrar);
   alClic("w-alt", () => wsel.forEach(w => w.variant = (w.variant || 0) + 1));
   alClic("w-reset", () => wsel.forEach(rutaAuto));
   document.querySelectorAll(".pin-name").forEach(inp => {
