@@ -96,15 +96,15 @@
       conexiones = [{ id: "c1", from: { id: "b1" }, to: { id: "s1" } }];
     } else if (h === "simulador") {
       nodos = [
-        { id: "in1", type: "in", x: 160, y: 180, label: "A", on: true },
-        { id: "in2", type: "in", x: 160, y: 260, label: "B", on: false },
-        { id: "and1", type: "and", x: 280, y: 220, w: 60, h: 44, label: "&" },
-        { id: "out1", type: "out", x: 400, y: 220, label: "S" }
+        { id: "in1", type: "in", x: 140, y: 160, label: "A", on: true },
+        { id: "in2", type: "in", x: 140, y: 240, label: "B", on: false },
+        { id: "and1", type: "and", x: 280, y: 200, label: "AND", pins: 2 },
+        { id: "out1", type: "out", x: 420, y: 200, label: "S" }
       ];
       conexiones = [
-        { id: "w1", from: { id: "in1" }, to: { id: "and1" } },
-        { id: "w2", from: { id: "in2" }, to: { id: "and1" } },
-        { id: "w3", from: { id: "and1" }, to: { id: "out1" } }
+        { id: "w1", from: { id: "in1", pin: "o" }, to: { id: "and1", pin: 0 } },
+        { id: "w2", from: { id: "in2", pin: "o" }, to: { id: "and1", pin: 1 } },
+        { id: "w3", from: { id: "and1", pin: "o" }, to: { id: "out1", pin: 0 } }
       ];
     } else if (h === "senales") {
       nodos = [
@@ -135,10 +135,28 @@
       nuevo.label = tipo === "block" ? "G" + uidCounter : tipo === "sum" ? "" : "X";
       if (tipo === "sum") nuevo.signs = { l: "+", t: "", r: "", b: "−" };
     } else if (herramientaActiva === "simulador") {
-      nuevo.type = tipo;
-      nuevo.label = tipo.toUpperCase();
-      nuevo.w = 56;
-      nuevo.h = 44;
+      if (tipo.startsWith("ff-")) {
+        const kind = tipo.replace("ff-", "");
+        nuevo.type = "ff";
+        nuevo.kind = kind;
+        nuevo.label = "FF-" + kind.toUpperCase();
+        nuevo.q = 0;
+      } else if (tipo === "clk") {
+        nuevo.type = "clk";
+        nuevo.label = "CLK";
+        nuevo.on = false;
+      } else if (tipo === "in") {
+        nuevo.type = "in";
+        nuevo.label = "IN";
+        nuevo.on = false;
+      } else if (tipo === "out") {
+        nuevo.type = "out";
+        nuevo.label = "OUT";
+      } else {
+        nuevo.type = tipo;
+        nuevo.label = tipo.toUpperCase();
+        nuevo.pins = (tipo === "not" || tipo === "buf") ? 1 : 2;
+      }
     } else if (herramientaActiva === "senales") {
       nuevo.nombre = "x" + uidCounter;
       nuevo.tipo = tipo;
@@ -153,7 +171,7 @@
     if (!elementoSeleccionado) return;
     const id = elementoSeleccionado.id;
     nodos = nodos.filter(n => n.id !== id);
-    conexiones = conexiones.filter(c => (c.from?.id !== id && c.to?.id !== id && c.de !== id && c.a !== id));
+    conexiones = conexiones.filter(c => c.id !== id && c.from?.id !== id && c.to?.id !== id && c.de !== id && c.a !== id);
     elementoSeleccionado = null;
     commitState();
   }
@@ -178,11 +196,11 @@
     }
   }
 
-  function handleCrearConexion(desdeId: string, hastaId: string) {
+  function handleCrearConexion(desdeId: string, hastaId: string, desdePin?: string | number, hastaPin?: string | number) {
     const nuevaConexion = {
       id: "conn_" + ++uidCounter,
-      from: { id: desdeId },
-      to: { id: hastaId },
+      from: { id: desdeId, pin: desdePin ?? "o" },
+      to: { id: hastaId, pin: hastaPin ?? 0 },
       de: desdeId,
       a: hastaId,
       g: "1",
@@ -190,6 +208,15 @@
     };
     conexiones = [...conexiones, nuevaConexion];
     commitState();
+  }
+
+  function handleToggleNodo(id: string) {
+    const n = nodos.find(item => item.id === id);
+    if (n) {
+      n.on = !n.on;
+      nodos = [...nodos];
+      commitState();
+    }
   }
 
   function handleModificarElemento(prop: string, valor: any) {
@@ -271,6 +298,7 @@
     />
 
     <Canvas
+      {herramientaActiva}
       {nodos}
       {conexiones}
       {elementoSeleccionado}
@@ -281,6 +309,7 @@
       onMoverElemento={handleMoverElemento}
       onActualizarVista={(p, z) => { pan = p; zoom = z; }}
       onCrearConexion={handleCrearConexion}
+      onToggleNodo={handleToggleNodo}
     />
 
     <Inspector

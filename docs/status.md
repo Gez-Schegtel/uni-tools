@@ -58,22 +58,24 @@ El proyecto se encuentra en el punto de inflexión donde se ha completado el an�
   - Redacción de [docs/specs/ui/design-tokens.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/design-tokens.spec.md): paletas cromáticas, variables semánticas, temas claro y oscuro, sombras y tipografía.
   - Redacción de [docs/specs/ui/layout.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/ui/layout.spec.md): arquitectura de pantalla completa (Header con tool switcher, lienzo infinito con grilla sutil, toolbar flotante, inspector contextual colapsable y barra de estado).
   - Redacción de [docs/specs/ui/interactions.spec.md](file:///home/n1krov/projects/ui/interactions.spec.md): modos de cursor, doble clic para edición de texto in-situ, gestos táctiles y atajos de teclado universales.
+  - Redacción de [docs/specs/simulador/components.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/simulador/components.spec.md): catálogo formal de símbolos ANSI (AND, OR, NOT, XOR, NAND, NOR, XNOR), encapsulados IC de biestables (D, JK, T, RS con notch dinámico de reloj y salidas $Q/\overline{Q}$), interruptores interactivos con toggle vivo y sondas LED de salida.
 - **Fase 6: Construcción de la Nueva UI en Svelte 5 (En Progreso - T6.1 Completada):**
   - Implementación del sistema de diseño en `src/ui/theme.css` con variables CSS semánticas, temas claro/oscuro y reseteo moderno.
+  - Módulo geométrico [`src/ui/canvas/geometry.ts`](file:///home/n1krov/projects/uni-tools/src/ui/canvas/geometry.ts): cálculo de puertos/pines, ruteo Manhattan a 90° con esquinas curvadas, caminos SVG ANSI y bucles de realimentación.
   - Creación de componentes modulares de Svelte 5:
     - [`Header.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Header.svelte): selector de herramientas (Bloques, Simulador, Señales), nombre editable in-situ, acciones de deshacer/rehacer, exportación y alternador de tema.
-    - [`Toolbar.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Toolbar.svelte): barra flotante con cursores (`V`, `C`), agregado rápido de componentes según herramienta y borrado.
-    - [`Canvas.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Canvas.svelte): lienzo SVG con grilla de puntos, paneo fluido, zoom centrado, selección visual y creación de conexiones.
-    - [`Inspector.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Inspector.svelte): panel lateral derecho contextual con edición de etiquetas LaTeX, coordenadas $X/Y$, encaje en grilla, signos y colores.
+    - [`Toolbar.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Toolbar.svelte): barra flotante con cursores (`V`, `C`), agregado rápido de todas las compuertas lógicas (AND, OR, NOT, XOR, NAND, NOR), biestables (D, JK, T, RS) y borrado.
+    - [`Canvas.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Canvas.svelte): lienzo SVG con terminales interactivos de pines visibles al hacer hover, drag-and-drop de cables ortogonales con guía punteada elástica, renderizado ANSI, conmutadores interactivos con simulación en tiempo real y cables energizados con nivel lógico visual (verde esmeralda para High, pizarra para Low).
+    - [`Inspector.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/Inspector.svelte): panel lateral derecho contextual con configuración de compuertas lógicas, número de entradas, selector de biestable (D, JK, T, RS), estado de interruptores, coordenadas $X/Y$, encaje en grilla y paleta cromática.
     - [`StatusBar.svelte`](file:///home/n1krov/projects/uni-tools/src/ui/StatusBar.svelte): barra inferior con estadísticas, nivel de zoom y estado de autoguardado.
-    - [`App.svelte`](file:///home/n1krov/projects/uni-tools/src/App.svelte): integración completa y gestión de estado con Svelte 5 runes (`$state`, `$effect`).
-- **Verificación Automática:** 19 pruebas unitarias pasando al 100% y build de producción verificado con Vite (`npm run build` en ~390ms).
+    - [`App.svelte`](file:///home/n1krov/projects/uni-tools/src/App.svelte): integración completa, reactividad con runes de Svelte 5 (`$state`, `$derived`, `$effect`) y circuito demostrativo interactivo listo para probar en local.
+- **Verificación Automática:** 25 pruebas unitarias en Vitest (`tests/unit/`) pasando al 100% y build de producción verificado con Vite (`npm run build` en ~480ms sin advertencias).
 
 ---
 
 ## 4. Próximos Pasos Inmediatos
 
 1. **Fase 6 (Finalización):**
-   - Incorporar diálogos modales modernos (Tabla de Verdad con simplificación, Análisis de Mason con árbol paso a paso, Importación/Apertura con Drag & Drop).
+   - Incorporar diálogos modales modernos (Tabla de Verdad con simplificación Quine-McCluskey, Análisis de Mason con árbol paso a paso, Importación/Apertura con Drag & Drop).
 2. **Fase 3 (Especificaciones detalladas de Motores de Dominio):**
    - Completar las specs formales pendientes en `docs/specs/`.

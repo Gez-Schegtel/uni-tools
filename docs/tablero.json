@@ -1,14 +1,14 @@
 {
   "proyecto": "uni-tools",
   "version": "2.0.0-dev",
-  "ultima_actualizacion": "2026-10-18T03:10:00-03:00",
+  "ultima_actualizacion": "2026-10-18T13:50:00-03:00",
   "metodologia": "Spec-Driven Development (SDD)",
   "fuente_de_verdad": "docs/",
   "resumen": {
-    "total_tareas": 18,
-    "completadas": 12,
-    "en_progreso": 0,
-    "pendientes": 6,
+    "total_tareas": 19,
+    "completadas": 14,
+    "en_progreso": 1,
+    "pendientes": 4,
     "bloqueadas": 0
   },
   "fases": [
@@ -53,7 +53,7 @@
     },
     {
       "id": "fase-1",
-      "nombre": "Fase 1: Especificaciones del Rediseño UI/UX",
+      "nombre": "Fase 1: Especificaciones del Rediseño UI/UX y Componentes",
       "estado": "completado",
       "tareas": [
         {
@@ -79,6 +79,14 @@
           "estado": "completado",
           "prioridad": "media",
           "tags": ["ui", "interacciones"]
+        },
+        {
+          "id": "T1.4",
+          "titulo": "Especificación de componentes ANSI, biestables y ruteo ortogonal interactivo",
+          "archivo_asociado": "docs/specs/simulador/components.spec.md",
+          "estado": "completado",
+          "prioridad": "alta",
+          "tags": ["simulador", "ansi", "specs", "routing"]
         }
       ]
     },
@@ -189,17 +197,17 @@
       "tareas": [
         {
           "id": "T6.1",
-          "titulo": "Desarrollo de componentes visuales modernos y lienzo SVG reactivo",
-          "archivo_asociado": "src/ui/",
+          "titulo": "Lienzo interactivo Svelte 5 con ruteo ortogonal, hover en pines, compuertas ANSI y simulación en tiempo real",
+          "archivo_asociado": "src/ui/Canvas.svelte",
           "estado": "completado",
           "prioridad": "alta",
-          "tags": ["ui", "svelte", "canvas"]
+          "tags": ["ui", "svelte", "canvas", "cad"]
         },
         {
           "id": "T6.2",
           "titulo": "Verificación final E2E y compatibilidad de archivos legacy",
           "archivo_asociado": "tests/",
-          "estado": "pendiente",
+          "estado": "en_progreso",
           "prioridad": "alta",
           "tags": ["qa", "compatibilidad"]
         }

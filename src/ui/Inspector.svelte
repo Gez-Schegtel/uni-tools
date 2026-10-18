@@ -117,6 +117,98 @@
         </div>
       {/if}
 
+      <!-- Opciones de Compuerta Lógica -->
+      {#if /^(and|nand|or|nor|xor|xnor|not|buf)$/.test(elementoSeleccionado.type)}
+        <div class="inspector-card">
+          <span class="card-title">Configuración de Compuerta</span>
+          <div class="grid-row">
+            <div class="field-group">
+              <label for="gate-type" class="field-label">Función Lógica</label>
+              <select
+                id="gate-type"
+                class="field-select"
+                value={elementoSeleccionado.type}
+                onchange={(e) => {
+                  const t = (e.target as HTMLSelectElement).value;
+                  onModificarElemento('type', t);
+                  onModificarElemento('label', t.toUpperCase());
+                  if (t === 'not' || t === 'buf') onModificarElemento('pins', 1);
+                }}
+              >
+                <option value="and">AND (&)</option>
+                <option value="nand">NAND</option>
+                <option value="or">OR (≥1)</option>
+                <option value="nor">NOR</option>
+                <option value="xor">XOR (=1)</option>
+                <option value="xnor">XNOR</option>
+                <option value="not">NOT (Inversor)</option>
+                <option value="buf">BUFFER</option>
+              </select>
+            </div>
+            {#if elementoSeleccionado.type !== 'not' && elementoSeleccionado.type !== 'buf'}
+              <div class="field-group">
+                <label for="gate-pins" class="field-label">Entradas</label>
+                <select
+                  id="gate-pins"
+                  class="field-select"
+                  value={elementoSeleccionado.pins || 2}
+                  onchange={(e) => onModificarElemento('pins', +(e.target as HTMLSelectElement).value)}
+                >
+                  <option value={2}>2 entradas</option>
+                  <option value={3}>3 entradas</option>
+                  <option value={4}>4 entradas</option>
+                  <option value={8}>8 entradas</option>
+                </select>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Opciones de Biestable / Flip-Flop -->
+      {#if elementoSeleccionado.type === 'ff'}
+        <div class="inspector-card">
+          <span class="card-title">Biestable / Flip-Flop</span>
+          <div class="field-group">
+            <label for="ff-kind" class="field-label">Tipo de Biestable</label>
+            <select
+              id="ff-kind"
+              class="field-select"
+              value={elementoSeleccionado.kind || 'd'}
+              onchange={(e) => {
+                const k = (e.target as HTMLSelectElement).value;
+                onModificarElemento('kind', k);
+                onModificarElemento('label', 'FF-' + k.toUpperCase());
+              }}
+            >
+              <option value="d">Flip-Flop D (Dato)</option>
+              <option value="jk">Flip-Flop JK</option>
+              <option value="t">Flip-Flop T (Toggle)</option>
+              <option value="sr">Flip-Flop RS / SR</option>
+            </select>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Opciones de Conmutador IN -->
+      {#if elementoSeleccionado.type === 'in'}
+        <div class="inspector-card">
+          <span class="card-title">Estado Lógico</span>
+          <div class="field-group">
+            <label for="in-state" class="field-label">Nivel de Entrada</label>
+            <select
+              id="in-state"
+              class="field-select"
+              value={elementoSeleccionado.on ? '1' : '0'}
+              onchange={(e) => onModificarElemento('on', (e.target as HTMLSelectElement).value === '1')}
+            >
+              <option value="0">0 (Nivel Bajo / Low)</option>
+              <option value="1">1 (Nivel Alto / High)</option>
+            </select>
+          </div>
+        </div>
+      {/if}
+
       <!-- Paleta de Color -->
       <div class="inspector-card">
         <span class="card-title">Color de Resalte</span>

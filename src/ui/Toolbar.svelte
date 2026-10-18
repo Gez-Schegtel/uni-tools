@@ -65,23 +65,53 @@
         <span class="icon-label">I/O</span>
       </button>
     {:else if herramientaActiva === 'simulador'}
-      <button class="tool-btn" onclick={() => onAgregarElemento('in')} title="Interruptor de Entrada">
+      <!-- Entradas y Salidas -->
+      <button class="tool-btn" onclick={() => onAgregarElemento('in')} title="Interruptor de Entrada (0/1)">
         <span class="icon-label">IN</span>
       </button>
-      <button class="tool-btn" onclick={() => onAgregarElemento('out')} title="Sonda de Salida">
+      <button class="tool-btn" onclick={() => onAgregarElemento('clk')} title="Generador de Reloj (Pulsos)">
+        <span class="icon-label">CLK</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('out')} title="Sonda LED de Salida">
         <span class="icon-label">OUT</span>
       </button>
+
+      <div class="divider"></div>
+
+      <!-- Compuertas Lógicas -->
       <button class="tool-btn" onclick={() => onAgregarElemento('and')} title="Compuerta AND">
-        <span class="icon-label">&</span>
+        <span class="icon-label">AND</span>
       </button>
       <button class="tool-btn" onclick={() => onAgregarElemento('or')} title="Compuerta OR">
-        <span class="icon-label">≥1</span>
+        <span class="icon-label">OR</span>
       </button>
       <button class="tool-btn" onclick={() => onAgregarElemento('not')} title="Inversor NOT">
-        <span class="icon-label">1</span>
+        <span class="icon-label">NOT</span>
       </button>
-      <button class="tool-btn" onclick={() => onAgregarElemento('ff')} title="Biestable / Flip-Flop D">
-        <span class="icon-label">FF</span>
+      <button class="tool-btn" onclick={() => onAgregarElemento('xor')} title="Compuerta XOR (O Exclusiva)">
+        <span class="icon-label">XOR</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('nand')} title="Compuerta NAND">
+        <span class="icon-label">NAND</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('nor')} title="Compuerta NOR">
+        <span class="icon-label">NOR</span>
+      </button>
+
+      <div class="divider"></div>
+
+      <!-- Biestables / Flip-Flops -->
+      <button class="tool-btn" onclick={() => onAgregarElemento('ff-d')} title="Biestable / Flip-Flop D">
+        <span class="icon-label">FF-D</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('ff-jk')} title="Biestable / Flip-Flop JK">
+        <span class="icon-label">FF-JK</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('ff-t')} title="Biestable / Flip-Flop T">
+        <span class="icon-label">FF-T</span>
+      </button>
+      <button class="tool-btn" onclick={() => onAgregarElemento('ff-sr')} title="Biestable / Flip-Flop RS">
+        <span class="icon-label">FF-RS</span>
       </button>
     {:else if herramientaActiva === 'senales'}
       <button class="tool-btn" onclick={() => onAgregarElemento('normal')} title="Agregar Nodo de Señal">

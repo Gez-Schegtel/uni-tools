@@ -117,9 +117,13 @@ export function simulate(
   const src = new Map<string, { id: string; i: number }>();
 
   for (const w of wires) {
-    src.set(w.to.id + ":" + w.to.pin, {
-      id: w.from.id,
-      i: idxSalida(w.from.pin || "o")
+    const fromId = w.from?.id || (w as any).de;
+    const toId = w.to?.id || (w as any).a;
+    if (!fromId || !toId) continue;
+    const toPin = w.to?.pin !== undefined ? w.to.pin : 0;
+    src.set(toId + ":" + toPin, {
+      id: fromId,
+      i: idxSalida(w.from?.pin || "o")
     });
   }
 
