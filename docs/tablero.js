@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 /**
- * Visualizador CLI del tablero de control de uni-tools.
+ * Visualizador CLI del tablero de control de uni-tools (ESM).
  * Uso: node docs/tablero.js
  */
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const TABLERO_PATH = path.join(__dirname, "tablero.json");
 
 if (!fs.existsSync(TABLERO_PATH)) {

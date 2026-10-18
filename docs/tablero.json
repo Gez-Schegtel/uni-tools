@@ -6,9 +6,9 @@
   "fuente_de_verdad": "docs/",
   "resumen": {
     "total_tareas": 18,
-    "completadas": 4,
+    "completadas": 8,
     "en_progreso": 0,
-    "pendientes": 14,
+    "pendientes": 10,
     "bloqueadas": 0
   },
   "fases": [
@@ -91,7 +91,7 @@
           "id": "T2.1",
           "titulo": "Especificación de esquema de documentos y validación Zod (JSON/SVG)",
           "archivo_asociado": "docs/specs/core/document-schema.spec.md",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["core", "schemas"]
         },
@@ -147,13 +147,13 @@
     {
       "id": "fase-4",
       "nombre": "Fase 4: Inicialización del Entorno de Desarrollo",
-      "estado": "pendiente",
+      "estado": "completado",
       "tareas": [
         {
           "id": "T4.1",
           "titulo": "Configuración de Vite, Svelte 5, TypeScript strict y Vitest",
           "archivo_asociado": "package.json",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["setup", "svelte", "typescript"]
         }
@@ -162,21 +162,21 @@
     {
       "id": "fase-5",
       "nombre": "Fase 5: Implementación de Motores Core y Pruebas Vitest",
-      "estado": "pendiente",
+      "estado": "completado",
       "tareas": [
         {
           "id": "T5.1",
           "titulo": "Implementación de Core y validadores con 100% test coverage en Vitest",
           "archivo_asociado": "src/core/",
-          "estado": "pendiente",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["core", "tdd", "vitest"]
         },
         {
           "id": "T5.2",
           "titulo": "Implementación de motores matemáticos desacoplados del DOM",
-          "archivo_asociado": "src/engines/",
-          "estado": "pendiente",
+          "archivo_asociado": "src/core/",
+          "estado": "completado",
           "prioridad": "alta",
           "tags": ["motores", "tdd", "vitest"]
         }

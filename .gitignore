@@ -1,5 +1,7 @@
 # --- Pruebas (tests/): dependencias y resultados ---
 node_modules/
+dist/
+coverage/
 tests/test-results/
 tests/playwright-report/
 

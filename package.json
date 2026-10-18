@@ -1,0 +1,33 @@
+{
+  "name": "uni-tools",
+  "version": "1.0.0",
+  "description": "<img src=\"uni-tools-logo.png\" alt=\"uni-tools — Simulación y creación de diagramas lógicos, de bloques y de señales\" width=\"480\">",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "tablero": "node docs/tablero.js"
+  },
+  "bugs": {
+    "url": "https://github.com/Gez-Schegtel/uni-tools/issues"
+  },
+  "homepage": "https://github.com/Gez-Schegtel/uni-tools#readme",
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

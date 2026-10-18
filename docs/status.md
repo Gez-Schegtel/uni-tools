@@ -34,20 +34,28 @@ El proyecto se encuentra en el punto de inflexión donde se ha completado el an�
 
 ### [2026-10-18]
 - **Análisis completo del código fuente:** Se auditaron todas las herramientas ([diagrama-bloque.html](file:///home/n1krov/projects/uni-tools/diagrama-bloque.html), [simulador-logico.html](file:///home/n1krov/projects/uni-tools/simulador-logico.html), [diagrama-señales.html](file:///home/n1krov/projects/uni-tools/diagrama-señales.html)) y fuentes en `src/`. Se documentaron en [docs/resumen_actual.md](file:///home/n1krov/projects/uni-tools/docs/resumen_actual.md).
-- **Detección de problemas legacy:** Se identificó que en el commit `46402a1` se habían editado directamente los archivos de la raíz desincronizando `src/` y rompiendo `src/construir.js --comprobar`.
-- **Definición de stack tecnológico:** Evaluación y selección de Svelte 5 + TypeScript + Vite.
-- **Creación de directivas en GEMINI.md:** Fuente de verdad única en `docs/`, commits obligatorios por cada spec/cambio, y sincronización estricta de estado.
 - **Configuración del entorno SDD:**
   - Estructuración de directorios temáticos: `docs/specs/core/`, `docs/specs/bloque/`, `docs/specs/simulador/`, `docs/specs/senales/`, `docs/specs/ui/`.
   - Creación de `docs/tablero.json` y del visualizador interactivo de terminal `docs/tablero.js`.
-  - Creación de `docs/status.md`.
+  - Reglas operativas y fuente de verdad en [GEMINI.md](file:///home/n1krov/projects/uni-tools/GEMINI.md).
+- **Inicialización del Stack Tecnológico Moderno (Fase 4):**
+  - Setup de `package.json` en raíz con Vite 8, Svelte 5 (`^5.57.2`), TypeScript 7 strict, Vitest 5 y Zod.
+  - Configuración de `tsconfig.json`, `vite.config.ts`, `svelte.config.js`.
+- **Preservación y Port de Motores Matemáticos / Core (Fases 2 y 5):**
+  - Especificación formal e implementación de esquemas Zod en [docs/specs/core/document-schema.spec.md](file:///home/n1krov/projects/uni-tools/docs/specs/core/document-schema.spec.md) y `src/core/schemas/document.schema.ts`.
+  - Port a TypeScript puro del motor de análisis de Mason (`src/core/mason/mason.ts`) y síntesis de diagramas de bloques (`src/core/mason/synthesis.ts`).
+  - Port a TypeScript puro del simulador lógico combinacional/secuencial (`src/core/logic/simulator.ts`) y optimizador Quine-McCluskey (`src/core/logic/minimizer.ts`).
+  - Port a TypeScript puro del parser de ecuaciones LaTeX y layout de cajas (`src/core/math/parser.ts`).
+  - Port a TypeScript puro del ruteo ortogonal A* (`src/core/routing/orthogonal.ts`).
+  - Implementación de máquina de estado e historial inmutable `HistoryManager` (`src/core/history/history.ts`).
+- **Verificación Automática:** 19 pruebas unitarias creadas en `tests/unit/` ejecutándose al 100% en menos de 800ms con Vitest. Todo el CSS legacy fue desvinculado del Core, dejándolo listo para la nueva UI.
 
 ---
 
 ## 4. Próximos Pasos Inmediatos
 
-1. **Finalizar Fase 0:** Marcar T0.4 como completada en `docs/tablero.json` y realizar el commit correspondiente.
-2. **Arrancar Fase 1 (Rediseño UI/UX):**
-   - Redactar `docs/specs/ui/layout.spec.md` detallando la nueva disposición de la pantalla, el lienzo infinito, el inspector colapsable y los controles contextuales.
-   - Definir `docs/specs/ui/design-tokens.spec.md` (paleta moderna, tipografía y soporte para temas claro/oscuro).
-   - Acordar los mockups conceptuales con el usuario antes de pasar a la especificación de los motores de cálculo.
+1. **Fase 1 (Rediseño UI/UX):**
+   - Especificar en `docs/specs/ui/layout.spec.md` la nueva interfaz moderna, fluida y natural (header, lienzo infinito, barra de herramientas flotante, panel inspector contextual colapsable y diálogos modales).
+   - Especificar tokens de diseño y temas claro/oscuro en `docs/specs/ui/design-tokens.spec.md`.
+2. **Fase 6 (Implementación UI Svelte 5):**
+   - Crear los componentes visuales de la nueva UI en `src/ui/` con el nuevo CSS desde cero.
