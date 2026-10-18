@@ -46,17 +46,17 @@ svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; rende
 svg.addEventListener("pointerdown", ev => {
   if (ev.pointerType === "touch") {
     dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    if (dedos.size === 2) { svg.setPointerCapture(ev.pointerId); return arrancarPellizco(); }
+    if (dedos.size === 2) { capturarPuntero(ev); return arrancarPellizco(); }
     if (dedos.size > 2) return;
   }
   // rueda del mouse, barra espaciadora, o Ctrl (⌘) + clic izquierdo: mueven la hoja
   if (ev.button === 1 || spaceDown || (ev.button === 0 && (ev.ctrlKey || ev.metaKey))) {
     drag = { kind: "pan", x0: ev.clientX, y0: ev.clientY, p0: Object.assign({}, S.pan) };
-    svg.classList.add("panning"); svg.setPointerCapture(ev.pointerId); return;
+    svg.classList.add("panning"); capturarPuntero(ev); return;
   }
   if (ev.button !== 0) return;
   const w = toWorld(ev), t = ev.target;
-  svg.setPointerCapture(ev.pointerId);
+  capturarPuntero(ev);
 
   if (drag && drag.kind === "curve-new") {
     commit(); drag = null; render(); return;

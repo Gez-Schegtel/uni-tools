@@ -54,7 +54,7 @@ function nodoDeSalida() {
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
-const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
+const docDatos = () => ({ version: VERSION_DOC, nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodos = d.nodos; S.ramas = d.ramas; uidc = d.uidc || uidc;

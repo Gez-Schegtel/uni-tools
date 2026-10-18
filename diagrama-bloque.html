@@ -498,6 +498,13 @@ svg.addEventListener("pointerdown", () => {
   if (s && s.rangeCount && !s.isCollapsed) s.removeAllRanges();
 }, true);
 
+/* Capturar el puntero es una ayuda para no perder el gesto, no un requisito: puede
+   fallar (un dedo que ya se levantó, eventos sintéticos) y el gesto tiene que seguir
+   igual, así que el error se ignora. */
+function capturarPuntero(ev) {
+  try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+}
+
 /* Crea un elemento SVG con sus atributos y, si se le pasa, lo cuelga del padre */
 function el(tag, attrs, parent) {
   const e = document.createElementNS(NS, tag);
@@ -570,8 +577,10 @@ function aplicarTema() {
 /* Las puntas de flecha viven en <defs> y no heredan el color de cada flecha,
    así que hay un marcador por color, creado a medida que hace falta. */
 const idMarcador = (color) => "arrow-" + color.replace(/[^0-9a-zA-Z]/g, "");
+const marcadoresUsados = new Set();          // los que usó el render en curso
 function markerPara(color) {
   const id = idMarcador(color);
+  marcadoresUsados.add(id);
   if (!svg.querySelector("#" + id)) {
     const m = el("marker", { id, viewBox: "0 0 10 10", refX: 9.2, refY: 5,
       markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse", markerUnits: "strokeWidth" },
@@ -579,6 +588,12 @@ function markerPara(color) {
     el("path", { d: "M0.5 1.2 L9.5 5 L0.5 8.8 z", fill: color }, m);
   }
   return `url(#${id})`;
+}
+/* Los marcadores de colores que ya no se usan se sacan al terminar cada render: si no,
+   arrastrar el selector de color deja uno en <defs> por cada tono por el que se pasa. */
+function limpiarMarcadores() {
+  for (const m of svg.querySelectorAll("defs > marker"))
+    if (m.id.startsWith("arrow-") && !marcadoresUsados.has(m.id)) m.remove();
 }
 /* ---------- identificadores ----------
    Un id repetido es veneno: buscar por id devuelve siempre el primero, así que el
@@ -615,6 +630,11 @@ const buscarNodo = (id) => S[HERRAMIENTA.nodos].find(n => n.id === id);
    Lo que se guarda en el JSON y viaja adentro del SVG lo arma docDatos() de cada
    herramienta; lo que llega de un archivo lo valida su cargarDoc(). Esto es el resto,
    que es igual en las tres. */
+
+/* Versión del formato del documento: viaja en el JSON y adentro del SVG para que, si
+   cambia la forma de guardar, se sepa con qué se está tratando (los archivos viejos
+   no la traen). Al subirla, migrar en cargarDoc() según la que venga. */
+const VERSION_DOC = 1;
 
 /* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
    herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
@@ -1379,8 +1399,8 @@ const getEdge = (id) => S.edges.find(e => e.id === id);
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
 /* El documento entero, tal como se guarda en el JSON y como viaja adentro del SVG */
-const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes, edges: S.edges,
-                          tema: S.tema, hoja: S.hoja });
+const docDatos = () => ({ version: VERSION_DOC, nombre: limpiarNombre(S.nombre), nodes: S.nodes,
+                          edges: S.edges, tema: S.tema, hoja: S.hoja });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodes = d.nodes; S.edges = d.edges; uidc = d.uidc || uidc;
@@ -1998,6 +2018,7 @@ function render() {
   routeAll();
   aplicarTema();
   gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
+  marcadoresUsados.clear();
   moverVista();
   $("#gridbg").style.display = S.showGrid ? "" : "none";
   // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
@@ -2035,6 +2056,7 @@ function render() {
   if (document.activeElement !== $("#b-nombre")) $("#b-nombre").value = S.nombre || "";
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
+  limpiarMarcadores();
   renderInspector();
 }
 /* ======================= inspector ======================= */
@@ -2499,7 +2521,7 @@ function empezarTramo(eid, i, w) {
   return true;
 }
 svg.addEventListener("pointerdown", ev => {
-  try { svg.setPointerCapture(ev.pointerId); } catch {}
+  capturarPuntero(ev);
   const w = toWorld(ev);
   const t = ev.target;
   if (ev.pointerType === "touch") {

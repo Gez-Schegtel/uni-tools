@@ -23,8 +23,8 @@ const getEdge = (id) => S.edges.find(e => e.id === id);
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
 /* El documento entero, tal como se guarda en el JSON y como viaja adentro del SVG */
-const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes, edges: S.edges,
-                          tema: S.tema, hoja: S.hoja });
+const docDatos = () => ({ version: VERSION_DOC, nombre: limpiarNombre(S.nombre), nodes: S.nodes,
+                          edges: S.edges, tema: S.tema, hoja: S.hoja });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodes = d.nodes; S.edges = d.edges; uidc = d.uidc || uidc;

@@ -54,8 +54,10 @@ function aplicarTema() {
 /* Las puntas de flecha viven en <defs> y no heredan el color de cada flecha,
    así que hay un marcador por color, creado a medida que hace falta. */
 const idMarcador = (color) => "arrow-" + color.replace(/[^0-9a-zA-Z]/g, "");
+const marcadoresUsados = new Set();          // los que usó el render en curso
 function markerPara(color) {
   const id = idMarcador(color);
+  marcadoresUsados.add(id);
   if (!svg.querySelector("#" + id)) {
     const m = el("marker", { id, viewBox: "0 0 10 10", refX: 9.2, refY: 5,
       markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse", markerUnits: "strokeWidth" },
@@ -63,4 +65,10 @@ function markerPara(color) {
     el("path", { d: "M0.5 1.2 L9.5 5 L0.5 8.8 z", fill: color }, m);
   }
   return `url(#${id})`;
+}
+/* Los marcadores de colores que ya no se usan se sacan al terminar cada render: si no,
+   arrastrar el selector de color deja uno en <defs> por cada tono por el que se pasa. */
+function limpiarMarcadores() {
+  for (const m of svg.querySelectorAll("defs > marker"))
+    if (m.id.startsWith("arrow-") && !marcadoresUsados.has(m.id)) m.remove();
 }

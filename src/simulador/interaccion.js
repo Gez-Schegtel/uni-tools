@@ -49,7 +49,7 @@ const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-wid],[data
 svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; render(); });
 
 svg.addEventListener("pointerdown", ev => {
-  svg.setPointerCapture(ev.pointerId);
+  capturarPuntero(ev);
   const w = toWorld(ev), t = ev.target;
   if (ev.pointerType === "touch") {
     dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });

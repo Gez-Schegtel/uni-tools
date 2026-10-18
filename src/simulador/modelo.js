@@ -42,7 +42,7 @@ function proximaLetra() {
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
 /* El circuito entero, tal como se guarda en el JSON y como viaja adentro del SVG */
-const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodes: S.nodes,
+const docDatos = () => ({ version: VERSION_DOC, nombre: limpiarNombre(S.nombre), nodes: S.nodes,
   wires: S.wires.map(w => ({ id: w.id, from: w.from, to: w.to, variant: w.variant, color: w.color })),
   tema: S.tema, hoja: S.hoja });
 function restore(js) {

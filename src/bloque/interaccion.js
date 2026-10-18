@@ -136,7 +136,7 @@ function empezarTramo(eid, i, w) {
   return true;
 }
 svg.addEventListener("pointerdown", ev => {
-  try { svg.setPointerCapture(ev.pointerId); } catch {}
+  capturarPuntero(ev);
   const w = toWorld(ev);
   const t = ev.target;
   if (ev.pointerType === "touch") {

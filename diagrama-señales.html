@@ -391,6 +391,13 @@ svg.addEventListener("pointerdown", () => {
   if (s && s.rangeCount && !s.isCollapsed) s.removeAllRanges();
 }, true);
 
+/* Capturar el puntero es una ayuda para no perder el gesto, no un requisito: puede
+   fallar (un dedo que ya se levantó, eventos sintéticos) y el gesto tiene que seguir
+   igual, así que el error se ignora. */
+function capturarPuntero(ev) {
+  try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+}
+
 /* Crea un elemento SVG con sus atributos y, si se le pasa, lo cuelga del padre */
 function el(tag, attrs, parent) {
   const e = document.createElementNS(NS, tag);
@@ -474,6 +481,11 @@ const buscarNodo = (id) => S[HERRAMIENTA.nodos].find(n => n.id === id);
    Lo que se guarda en el JSON y viaja adentro del SVG lo arma docDatos() de cada
    herramienta; lo que llega de un archivo lo valida su cargarDoc(). Esto es el resto,
    que es igual en las tres. */
+
+/* Versión del formato del documento: viaja en el JSON y adentro del SVG para que, si
+   cambia la forma de guardar, se sepa con qué se está tratando (los archivos viejos
+   no la traen). Al subirla, migrar en cargarDoc() según la que venga. */
+const VERSION_DOC = 1;
 
 /* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
    herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
@@ -803,7 +815,7 @@ function nodoDeSalida() {
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
-const docDatos = () => ({ nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
+const docDatos = () => ({ version: VERSION_DOC, nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodos = d.nodos; S.ramas = d.ramas; uidc = d.uidc || uidc;
@@ -1954,17 +1966,17 @@ svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; rende
 svg.addEventListener("pointerdown", ev => {
   if (ev.pointerType === "touch") {
     dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-    if (dedos.size === 2) { svg.setPointerCapture(ev.pointerId); return arrancarPellizco(); }
+    if (dedos.size === 2) { capturarPuntero(ev); return arrancarPellizco(); }
     if (dedos.size > 2) return;
   }
   // rueda del mouse, barra espaciadora, o Ctrl (⌘) + clic izquierdo: mueven la hoja
   if (ev.button === 1 || spaceDown || (ev.button === 0 && (ev.ctrlKey || ev.metaKey))) {
     drag = { kind: "pan", x0: ev.clientX, y0: ev.clientY, p0: Object.assign({}, S.pan) };
-    svg.classList.add("panning"); svg.setPointerCapture(ev.pointerId); return;
+    svg.classList.add("panning"); capturarPuntero(ev); return;
   }
   if (ev.button !== 0) return;
   const w = toWorld(ev), t = ev.target;
-  svg.setPointerCapture(ev.pointerId);
+  capturarPuntero(ev);
 
   if (drag && drag.kind === "curve-new") {
     commit(); drag = null; render(); return;

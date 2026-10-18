@@ -326,6 +326,41 @@ test.describe("mover la hoja", () => {
   });
 });
 
+test.describe("área de impresión", () => {
+  test("con hoja, la exportación es exactamente ese recorte", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      loadExample();
+      const sin = buildExportSVG();
+      ponerHoja("a4-h");
+      const con = buildExportSVG();
+      const h = hojaActiva();
+      return { sin: [sin.W, sin.H], con: [con.W, con.H],
+               viewBox: con.svg.getAttribute("viewBox"), caja: [h.x, h.y, h.w, h.h] };
+    });
+    expect(r.con).toEqual([1123, 794]);               // A4 apaisada, 1 px = 1 unidad
+    expect(r.viewBox).toBe(r.caja.join(" "));         // el viewBox es justo la hoja
+    expect(r.sin[0]).not.toBe(r.con[0]);              // sin área, se recorta alrededor de lo dibujado
+  });
+  test("el selector de la barra cambia la hoja y avisa del recorte", async ({ page }) => {
+    await page.locator(".glab", { hasText: "Archivo" }).click();      // despliega el grupo
+    await page.selectOption("#b-hoja", "a4-v");
+    await expect(page.locator("#toast")).toHaveText("El SVG y el PNG van a salir con este recorte");
+    expect(await page.evaluate(() => hojaActiva())).toMatchObject({ preset: "a4-v", w: 794, h: 1123 });
+  });
+});
+
+test("las puntas de flecha no dejan marcadores viejos en <defs>", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    loadExample();
+    S.sel = []; S.selEdges = []; render();
+    for (const c of ["#111111", "#222222", "#333333", "#444444"]) { S.tema.flecha = c; render(); }
+    const vigentes = new Set(S.edges.map((e) => idMarcador(colorEfectivo(e, "flecha"))));
+    const enDefs = Array.from(document.querySelectorAll("#canvas defs > marker[id^='arrow-']"));
+    return { viejos: enDefs.map((m) => m.id).filter((id) => !vigentes.has(id)) };
+  });
+  expect(r.viejos).toEqual([]);
+});
+
 test.describe("ecuaciones dentro de los bloques", () => {
   /* El texto tal como se dibuja, con ^{…} y _{…} para lo que sube y lo que baja */
   const dibujado = (page, label) => page.evaluate((label) => {

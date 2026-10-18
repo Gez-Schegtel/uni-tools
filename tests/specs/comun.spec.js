@@ -1,6 +1,7 @@
 /* Lo que las tres herramientas comparten desde src/comun: tiene que comportarse igual en
    las tres. Cada prueba corre una vez por herramienta. */
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
 const { abrir } = require("./ayudas");
 
 const HERRAMIENTAS = [
@@ -99,6 +100,64 @@ for (const h of HERRAMIENTAS) {
       await expect(page.locator("#ov-io .sub")).toContainText("así que se puede volver a abrir y editar");
       await page.locator("#io-cancel").click();
       await expect(page.locator("#ov-io")).not.toHaveClass(/show/);
+    });
+
+    test("el PNG se descarga y es un PNG del triple del recorte exportado", async ({ page }) => {
+      const { W, H } = await page.evaluate(() => { const r = buildExportSVG(); return { W: r.W, H: r.H }; });
+      const [descarga] = await Promise.all([
+        page.waitForEvent("download"),
+        page.evaluate(() => document.getElementById("b-png").click()),
+      ]);
+      expect(await descarga.failure()).toBeNull();
+      expect(descarga.suggestedFilename()).toMatch(".png");
+      const bytes = fs.readFileSync(await descarga.path());
+      expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");   // firma del PNG
+      const ancho = bytes.readUInt32BE(16), alto = bytes.readUInt32BE(20);
+      expect(Math.abs(ancho - W * 3)).toBeLessThanOrEqual(1);                 // se dibuja al triple
+      expect(ancho / alto).toBeCloseTo(W / H, 2);
+    });
+
+    test("el documento guardado lleva la versión del formato, también adentro del SVG", async ({ page }) => {
+      const v = await page.evaluate(() => [docDatos().version, VERSION_DOC]);
+      expect(Number.isInteger(v[0]) && v[0] >= 1).toBe(true);
+      expect(v[0]).toBe(v[1]);
+      const enSVG = await page.evaluate(() =>
+        JSON.parse(buildExportSVG().svg.querySelector("metadata").textContent).version);
+      expect(enSVG).toBe(v[0]);
+    });
+
+    test("gestos táctiles: un dedo en el fondo mueve la hoja y dos dedos hacen zoom", async ({ page }) => {
+      const puntero = (tipo, id, x, y) => page.evaluate(([tipo, id, x, y]) => {
+        document.getElementById("canvas").dispatchEvent(new PointerEvent(tipo, {
+          pointerId: id, pointerType: "touch", isPrimary: id === 1,
+          clientX: x, clientY: y, bubbles: true, cancelable: true }));
+      }, [tipo, id, x, y]);
+      const p = await sobreFondo(page);
+      // un dedo en el fondo: la hoja se corre con el dedo
+      const pan0 = await page.evaluate(() => ({ x: S.pan.x, y: S.pan.y }));
+      await puntero("pointerdown", 1, p.x, p.y);
+      await puntero("pointermove", 1, p.x + 60, p.y + 30);
+      await puntero("pointerup", 1, p.x + 60, p.y + 30);
+      const pan1 = await page.evaluate(() => ({ x: S.pan.x, y: S.pan.y }));
+      expect(pan1.x - pan0.x).toBeCloseTo(60, 0);
+      expect(pan1.y - pan0.y).toBeCloseTo(30, 0);
+      // dos dedos que se separan al doble: el zoom se duplica sobre el mismo punto de la hoja
+      await page.evaluate(() => { S.zoom = 1; render(); });
+      const enHoja = (x, y) => page.evaluate(([x, y]) => {
+        const r = document.getElementById("canvas").getBoundingClientRect();
+        return [(x - r.left - S.pan.x) / S.zoom, (y - r.top - S.pan.y) / S.zoom];
+      }, [x, y]);
+      const w0 = await enHoja(p.x, p.y);
+      await puntero("pointerdown", 1, p.x - 50, p.y);
+      await puntero("pointerdown", 2, p.x + 50, p.y);
+      await puntero("pointermove", 1, p.x - 100, p.y);
+      await puntero("pointermove", 2, p.x + 100, p.y);
+      await puntero("pointerup", 1, p.x - 100, p.y);
+      await puntero("pointerup", 2, p.x + 100, p.y);
+      expect(await page.evaluate(() => S.zoom)).toBeCloseTo(2, 2);
+      const w1 = await enHoja(p.x, p.y);
+      expect(w1[0]).toBeCloseTo(w0[0], 3);
+      expect(w1[1]).toBeCloseTo(w0[1], 3);
     });
   });
 }

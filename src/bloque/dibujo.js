@@ -142,6 +142,7 @@ function render() {
   routeAll();
   aplicarTema();
   gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
+  marcadoresUsados.clear();
   moverVista();
   $("#gridbg").style.display = S.showGrid ? "" : "none";
   // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
@@ -179,5 +180,6 @@ function render() {
   if (document.activeElement !== $("#b-nombre")) $("#b-nombre").value = S.nombre || "";
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
+  limpiarMarcadores();
   renderInspector();
 }

@@ -239,6 +239,23 @@ test.describe("simplificación (Quine–McCluskey)", () => {
   });
 });
 
+test.describe("área de impresión", () => {
+  test("con hoja, la exportación es exactamente ese recorte", async ({ page }) => {
+    await page.evaluate(() => cargarEjemplo("half"));
+    const r = await page.evaluate(() => {
+      const sin = buildExportSVG();
+      ponerHoja("a4-h");
+      const con = buildExportSVG();
+      const h = hojaActiva();
+      return { sin: [sin.W, sin.H], con: [con.W, con.H],
+               viewBox: con.svg.getAttribute("viewBox"), caja: [h.x, h.y, h.w, h.h] };
+    });
+    expect(r.con).toEqual([1123, 794]);               // A4 apaisada, 1 px = 1 unidad
+    expect(r.viewBox).toBe(r.caja.join(" "));         // el viewBox es justo la hoja
+    expect(r.sin[0]).not.toBe(r.con[0]);              // sin área, se recorta alrededor de lo dibujado
+  });
+});
+
 test("los cables no pasan por encima de la compuerta de la que salen o a la que llegan", async ({ page }) => {
   // en el latch SR los cables se cruzan de una NOR a la otra: tienen que rodearlas
   const cruces = await page.evaluate(() => {

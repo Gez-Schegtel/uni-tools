@@ -17,7 +17,7 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 
 | archivo | qué tiene |
 |---|---|
-| `lienzo.js` | `"use strict"`, `NS`, `$`, `svg`, `viewport`, el arreglo de Firefox, `el()`, `esc()`, `toast()` |
+| `lienzo.js` | `"use strict"`, `NS`, `$`, `svg`, `viewport`, el arreglo de Firefox, `capturarPuntero()`, `el()`, `esc()`, `toast()` |
 | `ids.js` | `uid`, `proximoUid`, `sanearIds`, `buscarNodo` |
 | `documento.js` | `esObj`, `num`, `limpiarNombre`, `abrirTexto`, `datosDeSVG`, `download`, `descargarPNG`, el esqueleto del SVG exportado (`svgExportado`, `fondoExportado`, `capasSinSeleccion`) y los botones de Archivo y la ventana Abrir |
 | `historial.js` | `snapshot`, `commit`, `undo`, `redo` |
@@ -127,7 +127,7 @@ y, si dibuja fuera del molde, `bodyW`/`bodyH`/`rectOf` y los pines.
 envolver con `alClic` algo que ya hace `commit()`+`render()`, como `duplicar`: en bloques eso dejaba
 un paso de deshacer vacío, porque el documento guarda la ruta de las flechas).
 
-**Algo que se guarda con el documento**: `docDatos()`, `cargarDoc()` y `snapshot()`/`restore()`.
+**Algo que se guarda con el documento**: `docDatos()`, `cargarDoc()` y `snapshot()`/`restore()`. El documento lleva `version` (`VERSION_DOC` en `comun/documento.js`): al cambiar la forma de guardar hay que subirla y migrar en `cargarDoc()` según la que venga (los archivos viejos no la traen).
 
 **Algo que se exporta**: `buildExportSVG()` (`exportar.js`), que arma sobre `svgExportado()` de
 `comun/documento.js`. Ojo con que el simulador inlinea los estilos como
@@ -206,6 +206,11 @@ elemento suelto va por `style`, que sí le gana a la clase.
   selección quedaban trabados hasta hacer clic en otro elemento. En Chromium no se notaba. Cualquier
   gesto nuevo sobre el lienzo hay que probarlo en Firefox también: la suite corre en Chromium y en
   Firefox (`--project=firefox` para uno solo).
+- **Capturar el puntero puede fallar y no es motivo para cortar el gesto.** Los `pointerdown` llaman
+  a `capturarPuntero(ev)` (`comun/lienzo.js`), que envuelve `svg.setPointerCapture` en `try/catch`:
+  con un puntero que ya no está activo (un dedo que se levantó, eventos sintéticos de las pruebas)
+  tira, y sin la guarda el gesto entero muere con un error en consola. Usar esa función en cualquier
+  gesto nuevo; no llamar a `setPointerCapture` a mano.
 - **Atajos con una ventana abierta:** el `keydown` común (`comun/teclado.js`) corta apenas hay un
   `.overlay.show` (sólo Esc la cierra). Sin eso, Ctrl+C no dejaba copiar el texto del análisis o de
   la tabla, y Supr/Ctrl+V/Ctrl+Z tocaban el diagrama de atrás. Una ventana nueva tiene que usar la

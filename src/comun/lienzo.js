@@ -19,6 +19,13 @@ svg.addEventListener("pointerdown", () => {
   if (s && s.rangeCount && !s.isCollapsed) s.removeAllRanges();
 }, true);
 
+/* Capturar el puntero es una ayuda para no perder el gesto, no un requisito: puede
+   fallar (un dedo que ya se levantó, eventos sintéticos) y el gesto tiene que seguir
+   igual, así que el error se ignora. */
+function capturarPuntero(ev) {
+  try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+}
+
 /* Crea un elemento SVG con sus atributos y, si se le pasa, lo cuelga del padre */
 function el(tag, attrs, parent) {
   const e = document.createElementNS(NS, tag);

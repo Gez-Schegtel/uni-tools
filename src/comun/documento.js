@@ -3,6 +3,11 @@
    herramienta; lo que llega de un archivo lo valida su cargarDoc(). Esto es el resto,
    que es igual en las tres. */
 
+/* Versión del formato del documento: viaja en el JSON y adentro del SVG para que, si
+   cambia la forma de guardar, se sepa con qué se está tratando (los archivos viejos
+   no la traen). Al subirla, migrar en cargarDoc() según la que venga. */
+const VERSION_DOC = 1;
+
 /* Un archivo mal armado (a mano, truncado, de otra versión) no tiene que tumbar la
    herramienta: se descarta lo que no se puede dibujar y se completa lo que falte,
    sin tocar lo que ya está bien. */
