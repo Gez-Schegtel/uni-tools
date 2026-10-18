@@ -48,6 +48,12 @@ El proyecto se encuentra en el punto de inflexión donde se ha completado el an�
   - Port a TypeScript puro del parser de ecuaciones LaTeX y layout de cajas (`src/core/math/parser.ts`).
   - Port a TypeScript puro del ruteo ortogonal A* (`src/core/routing/orthogonal.ts`).
   - Implementación de máquina de estado e historial inmutable `HistoryManager` (`src/core/history/history.ts`).
+- **Limpieza de la Raíz y Organización Arquitectónica:**
+  - Se movieron todos los archivos monolíticos HTML viejos a `legacy/html/`.
+  - Se movió el código viejo de `src/` (`bloque`, `comun`, `senales`, `simulador`, `construir.js`) a `legacy/src/`.
+  - Se movieron `CLAUDE.md` y `.claude/` a `legacy/claude/`.
+  - Se organizaron las imágenes en `public/`.
+  - Se configuró el nuevo `index.html`, `src/App.svelte` y `src/main.ts` con compilación verificada en producción (`npm run build`).
 - **Verificación Automática:** 19 pruebas unitarias creadas en `tests/unit/` ejecutándose al 100% en menos de 800ms con Vitest. Todo el CSS legacy fue desvinculado del Core, dejándolo listo para la nueva UI.
 
 ---
