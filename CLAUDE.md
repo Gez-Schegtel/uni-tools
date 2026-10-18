@@ -2,7 +2,7 @@
 
 Herramientas de escritorio-en-el-navegador para la cursada: se dibujan diagramas de control y
 circuitos lógicos, se simulan y se exportan. Publicado con GitHub Pages desde `main`
-(https://juli-sz.github.io/uni-tools/).
+(https://gez-schegtel.github.io/uni-tools/).
 
 ## Las cuatro páginas
 
