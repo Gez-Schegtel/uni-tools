@@ -851,15 +851,17 @@
               {@const innerX = p.x > 0 ? (dims.w / 2 + bubbleOffset) : (-dims.w / 2)}
               {@const isHoveredPin = hoverPin?.nodeId === n.id && hoverPin?.pin.id === p.id}
 
-              <!-- Línea física del stub hacia el puerto -->
-              <line
-                x1={p.x}
-                y1={p.y}
-                x2={innerX}
-                y2={p.y}
-                stroke="var(--diagram-node-stroke)"
-                stroke-width="1.6"
-              />
+              <!-- Línea física del stub hacia el puerto (solo para compuertas y componentes con separación de pines) -->
+              {#if /^(and|nand|or|nor|xor|xnor|not|buf|in|out|clk|ff)$/.test(n.type)}
+                <line
+                  x1={p.x}
+                  y1={p.y}
+                  x2={innerX}
+                  y2={p.y}
+                  stroke="var(--diagram-node-stroke)"
+                  stroke-width="1.6"
+                />
+              {/if}
 
               <!-- Terminal circular interactivo con hover -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
