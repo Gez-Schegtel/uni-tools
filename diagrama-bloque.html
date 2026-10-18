@@ -230,6 +230,8 @@ svg#canvas{
 .seg-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
 .seg-handle-wrap:hover .seg-handle{fill:var(--accent)}
 .ghostline{stroke-width:1.5}
+/* flecha que se está tirando hacia una entrada ya ocupada: la previa se ve en color de aviso */
+.ghostline.invalido{stroke:var(--warn)}
 .e-label{font-family:var(--draw);font-size:11px;fill:var(--c-texto);text-anchor:middle;
   dominant-baseline:central;pointer-events:none}
 .e-label-bg{fill:var(--c-fondo)}
@@ -431,7 +433,8 @@ svg#canvas{
     <tr><td><kbd>B</kbd><kbd>S</kbd><kbd>N</kbd><kbd>E</kbd><kbd>T</kbd><kbd>M</kbd></td><td>Insertar bloque, sumador, bifurcación, entrada-salida, texto, recuadro</td></tr>
     <tr><td>Modos y herramientas</td><td>Son excluyentes: elegir una herramienta sale del modo, y elegir un modo suelta la herramienta. Al colocar el elemento se vuelve a Selección. <kbd>Esc</kbd> suelta la herramienta (o el modo) y vuelve a Selección. Los atajos están siempre en la franja de abajo.</td></tr>
     <tr><td>Bifurcación</td><td>Elegí la herramienta y hacé clic en una flecha: se inserta en el medio y parte la línea en dos</td></tr>
-    <tr><td>Arrastrar desde un punto azul</td><td>Crea una flecha hacia otro elemento (o soltala en el vacío para cancelar)</td></tr>
+    <tr><td>Arrastrar desde un punto azul</td><td>Crea una flecha hacia otro elemento; si la soltás sobre la hoja libre, ahí queda una bifurcación</td></tr>
+    <tr><td>Entradas de un bloque</td><td>Un bloque tiene una sola entrada: si tirás una segunda flecha, avisa y no la crea (para juntar dos señales usá un sumador). Si un archivo o el autoguardado traen entradas de más, al abrirlo se deja una sola</td></tr>
     <tr><td>Doble clic</td><td>Renombrar el elemento</td></tr>
     <tr><td>Ecuaciones</td><td><kbd>K/(s+1)</kbd> apila la fracción, y también adentro de paréntesis:
       <kbd>(G_2/H_1)*(G_4/H_2)</kbd>. Las divisiones seguidas se juntan en una sola fracción
@@ -1395,6 +1398,11 @@ function makeNode(type, x, y, extra) {
 }
 const getNode = (id) => S.nodes.find(n => n.id === id);
 const getEdge = (id) => S.edges.find(e => e.id === id);
+/* Un bloque admite una sola entrada: para juntar dos señales está el sumador. */
+const admiteEntrada = (id) => {
+  const n = getNode(id);
+  return !(n && n.type === "block") || !S.edges.some(e => e.to.id === id);
+};
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
@@ -1425,15 +1433,26 @@ function depurarNodos(lista) {
       return n;
     });
 }
+let flechasDeMas = 0;                            // entradas repetidas que descartó la última depuración
 function depurarFlechas(lista, nodos) {
   const ids = new Set(nodos.map(n => n.id));
-  return (Array.isArray(lista) ? lista : []).filter(e => esObj(e) && esObj(e.from) && esObj(e.to)
-    && ids.has(e.from.id) && ids.has(e.to.id)).map(e => {
-      if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
-      if (e.width !== undefined) { e.width = num(e.width, undefined); if (e.width === undefined) delete e.width; }
-      if (e.color !== undefined) { e.color = soloColores(e.color); if (!e.color) delete e.color; }
-      return e;
-    });
+  const porId = new Map(nodos.map(n => [n.id, n]));
+  const conEntrada = new Set();                  // bloques que ya tienen su flecha
+  flechasDeMas = 0;
+  return (Array.isArray(lista) ? lista : []).filter(e => {
+    if (!(esObj(e) && esObj(e.from) && esObj(e.to) && ids.has(e.from.id) && ids.has(e.to.id))) return false;
+    const destino = porId.get(e.to.id);
+    if (destino.type === "block") {              // un bloque admite una sola entrada
+      if (conEntrada.has(destino.id)) { flechasDeMas++; return false; }
+      conEntrada.add(destino.id);
+    }
+    return true;
+  }).map(e => {
+    if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
+    if (e.width !== undefined) { e.width = num(e.width, undefined); if (e.width === undefined) delete e.width; }
+    if (e.color !== undefined) { e.color = soloColores(e.color); if (!e.color) delete e.color; }
+    return e;
+  });
 }
 function cargarDoc(d, desdeArchivo) {
   S.nodes = depurarNodos(d.nodes); S.edges = Array.isArray(d.edges) ? d.edges.filter(esObj) : [];
@@ -1444,7 +1463,10 @@ function cargarDoc(d, desdeArchivo) {
   const vistos = new Set();
   const repetidos = sanearIds(S.nodes, "n", vistos) + sanearIds(S.edges, "e", vistos);
   S.edges = depurarFlechas(S.edges, S.nodes);       // ya con los ids definitivos de los nodos
-  if (repetidos) setTimeout(() => toast("Se renumeraron " + repetidos + " ids repetidos"), 60);
+  const avisos = [];
+  if (flechasDeMas) avisos.push("Un bloque admite una sola entrada: " + (flechasDeMas === 1 ? "se quitó una flecha" : "se quitaron " + flechasDeMas + " flechas") + " de más");
+  if (repetidos) avisos.push("Se renumeraron " + repetidos + " ids repetidos");
+  if (avisos.length) setTimeout(() => toast(avisos.join(" · ")), 60);
   S.sel = []; S.selEdges = [];
 }
 /* Pegar y duplicar: mete la foto de tomarSeleccion() con ids nuevos, corrida desp */
@@ -2032,7 +2054,7 @@ function render() {
   renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
     const a = drag.start;
-    el("path", { class: "ghostline", d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;
@@ -2638,6 +2660,16 @@ function nearestPort(n, w, fromNode) {
   }
   return best;
 }
+/* Qué hay debajo del puntero al tirar una flecha: un puerto, un elemento, o nada */
+function destinoBajoPuntero(ev, drag, w) {
+  const t = document.elementFromPoint(ev.clientX, ev.clientY);
+  if (t && t.classList && t.classList.contains("port"))
+    return { id: t.getAttribute("data-pid"), port: t.getAttribute("data-port") };
+  const nid = t ? hitNode(t) : null;
+  if (nid && !esMarco(getNode(nid)))
+    return { id: nid, port: nearestPort(getNode(nid), w, getNode(drag.fromId)) };
+  return null;
+}
 svg.addEventListener("pointermove", ev => {
   if (ev.pointerType === "touch") {
     if (dedos.has(ev.pointerId)) dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -2698,7 +2730,12 @@ svg.addEventListener("pointermove", ev => {
     }
     render(); return;
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
+  if (drag.kind === "connect") {
+    drag.cur = w;
+    const dst = destinoBajoPuntero(ev, drag, w);
+    drag.invalido = !!dst && dst.id !== drag.fromId && !admiteEntrada(dst.id);
+    render(); return;
+  }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
 });
 svg.addEventListener("pointerup", ev => {
@@ -2734,23 +2771,21 @@ svg.addEventListener("pointerup", ev => {
     return;
   }
   if (drag.kind === "connect") {
-    const t = document.elementFromPoint(ev.clientX, ev.clientY);
-    let targetId = null, targetPort = null;
-    if (t && t.classList && t.classList.contains("port")) {
-      targetId = t.getAttribute("data-pid"); targetPort = t.getAttribute("data-port");
-    } else {
-      const nid = t ? hitNode(t) : null;
-      if (nid && !esMarco(getNode(nid))) { targetId = nid; targetPort = nearestPort(getNode(nid), w, getNode(drag.fromId)); }
-      else {
-        // soltar en el vacío = crear bifurcación ahí y conectar
-        const nn = makeNode("node", snapV(w.x), snapV(w.y));
-        S.nodes.push(nn); targetId = nn.id; targetPort = "l";
-      }
+    const dst = destinoBajoPuntero(ev, drag, w);
+    let targetId = dst && dst.id, targetPort = dst && dst.port;
+    if (!targetId) {
+      // soltar en el vacío = crear bifurcación ahí y conectar
+      const nn = makeNode("node", snapV(w.x), snapV(w.y));
+      S.nodes.push(nn); targetId = nn.id; targetPort = "l";
     }
-    if (targetId && targetId !== drag.fromId) {
-      S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
-        to: { id: targetId, port: targetPort }, variant: 0 });
-      commit();
+    if (targetId !== drag.fromId) {
+      if (admiteEntrada(targetId)) {
+        S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
+          to: { id: targetId, port: targetPort }, variant: 0 });
+        commit();
+      } else {
+        toast("Un bloque admite una sola entrada: para juntar dos señales usá un sumador");
+      }
     }
   } else if (drag.kind === "band") {
     const b = drag.band;

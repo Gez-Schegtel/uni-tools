@@ -118,6 +118,58 @@ test.describe("flechas", () => {
   });
 });
 
+test.describe("un bloque tiene una sola entrada", () => {
+  const doc = () => ({
+    nodes: [{ id: "r", type: "io", x: 140, y: 200, w: 46, h: 22, label: "R(s)", font: 14 },
+            { id: "g1", type: "block", x: 340, y: 200, w: 72, h: 42, label: "G1", font: 15 },
+            { id: "g2", type: "block", x: 340, y: 380, w: 72, h: 42, label: "G2", font: 15 }],
+    edges: [{ id: "e1", from: { id: "r", port: "r" }, to: { id: "g1", port: "l" }, variant: 0 }],
+  });
+  const centro = async (page, sel) => {
+    const r = await page.locator(sel).boundingBox();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  };
+  test("tirar una segunda flecha hacia un bloque ocupado no la crea y avisa", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await page.keyboard.press("c");                     // en modo conectar se ven todos los puertos
+    const desde = await centro(page, '.port[data-pid="r"][data-port="r"]');
+    const g1 = await centro(page, '.node[data-id="g1"]');
+    await page.mouse.move(desde.x, desde.y);
+    await page.mouse.down();
+    await page.mouse.move(g1.x, g1.y, { steps: 8 });
+    await expect(page.locator(".ghostline.invalido")).toHaveCount(1);   // la previa ya avisa
+    await page.mouse.up();
+    expect(await page.evaluate(() => S.edges.length)).toBe(1);          // no se crea la flecha
+    expect(await page.evaluate(() => S.nodes.length)).toBe(3);          // ni queda una bifurcación suelta
+    await expect(page.locator("#toast")).toContainText("una sola entrada");
+    // a un bloque libre sí le entra
+    const g2 = await centro(page, '.node[data-id="g2"]');
+    await arrastrar(page, desde, [g2.x - desde.x, g2.y - desde.y]);
+    expect(await page.evaluate(() => S.edges.map((e) => e.to.id))).toEqual(["g1", "g2"]);
+    // y soltar en el vacío sigue dejando una bifurcación con su flecha
+    const r = await page.locator("#canvas").boundingBox();
+    const libre = { x: r.x + r.width - 50, y: r.y + r.height - 50 };
+    await arrastrar(page, desde, [libre.x - desde.x, libre.y - desde.y]);
+    expect(await page.evaluate(() => S.nodes[S.nodes.length - 1].type)).toBe("node");
+    expect(await page.evaluate(() => S.edges.length)).toBe(3);
+  });
+  test("abrir un archivo con dos flechas al mismo bloque deja una sola y avisa", async ({ page }) => {
+    const d = doc();
+    d.edges.push({ id: "e2", from: { id: "g2", port: "r" }, to: { id: "g1", port: "t" }, variant: 0 });
+    await abrirTexto(page, JSON.stringify(d));
+    expect(await page.evaluate(() => S.edges.map((e) => e.id))).toEqual(["e1"]);
+    await expect(page.locator("#toast")).toContainText("una sola entrada");
+  });
+  test("los sumadores siguen juntando varias flechas", async ({ page }) => {
+    const d = doc();
+    d.nodes.push({ id: "s", type: "sum", x: 560, y: 200 });
+    d.edges.push({ id: "e2", from: { id: "g1", port: "r" }, to: { id: "s", port: "l" }, variant: 0 },
+                 { id: "e3", from: { id: "g2", port: "r" }, to: { id: "s", port: "b" }, variant: 0 });
+    await abrirTexto(page, JSON.stringify(d));
+    expect(await page.evaluate(() => S.edges.map((e) => e.id))).toEqual(["e1", "e2", "e3"]);
+  });
+});
+
 test.describe("guardar y abrir", () => {
   test("el ejemplo sobrevive a ida y vuelta por JSON", async ({ page }) => {
     await page.evaluate(() => loadExample());

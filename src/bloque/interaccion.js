@@ -253,6 +253,16 @@ function nearestPort(n, w, fromNode) {
   }
   return best;
 }
+/* Qué hay debajo del puntero al tirar una flecha: un puerto, un elemento, o nada */
+function destinoBajoPuntero(ev, drag, w) {
+  const t = document.elementFromPoint(ev.clientX, ev.clientY);
+  if (t && t.classList && t.classList.contains("port"))
+    return { id: t.getAttribute("data-pid"), port: t.getAttribute("data-port") };
+  const nid = t ? hitNode(t) : null;
+  if (nid && !esMarco(getNode(nid)))
+    return { id: nid, port: nearestPort(getNode(nid), w, getNode(drag.fromId)) };
+  return null;
+}
 svg.addEventListener("pointermove", ev => {
   if (ev.pointerType === "touch") {
     if (dedos.has(ev.pointerId)) dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -313,7 +323,12 @@ svg.addEventListener("pointermove", ev => {
     }
     render(); return;
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
+  if (drag.kind === "connect") {
+    drag.cur = w;
+    const dst = destinoBajoPuntero(ev, drag, w);
+    drag.invalido = !!dst && dst.id !== drag.fromId && !admiteEntrada(dst.id);
+    render(); return;
+  }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
 });
 svg.addEventListener("pointerup", ev => {
@@ -349,23 +364,21 @@ svg.addEventListener("pointerup", ev => {
     return;
   }
   if (drag.kind === "connect") {
-    const t = document.elementFromPoint(ev.clientX, ev.clientY);
-    let targetId = null, targetPort = null;
-    if (t && t.classList && t.classList.contains("port")) {
-      targetId = t.getAttribute("data-pid"); targetPort = t.getAttribute("data-port");
-    } else {
-      const nid = t ? hitNode(t) : null;
-      if (nid && !esMarco(getNode(nid))) { targetId = nid; targetPort = nearestPort(getNode(nid), w, getNode(drag.fromId)); }
-      else {
-        // soltar en el vacío = crear bifurcación ahí y conectar
-        const nn = makeNode("node", snapV(w.x), snapV(w.y));
-        S.nodes.push(nn); targetId = nn.id; targetPort = "l";
-      }
+    const dst = destinoBajoPuntero(ev, drag, w);
+    let targetId = dst && dst.id, targetPort = dst && dst.port;
+    if (!targetId) {
+      // soltar en el vacío = crear bifurcación ahí y conectar
+      const nn = makeNode("node", snapV(w.x), snapV(w.y));
+      S.nodes.push(nn); targetId = nn.id; targetPort = "l";
     }
-    if (targetId && targetId !== drag.fromId) {
-      S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
-        to: { id: targetId, port: targetPort }, variant: 0 });
-      commit();
+    if (targetId !== drag.fromId) {
+      if (admiteEntrada(targetId)) {
+        S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
+          to: { id: targetId, port: targetPort }, variant: 0 });
+        commit();
+      } else {
+        toast("Un bloque admite una sola entrada: para juntar dos señales usá un sumador");
+      }
     }
   } else if (drag.kind === "band") {
     const b = drag.band;

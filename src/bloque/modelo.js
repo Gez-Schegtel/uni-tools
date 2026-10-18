@@ -19,6 +19,11 @@ function makeNode(type, x, y, extra) {
 }
 const getNode = (id) => S.nodes.find(n => n.id === id);
 const getEdge = (id) => S.edges.find(e => e.id === id);
+/* Un bloque admite una sola entrada: para juntar dos señales está el sumador. */
+const admiteEntrada = (id) => {
+  const n = getNode(id);
+  return !(n && n.type === "block") || !S.edges.some(e => e.to.id === id);
+};
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
@@ -49,15 +54,26 @@ function depurarNodos(lista) {
       return n;
     });
 }
+let flechasDeMas = 0;                            // entradas repetidas que descartó la última depuración
 function depurarFlechas(lista, nodos) {
   const ids = new Set(nodos.map(n => n.id));
-  return (Array.isArray(lista) ? lista : []).filter(e => esObj(e) && esObj(e.from) && esObj(e.to)
-    && ids.has(e.from.id) && ids.has(e.to.id)).map(e => {
-      if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
-      if (e.width !== undefined) { e.width = num(e.width, undefined); if (e.width === undefined) delete e.width; }
-      if (e.color !== undefined) { e.color = soloColores(e.color); if (!e.color) delete e.color; }
-      return e;
-    });
+  const porId = new Map(nodos.map(n => [n.id, n]));
+  const conEntrada = new Set();                  // bloques que ya tienen su flecha
+  flechasDeMas = 0;
+  return (Array.isArray(lista) ? lista : []).filter(e => {
+    if (!(esObj(e) && esObj(e.from) && esObj(e.to) && ids.has(e.from.id) && ids.has(e.to.id))) return false;
+    const destino = porId.get(e.to.id);
+    if (destino.type === "block") {              // un bloque admite una sola entrada
+      if (conEntrada.has(destino.id)) { flechasDeMas++; return false; }
+      conEntrada.add(destino.id);
+    }
+    return true;
+  }).map(e => {
+    if (e.manual !== undefined && !(esObj(e.manual) && Array.isArray(e.manual.c) && e.manual.c.every(v => typeof v === "number" && isFinite(v)))) delete e.manual;
+    if (e.width !== undefined) { e.width = num(e.width, undefined); if (e.width === undefined) delete e.width; }
+    if (e.color !== undefined) { e.color = soloColores(e.color); if (!e.color) delete e.color; }
+    return e;
+  });
 }
 function cargarDoc(d, desdeArchivo) {
   S.nodes = depurarNodos(d.nodes); S.edges = Array.isArray(d.edges) ? d.edges.filter(esObj) : [];
@@ -68,7 +84,10 @@ function cargarDoc(d, desdeArchivo) {
   const vistos = new Set();
   const repetidos = sanearIds(S.nodes, "n", vistos) + sanearIds(S.edges, "e", vistos);
   S.edges = depurarFlechas(S.edges, S.nodes);       // ya con los ids definitivos de los nodos
-  if (repetidos) setTimeout(() => toast("Se renumeraron " + repetidos + " ids repetidos"), 60);
+  const avisos = [];
+  if (flechasDeMas) avisos.push("Un bloque admite una sola entrada: " + (flechasDeMas === 1 ? "se quitó una flecha" : "se quitaron " + flechasDeMas + " flechas") + " de más");
+  if (repetidos) avisos.push("Se renumeraron " + repetidos + " ids repetidos");
+  if (avisos.length) setTimeout(() => toast(avisos.join(" · ")), 60);
   S.sel = []; S.selEdges = [];
 }
 /* Pegar y duplicar: mete la foto de tomarSeleccion() con ids nuevos, corrida desp */

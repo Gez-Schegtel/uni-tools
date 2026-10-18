@@ -94,6 +94,8 @@ svg#canvas{
 .seg-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
 .seg-handle-wrap:hover .seg-handle{fill:var(--accent)}
 .ghostline{stroke-width:1.5}
+/* flecha que se está tirando hacia una entrada ya ocupada: la previa se ve en color de aviso */
+.ghostline.invalido{stroke:var(--warn)}
 .e-label{font-family:var(--draw);font-size:11px;fill:var(--c-texto);text-anchor:middle;
   dominant-baseline:central;pointer-events:none}
 .e-label-bg{fill:var(--c-fondo)}

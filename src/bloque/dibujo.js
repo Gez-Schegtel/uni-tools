@@ -156,7 +156,7 @@ function render() {
   renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
     const a = drag.start;
-    el("path", { class: "ghostline", d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;

@@ -269,6 +269,11 @@ elemento suelto va por `style`, que sí le gana a la clase.
   agrega un campo obligatorio a un nodo, completarlo ahí también, o un JSON viejo va a tirar un
   `NaN` en el SVG. Los cables/flechas se depuran *después* de `sanearIds`, porque comparan contra
   los ids definitivos.
+- **Un bloque tiene una sola entrada** (diagrama-bloque): `admiteEntrada()` frena la segunda flecha
+  al soltarla y avisa con un toast (la previa se ve en color de aviso, `.ghostline.invalido`); al
+  abrir un archivo o el autoguardado, `depurarFlechas` descarta las repetidas y `cargarDoc` avisa con
+  `flechasDeMas`. Los sumadores, las bifurcaciones y las entradas/salidas siguen recibiendo varias
+  flechas. El `restore()` del historial no depura: es una foto fiel de lo que se hizo.
 - **Tabla de verdad del simulador:** los nombres de las entradas se pasan a `simplify(minterms, n,
   nombres)`; se escapan con `esc()` antes. No volver a reemplazar letras A, B, C sobre el HTML ya
   armado: pisaba nombres (la salida «S» o una entrada «B» se confundían).
