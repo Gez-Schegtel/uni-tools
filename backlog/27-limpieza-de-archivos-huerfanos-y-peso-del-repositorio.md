@@ -1,6 +1,7 @@
 # Spec 27 — Limpieza de Archivos Huérfanos y Reducción de Peso del Repositorio
 
 - **ID:** `SPEC-27`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `6.2`
 - **Prioridad:** Baja (27 / 27)
 - **Esfuerzo estimado:** Muy bajo (~10 minutos)
@@ -47,6 +48,6 @@
 
 ## 5. Criterios de Aceptación
 
-- [ ] `uni-tools-logo.jpg` ya no figura en `git ls-files`.
-- [ ] En la raíz del proyecto no existen `node_modules/` ni `test-results/`.
-- [ ] `tests/specs/humo.spec.js` pasa sin errores ni recursos faltantes en Chromium y Firefox.
+- [x] `uni-tools-logo.jpg` ya no figura en `git ls-files`.
+- [x] En la raíz del proyecto no existen `node_modules/` ni `test-results/`.
+- [x] `tests/specs/humo.spec.js` pasa sin errores ni recursos faltantes en Chromium y Firefox.
