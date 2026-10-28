@@ -287,3 +287,23 @@ test.describe("duplicar (Ctrl+D)", () => {
     expect(await page.evaluate(() => portapapeles.nodos.length)).toBe(1);
   });
 });
+
+test("en modo selección múltiple (X) o con Shift, la banda suma nodos a la selección existente", async ({ page }) => {
+  await page.evaluate(() => { cargarEjemplo("simple"); S.sel = [S.nodos[0].id]; render(); });
+  await page.keyboard.press("x");
+  const { id0, id2, p1, p2 } = await page.evaluate(() => {
+    const n2 = S.nodos[2], r = document.getElementById("canvas").getBoundingClientRect();
+    const aPantalla = (x, y) => ({ x: r.left + S.pan.x + x * S.zoom, y: r.top + S.pan.y + y * S.zoom });
+    return {
+      id0: S.nodos[0].id,
+      id2: n2.id,
+      p1: aPantalla(n2.x - 35, n2.y - 35),
+      p2: aPantalla(n2.x + 35, n2.y + 35),
+    };
+  });
+  await page.mouse.move(p1.x, p1.y);
+  await page.mouse.down();
+  await page.mouse.move(p2.x, p2.y, { steps: 5 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => S.sel)).toEqual([id0, id2]);
+});

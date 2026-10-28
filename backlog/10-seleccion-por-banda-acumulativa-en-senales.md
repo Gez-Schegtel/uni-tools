@@ -1,6 +1,7 @@
 # Spec 10 — Selección por Banda Acumulativa (`Shift` y Modo Selección Múltiple) en `diagrama-señales`
 
 - **ID:** `SPEC-10`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-09` y Sección `5.4.D.2`
 - **Prioridad:** Media / Quick Win (10 / 27)
 - **Esfuerzo estimado:** Muy bajo (~15 minutos)
@@ -72,6 +73,6 @@ En [`tests/specs/senales.spec.js`](../tests/specs/senales.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Arrastrar una banda con `Shift` o en `S.modo === "multi"` agrega los nodos encerrados a `S.sel` sin perder los ya seleccionados.
-- [ ] Arrastrar una banda en modo normal (`"select"`) sin `Shift` sigue reemplazando `S.sel`.
-- [ ] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test en `senales.spec.js` pasa.
+- [x] Arrastrar una banda con `Shift` o en `S.modo === "multi"` agrega los nodos encerrados a `S.sel` sin perder los ya seleccionados.
+- [x] Arrastrar una banda en modo normal (`"select"`) sin `Shift` sigue reemplazando `S.sel`.
+- [x] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test en `senales.spec.js` pasa.

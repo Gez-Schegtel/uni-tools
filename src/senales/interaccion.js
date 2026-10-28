@@ -95,7 +95,7 @@ svg.addEventListener("pointerdown", ev => {
     render(); return;
   }
   if (!sumandoALaSeleccion(ev)) { S.sel = []; S.selR = []; }
-  drag = { kind: "band", band: { x1: w.x, y1: w.y, x2: w.x, y2: w.y } };
+  drag = { kind: "band", band: { x1: w.x, y1: w.y, x2: w.x, y2: w.y }, add: sumandoALaSeleccion(ev) };
   render();
 });
 svg.addEventListener("pointermove", ev => {
@@ -166,8 +166,10 @@ svg.addEventListener("pointerup", ev => {
     const b = drag.band;
     const l = Math.min(b.x1, b.x2), r = Math.max(b.x1, b.x2);
     const t = Math.min(b.y1, b.y2), bo = Math.max(b.y1, b.y2);
-    if (Math.abs(r - l) > 4 || Math.abs(bo - t) > 4)
-      S.sel = S.nodos.filter(n => n.x >= l && n.x <= r && n.y >= t && n.y <= bo).map(n => n.id);
+    if (Math.abs(r - l) > 4 || Math.abs(bo - t) > 4) {
+      const nuevos = S.nodos.filter(n => n.x >= l && n.x <= r && n.y >= t && n.y <= bo).map(n => n.id);
+      S.sel = drag.add ? Array.from(new Set(S.sel.concat(nuevos))) : nuevos;
+    }
   }
   if (drag.kind === "move" || drag.kind === "curve") commit();
   svg.classList.remove("panning");
