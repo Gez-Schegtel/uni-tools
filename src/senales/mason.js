@@ -7,12 +7,25 @@ const nodosDeRamas = (ramas) => {
   return s;
 };
 const salientesDe = (id) => S.ramas.filter(r => r.de === id);
+const MAX_CAMINOS = 200, MAX_LAZOS = 200, MAX_COMB = 2000;
+let _truncadoMason = false;
+let _cacheMason = { clave: "", valor: null };
+
+function firmaMason() {
+  let s = "";
+  for (const n of S.nodos) s += n.id + ":" + n.nombre + ":" + n.tipo + ";";
+  s += "|";
+  for (const r of S.ramas) s += r.id + ":" + r.de + ">" + r.a + "=" + r.g + ";";
+  return s;
+}
 
 function trayectorias(desde, hasta) {
   const res = [];
   if (!desde || !hasta || desde === hasta) return res;
   const paso = (actual, visitados, ramas) => {
+    if (res.length >= MAX_CAMINOS) { _truncadoMason = true; return; }
     for (const r of salientesDe(actual)) {
+      if (res.length >= MAX_CAMINOS) { _truncadoMason = true; return; }
       if (r.a === hasta) { res.push(ramas.concat(r)); continue; }
       if (visitados.has(r.a)) continue;
       visitados.add(r.a); ramas.push(r);
@@ -28,9 +41,12 @@ function lazos() {
   const res = [];
   const idx = new Map(S.nodos.map((n, i) => [n.id, i]));
   for (const inicio of S.nodos) {
+    if (res.length >= MAX_LAZOS) { _truncadoMason = true; break; }
     const i0 = idx.get(inicio.id);
     const paso = (actual, visitados, ramas) => {
+      if (res.length >= MAX_LAZOS) { _truncadoMason = true; return; }
       for (const r of salientesDe(actual)) {
+        if (res.length >= MAX_LAZOS) { _truncadoMason = true; return; }
         if (r.a === inicio.id) { res.push(ramas.concat(r)); continue; }
         if (idx.get(r.a) < i0 || visitados.has(r.a)) continue;
         visitados.add(r.a); ramas.push(r);
@@ -47,9 +63,15 @@ const seTocan = (a, b) => { for (const n of a) if (b.has(n)) return true; return
 /* Todas las combinaciones de lazos que no se tocan, agrupadas por cuántos son */
 function combinacionesDisjuntas(ls) {
   const porTamano = {};
+  let total = 0;
   const paso = (desde, actual) => {
-    if (actual.length >= 2) (porTamano[actual.length] = porTamano[actual.length] || []).push(actual.slice());
+    if (total >= MAX_COMB) { _truncadoMason = true; return; }
+    if (actual.length >= 2) {
+      (porTamano[actual.length] = porTamano[actual.length] || []).push(actual.slice());
+      total++;
+    }
     for (let i = desde; i < ls.length; i++) {
+      if (total >= MAX_COMB) { _truncadoMason = true; return; }
       if (actual.every(j => !seTocan(ls[j].nodos, ls[i].nodos))) { actual.push(i); paso(i + 1, actual); actual.pop(); }
     }
   };
@@ -84,6 +106,15 @@ const nombreNodo = (id) => { const n = getNodo(id); return n ? n.nombre : "?"; }
 const numerico = (s) => { const v = Number(String(s).trim()); return Number.isFinite(v) ? v : null; };
 
 function analizar() {
+  const clave = firmaMason();
+  if (_cacheMason.valor && _cacheMason.clave === clave) {
+    const c = _cacheMason.valor;
+    return Object.assign({}, c, {
+      entrada: S.nodos.find(n => n.tipo === "entrada"),
+      salida: S.nodos.find(n => n.tipo === "salida"),
+    });
+  }
+  _truncadoMason = false;
   const entrada = S.nodos.find(n => n.tipo === "entrada");
   const salida = S.nodos.find(n => n.tipo === "salida");
   const P = trayectorias(entrada && entrada.id, salida && salida.id).map((ramas, i) => ({
@@ -101,7 +132,9 @@ function analizar() {
     const d = determinante(libres);
     return { p, libres, det: d };
   });
-  return { entrada, salida, P, L, det, cof };
+  const res = { entrada, salida, P, L, det, cof, truncado: _truncadoMason };
+  _cacheMason = { clave, valor: res };
+  return res;
 }
 /* Δ escrito como texto, a partir de los términos y de cómo se llama cada lazo */
 function textoDelta(ls, det) {

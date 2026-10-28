@@ -1,6 +1,7 @@
 # Spec 07 — Caché Topológica y Cotas de Seguridad en la Regla de Mason (`diagrama-señales`)
 
 - **ID:** `SPEC-07`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-03` y Sección `5.4.D.4`
 - **Prioridad:** Alta (7 / 27)
 - **Esfuerzo estimado:** Medio (~40 minutos)
@@ -73,6 +74,6 @@ const MAX_COMB = 2000;
 
 ## 5. Criterios de Aceptación
 
-- [ ] Mover nodos o curvar ramas en `diagrama-señales` no vuelve a ejecutar `trayectorias()`, `lazos()` ni `combinacionesDisjuntas()`.
-- [ ] Un grafo con 16 lazos disjuntos o un grafo completo de 8 nodos no congela la pestaña y responde en menos de 100 ms informando que se alcanzó el tope simbólico.
-- [ ] Todos los tests existentes en `tests/unidades/mason.test.js`, `tests/specs/senales.spec.js` y `tests/specs/correccion.spec.js` siguen pasando.
+- [x] Mover nodos o curvar ramas en `diagrama-señales` no vuelve a ejecutar `trayectorias()`, `lazos()` ni `combinacionesDisjuntas()`.
+- [x] Un grafo con 16 lazos disjuntos o un grafo completo de 8 nodos no congela la pestaña y responde en menos de 100 ms informando que se alcanzó el tope simbólico.
+- [x] Todos los tests existentes en `tests/unidades/mason.test.js`, `tests/specs/senales.spec.js` y `tests/specs/correccion.spec.js` siguen pasando.

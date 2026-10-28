@@ -71,7 +71,9 @@ function resumenMason() {
       style="font-family:var(--mono);font-size:12px">${f[1]}</div></div>`).join("") +
     `<div class="iconbar" style="margin-top:10px">
       <button class="btn on" id="b-mason2" style="width:100%">Ver el análisis completo</button></div>
-    <div class="hint" style="margin-top:8px">${A.entrada && A.salida
+    <div class="hint" style="margin-top:8px">${A.truncado
+      ? "Se alcanzó el tope simbólico: se muestra un subconjunto de términos."
+      : A.entrada && A.salida
       ? "Ecuaciones, cofactores y función de transferencia."
       : "Marcá un nodo como entrada y otro como salida para que se pueda calcular."}</div></div>`;
 }

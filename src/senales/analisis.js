@@ -18,6 +18,8 @@ function mostrarMason() {
     `${A.L.length} lazo${A.L.length === 1 ? "" : "s"}`;
 
   let h = htmlEcuaciones();
+  if (A.truncado)
+    h = `<div class="aviso">El grafo supera el tope simbólico: se muestra sólo una parte de las trayectorias, lazos o combinaciones disjuntas.</div>` + h;
   /* Mason toma la entrada como fuente. Si le llegan ramas, lo que calcula es la transferencia
      desde una señal que se suma en ese nodo, no salida/entrada: se avisa, con la salida de libro. */
   if (S.ramas.some(r => r.a === A.entrada.id))

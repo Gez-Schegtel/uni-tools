@@ -61,3 +61,19 @@ test("las ecuaciones nodo a nodo se arman con las ramas", () => {
   assert.deepEqual(clonar(m.ecuaciones()).map(x => x.texto),
     ["e = entrada del sistema", "a = 2·e", "s = −3·a"]);
 });
+
+test("un grafo muy denso o con muchos lazos disjuntos termina en pocos milisegundos gracias a las cotas de seguridad", () => {
+  const nodos = [], ramas = [];
+  for (let i = 0; i < 16; i++) {
+    const id = "n" + i;
+    nodos.push(nodo(id, "x" + i, i === 0 ? "entrada" : i === 15 ? "salida" : "normal"));
+    ramas.push(rama(id, id, "L" + i));
+    if (i > 0) ramas.push(rama("n" + (i - 1), id, "1"));
+  }
+  const m = conGrafo(nodos, ramas);
+  const t0 = performance.now();
+  const r = m.analizar();
+  const dt = performance.now() - t0;
+  assert.equal(r.truncado, true);
+  assert.equal(dt < 100, true);
+});

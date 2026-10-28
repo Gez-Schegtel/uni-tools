@@ -351,3 +351,28 @@ test("crear una rama arrastrando entre dos nodos, curvarla y fijarla con clic o 
   await page.evaluate(() => undo());
   expect(await page.evaluate(() => S.ramas.length)).toBe(r0);
 });
+
+test("mover nodos o curvar ramas reutiliza la caché topológica de Mason sin recalcular caminos ni lazos", async ({ page }) => {
+  await page.evaluate(() => cargarEjemplo("simple"));
+  const llamadas = await page.evaluate(() => {
+    let cont = 0;
+    const orig = trayectorias;
+    trayectorias = (...args) => { cont++; return orig(...args); };
+    try {
+      // Cambiar la topología/ganancia sí recalcula una vez
+      S.ramas[0].g = "G99";
+      render();
+      const trasCambio = cont;
+      // Mover nodos o curvar ramas no debe volver a llamar a trayectorias()
+      S.nodos[0].x += 40;
+      S.nodos[1].y += 20;
+      S.ramas[0].curva = 50;
+      render();
+      render();
+      return [trasCambio, cont];
+    } finally {
+      trayectorias = orig;
+    }
+  });
+  expect(llamadas).toEqual([1, 1]);
+});
