@@ -145,6 +145,11 @@ function wireInspector(nsel, esel) {
   document.querySelectorAll(".sgn").forEach(sel => {
     sel.onchange = () => {
       const side = sel.dataset.side, val = sel.value;
+      if (val === "" && nsel.some(n => S.edges.some(e => e.to.id === n.id && e.to.port === side))) {
+        toast("Por ese lado entra una flecha: no puede quedar vacío");
+        render();
+        return;
+      }
       if (val !== "" && nsel.some(n => n.signs && ["l", "r", "t", "b"].filter(k => (k === side ? val : n.signs[k]) !== "").length > 3)) {
         toast("El sumador admite hasta tres signos: un lado debe quedar vacío");
         render();
@@ -163,8 +168,15 @@ function wireInspector(nsel, esel) {
   if (ar) { ar.value = esel[0].arrow === false ? "0" : "1"; ar.onchange = () => { esel.forEach(e => e.arrow = ar.value === "1"); commit(); render(); }; }
   const flip = document.getElementById("e-flip");
   if (flip) flip.onclick = () => {
-    if (esel.some(e => !admiteEntrada(e.from.id, e.id))) {
-      toast("Un bloque admite una sola entrada: para juntar dos señales usá un sumador");
+    const inv = esel.find(e => !admiteEntrada(e.from.id, e.id));
+    if (inv) {
+      const d = getNode(inv.from.id);
+      const cosa = d && d.type === "node" ? "Una bifurcación" : d && d.type === "io" ? "Una salida" : "Un bloque";
+      toast(cosa + " admite una sola entrada: para juntar dos señales usá un sumador");
+      return;
+    }
+    if (esel.some(e => !admitePuertoDestino(e.from.id, e.from.port))) {
+      toast("Ese lado del sumador está vacío: elegí una pata con signo + o −");
       return;
     }
     esel.forEach(e => { const f = e.from; e.from = e.to; e.to = f; rutaAuto(e); });
@@ -172,7 +184,16 @@ function wireInspector(nsel, esel) {
   };
   const fp = document.getElementById("e-fp"), tp = document.getElementById("e-tp");
   if (fp) fp.onchange = () => { esel.forEach(e => { e.from.port = fp.value; rutaAuto(e); }); commit(); render(); };
-  if (tp) tp.onchange = () => { esel.forEach(e => { e.to.port = tp.value; rutaAuto(e); }); commit(); render(); };
+  if (tp) tp.onchange = () => {
+    const p = tp.value;
+    if (esel.some(e => !admitePuertoDestino(e.to.id, p))) {
+      toast("Ese lado del sumador está vacío: elegí una pata con signo + o −");
+      render();
+      return;
+    }
+    esel.forEach(e => { e.to.port = p; rutaAuto(e); });
+    commit(); render();
+  };
 
   if (nsel.length) wireColorPropio("nc-", clavesColor(nsel[0]), nsel);
   if (esel.length) wireColorPropio("ec-", ["flecha"], esel);

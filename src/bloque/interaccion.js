@@ -351,7 +351,7 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "connect") {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
-    drag.invalido = !!dst && dst.id !== drag.fromId && !admiteEntrada(dst.id);
+    drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
     render(); return;
   }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
@@ -394,12 +394,16 @@ svg.addEventListener("pointerup", ev => {
     if (!targetId) {
       toast("La flecha debe conectarse a un elemento: no puede quedar suelta");
     } else if (targetId !== drag.fromId) {
-      if (admiteEntrada(targetId)) {
+      if (!admiteEntrada(targetId)) {
+        const d = getNode(targetId);
+        const cosa = d && d.type === "node" ? "Una bifurcación" : d && d.type === "io" ? "Una salida" : "Un bloque";
+        toast(cosa + " admite una sola entrada: para juntar dos señales usá un sumador");
+      } else if (!admitePuertoDestino(targetId, targetPort)) {
+        toast("Ese lado del sumador está vacío: elegí una pata con signo + o −");
+      } else {
         S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
           to: { id: targetId, port: targetPort }, variant: 0 });
         commit();
-      } else {
-        toast("Un bloque admite una sola entrada: para juntar dos señales usá un sumador");
       }
     }
   } else if (drag.kind === "band") {

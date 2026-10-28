@@ -31,10 +31,18 @@ function makeNode(type, x, y, extra) {
 }
 const getNode = (id) => S.nodes.find(n => n.id === id);
 const getEdge = (id) => S.edges.find(e => e.id === id);
-/* Un bloque admite una sola entrada: para juntar dos señales está el sumador. */
+/* Un bloque, una bifurcación o un rótulo de entrada/salida admiten una sola entrada:
+   para juntar dos señales está el sumador. En un sumador sólo entran patas con signo. */
 const admiteEntrada = (id, ignorandoFlecha) => {
   const n = getNode(id);
-  return !(n && n.type === "block") || !S.edges.some(e => e.id !== ignorandoFlecha && e.to.id === id);
+  if (!n || n.type === "marco") return false;
+  if (n.type === "block" || n.type === "node" || n.type === "io")
+    return !S.edges.some(e => e.id !== ignorandoFlecha && e.to.id === id);
+  return true;
+};
+const admitePuertoDestino = (id, port) => {
+  const n = getNode(id);
+  return !(n && n.type === "sum") || !!(n.signs && n.signs[port]);
 };
 
 /* ======================= el documento =======================

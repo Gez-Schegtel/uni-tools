@@ -1,6 +1,7 @@
 # Spec 17 — Reglas Algebraicas Completas de Conexión e Inversión de Sentido en `diagrama-bloque`
 
 - **ID:** `SPEC-17`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-07` y Sección `5.4.B.2`
 - **Prioridad:** Media (17 / 27)
 - **Esfuerzo estimado:** Medio (~45 minutos)
@@ -79,6 +80,6 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ninguna acción de interfaz (arrastrar puerto, reconectar extremo, `#e-flip` o editar signos del sumador) ni carga de archivo permite violar las reglas algebraicas del diagrama de bloques.
-- [ ] Cada rechazo muestra en `#toast` la causa específica (entrada única, salida única, pata sin signo o lazo sin sumador).
-- [ ] `node src/construir.js` actualiza `diagrama-bloque.html` y todas las pruebas de `bloque.spec.js` y `senales.spec.js` (equivalente en bloques) pasan.
+- [x] Ninguna acción de interfaz (arrastrar puerto, reconectar extremo, `#e-flip` o editar signos del sumador) ni carga de archivo permite violar las reglas algebraicas del diagrama de bloques.
+- [x] Cada rechazo muestra en `#toast` la causa específica (entrada única, salida única, pata sin signo o lazo sin sumador).
+- [x] `node src/construir.js` actualiza `diagrama-bloque.html` y todas las pruebas de `bloque.spec.js` y `senales.spec.js` (equivalente en bloques) pasan.

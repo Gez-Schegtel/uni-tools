@@ -301,6 +301,30 @@ test.describe("un bloque tiene una sola entrada", () => {
     await abrirTexto(page, JSON.stringify(d));
     expect(await page.evaluate(() => S.edges.map((e) => e.id))).toEqual(["e1", "e2", "e3"]);
   });
+  test("una bifurcación admite una sola entrada y un sumador no admite entradas por su lado vacío", async ({ page }) => {
+    const d = {
+      nodes: [
+        { id: "g1", type: "block", x: 140, y: 160, w: 72, h: 42, label: "G1", font: 15 },
+        { id: "g2", type: "block", x: 140, y: 320, w: 72, h: 42, label: "G2", font: 15 },
+        { id: "br", type: "node", x: 340, y: 160 },
+        { id: "s", type: "sum", x: 340, y: 320, signs: { l: "+", t: "", r: "", b: "−" } },
+      ],
+      edges: [{ id: "e1", from: { id: "g1", port: "r" }, to: { id: "br", port: "l" }, variant: 0 }],
+    };
+    await abrirTexto(page, JSON.stringify(d));
+    await page.keyboard.press("c");
+    const desdeG2 = await centro(page, '.port[data-pid="g2"][data-port="r"]');
+    const pBr = await centro(page, '.port[data-pid="br"][data-port="b"]');
+    await arrastrar(page, desdeG2, [pBr.x - desdeG2.x, pBr.y - desdeG2.y]);
+    expect(await page.evaluate(() => S.edges.length)).toBe(1);
+    await expect(page.locator("#toast")).toContainText("Una bifurcación admite una sola entrada");
+
+    // Intentar entrar al sumador por su lado derecho (signo vacío "")
+    const pSumDer = await centro(page, '.port[data-pid="s"][data-port="r"]');
+    await arrastrar(page, desdeG2, [pSumDer.x - desdeG2.x, pSumDer.y - desdeG2.y]);
+    expect(await page.evaluate(() => S.edges.length)).toBe(1);
+    await expect(page.locator("#toast")).toContainText("Ese lado del sumador está vacío");
+  });
 });
 
 test.describe("guardar y abrir", () => {
