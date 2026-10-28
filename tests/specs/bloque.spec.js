@@ -308,12 +308,11 @@ test.describe("doble clic para editar el contenido directamente", () => {
     await arrastrar(page, c, [40, 40]);
     expect(await hayEditor(page)).toBe(false);
   });
-  test("funciona también en sumadores y en la etiqueta de una flecha", async ({ page }) => {
+  test("no abre el editor en sumadores y sí funciona en la etiqueta de una flecha", async ({ page }) => {
     const suma = await page.evaluate(() => S.nodes.find((n) => n.type === "sum").id);
     const c = await centro(page, suma);
     await page.mouse.dblclick(c.x, c.y);
-    expect(await hayEditor(page)).toBe(true);
-    await page.keyboard.press("Escape");
+    expect(await hayEditor(page)).toBe(false);
     const p = await page.evaluate(() => {
       // un cuarto del tramo más largo: el medio lo ocupa el tirador de la flecha seleccionada
       const e = S.edges.find((e) => e.pts && e.pts.length > 1), L = segsOf(e.pts)
@@ -628,4 +627,25 @@ test("al exportar sin hoja fija, un tramo de flecha corrido lejos de los bloques
   });
   expect(r.maxY).toBeGreaterThanOrEqual(750);
   expect(r.todosDentro).toBe(true);
+});
+
+test("sumador: no tiene campo Contenido, muestra 'vacío' en las opciones de signo y admite hasta tres signos", async ({ page }) => {
+  await page.evaluate(() => {
+    loadExample();
+    const s = S.nodes.find((n) => n.type === "sum");
+    S.sel = [s.id]; S.selEdges = []; render();
+  });
+  await expect(page.locator("#n-label")).toHaveCount(0);
+  const textos = await page.$$eval(".sgn option[value='']", (opts) => opts.map((o) => o.textContent));
+  expect(textos).toEqual(["vacío", "vacío", "vacío", "vacío"]);
+
+  // El primer sumador arranca con l="+" y b="−" (2 signos): poner "+" en "t" llega a 3 signos y se permite
+  await page.selectOption('.sgn[data-side="t"]', "+");
+  expect(await page.evaluate(() => S.nodes.find((n) => n.type === "sum").signs)).toEqual({ l: "+", t: "+", r: "", b: "−" });
+
+  // Intentar poner un 4° signo en "r" (el único lado vacío) debe avisar y mantener "r" vacío
+  await page.selectOption('.sgn[data-side="r"]', "+");
+  await expect(page.locator("#toast")).toContainText("El sumador admite hasta tres signos");
+  expect(await page.evaluate(() => S.nodes.find((n) => n.type === "sum").signs)).toEqual({ l: "+", t: "+", r: "", b: "−" });
+  expect(await page.locator('.sgn[data-side="r"]').inputValue()).toBe("");
 });

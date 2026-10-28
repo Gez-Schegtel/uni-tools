@@ -1,7 +1,7 @@
 # Spec 31 — Sumador en Diagramas de Bloques: Sin Campo `Contenido`, Texto `"vacío"` y Máximo de Tres Signos
 
 - **ID:** `SPEC-31`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Pedido directo del usuario (Puntos 5, 6 y 7)
 - **Prioridad:** Alta / Dominio y UX (Integrada al Bloque 2)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -95,7 +95,7 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Al seleccionar un sumador no aparece el campo `Contenido` ni se abre el editor flotante al hacerle doble clic.
-- [ ] La opción sin signo en los 4 selectores del sumador dice `"vacío"`.
-- [ ] Nunca se pueden activar 4 signos a la vez en un sumador (siempre queda al menos una porción vacía).
-- [ ] `node src/construir.js` actualiza `diagrama-bloque.html` y todos los tests pasan en Chromium y Firefox.
+- [x] Al seleccionar un sumador no aparece el campo `Contenido` ni se abre el editor flotante al hacerle doble clic.
+- [x] La opción sin signo en los 4 selectores del sumador dice `"vacío"`.
+- [x] Nunca se pueden activar 4 signos a la vez en un sumador (siempre queda al menos una porción vacía).
+- [x] `node src/construir.js` actualiza `diagrama-bloque.html` y todos los tests pasan en Chromium y Firefox.

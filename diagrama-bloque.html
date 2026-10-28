@@ -1456,12 +1456,24 @@ const DEF = {
   marco: { w: 240, h: 150, label: "", font: 12 }
 };
 const MINUS = "−";
+function sanearSignos(s) {
+  const res = Object.assign({}, DEF.sum.signs);
+  if (esObj(s)) {
+    for (const k of ["l", "t", "r", "b"]) {
+      const v = s[k] === "-" ? MINUS : s[k];
+      if (v === "+" || v === MINUS || v === "") res[k] = v;
+    }
+  }
+  const llenos = ["l", "t", "b", "r"].filter(k => res[k] !== "");
+  if (llenos.length > 3) res[llenos[3]] = "";
+  return res;
+}
 
 function makeNode(type, x, y, extra) {
   const d = DEF[type];
   const n = Object.assign({ id: uid("n"), type, x, y, w: d.w, h: d.h,
     label: d.label, font: d.font || 14 }, JSON.parse(JSON.stringify(extra || {})));
-  if (type === "sum") { n.signs = Object.assign({}, DEF.sum.signs, n.signs); n.cross = n.cross !== false; }
+  if (type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); n.cross = n.cross !== false; }
   if (type === "marco") completarMarco(n);
   return n;
 }
@@ -1496,7 +1508,7 @@ function depurarNodos(lista) {
       n.w = num(n.w, d.w); n.h = num(n.h, d.h);
       n.font = num(n.font, d.font || 14);
       if (typeof n.label !== "string") n.label = d.label;
-      if (n.type === "sum" && !esObj(n.signs)) n.signs = Object.assign({}, DEF.sum.signs);
+      if (n.type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); }
       if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); }
       if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       return n;
@@ -1990,7 +2002,6 @@ function renderNode(n, destino) {
         "font-size": fs }, g);
       t.textContent = sg;
     }
-    if (n.label) dibujarMath(g, n.label, 12, 0, -r - 12);
   } else if (n.type === "node") {
     el("circle", { cx: 0, cy: 0, r: 4.5, stroke: "none",
       class: S.sel.includes(n.id) ? "n-dot sel-dot" : "n-dot" }, g);
@@ -2192,26 +2203,28 @@ function renderInspector() {
     const n = nsel[0];
     const T = { block: "Bloque", sum: "Sumador", node: "Bifurcación", io: "Entrada / salida",
                 text: "Texto", marco: "Recuadro" }[n.type];
-    h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
-    if (n.type === "marco") {
-      h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
-    } else if (n.type !== "node") {
-      h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
-    } else {
-      h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
+    if (n.type !== "sum") {
+      h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
+      if (n.type === "marco") {
+        h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+      } else if (n.type !== "node") {
+        h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+      } else {
+        h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
+      }
+      if (n.type === "marco") {
+        h += `<div class="hint">Sirve para encuadrar un grupo de elementos y ponerle nombre.
+          No se cablea ni desvía las flechas.</div>`;
+      } else if (n.type !== "node") {
+        h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
+        <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
+        <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
+        <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
+      }
+      h += `</div>`;
     }
-    if (n.type === "marco") {
-      h += `<div class="hint">Sirve para encuadrar un grupo de elementos y ponerle nombre.
-        No se cablea ni desvía las flechas.</div>`;
-    } else if (n.type !== "node") {
-      h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
-      <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
-      <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
-      <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
-    }
-    h += `</div>`;
 
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
@@ -2269,7 +2282,7 @@ const portOpts = (v) => ["l", "r", "t", "b"].map(p =>
   `<option value="${p}"${p === v ? " selected" : ""}>${{ l: "Izquierda", r: "Derecha", t: "Arriba", b: "Abajo" }[p]}</option>`).join("");
 function signSel(side, val) {
   const o = (v, t) => `<option value="${v}"${v === val ? " selected" : ""}>${t}</option>`;
-  return `<select class="sgn" data-side="${side}">${o("+", "+")}${o(MINUS, MINUS)}${o("", "—vacío—")}</select>`;
+  return `<select class="sgn" data-side="${side}">${o("+", "+")}${o(MINUS, MINUS)}${o("", "vacío")}</select>`;
 }
 function wireInspector(nsel, esel) {
   const live = (id, fn) => enVivo(id, fn);
@@ -2290,7 +2303,16 @@ function wireInspector(nsel, esel) {
   const cross = document.getElementById("s-cross");
   if (cross) { cross.value = nsel[0].cross ? "1" : "0"; cross.onchange = () => { nsel.forEach(n => n.cross = cross.value === "1"); commit(); render(); }; }
   document.querySelectorAll(".sgn").forEach(sel => {
-    sel.onchange = () => { nsel.forEach(n => { if (n.signs) n.signs[sel.dataset.side] = sel.value; }); commit(); render(); };
+    sel.onchange = () => {
+      const side = sel.dataset.side, val = sel.value;
+      if (val !== "" && nsel.some(n => n.signs && ["l", "r", "t", "b"].filter(k => (k === side ? val : n.signs[k]) !== "").length > 3)) {
+        toast("El sumador admite hasta tres signos: un lado debe quedar vacío");
+        render();
+        return;
+      }
+      nsel.forEach(n => { if (n.signs) n.signs[side] = val; });
+      commit(); render();
+    };
   });
 
   live("e-label", v => esel.forEach(e => e.label = v));
@@ -2481,7 +2503,7 @@ function puntoEtiqueta(e) {                    // el medio del tramo más largo,
 function editarElemento(nid, eid) {
   if (nid) {
     const n = getNode(nid);
-    if (!n || n.type === "node") return;        // la bifurcación no tiene contenido
+    if (!n || n.type === "node" || n.type === "sum") return;        // ni la bifurcación ni el sumador tienen contenido
     S.sel = [nid]; S.selEdges = []; render();
     editarEnLaHoja(n.x, n.y, n.label, Math.max(120, n.w * S.zoom + 44), v => n.label = v);
     return;

@@ -23,7 +23,6 @@ function renderNode(n, destino) {
         "font-size": fs }, g);
       t.textContent = sg;
     }
-    if (n.label) dibujarMath(g, n.label, 12, 0, -r - 12);
   } else if (n.type === "node") {
     el("circle", { cx: 0, cy: 0, r: 4.5, stroke: "none",
       class: S.sel.includes(n.id) ? "n-dot sel-dot" : "n-dot" }, g);

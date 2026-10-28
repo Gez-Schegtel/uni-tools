@@ -8,12 +8,24 @@ const DEF = {
   marco: { w: 240, h: 150, label: "", font: 12 }
 };
 const MINUS = "−";
+function sanearSignos(s) {
+  const res = Object.assign({}, DEF.sum.signs);
+  if (esObj(s)) {
+    for (const k of ["l", "t", "r", "b"]) {
+      const v = s[k] === "-" ? MINUS : s[k];
+      if (v === "+" || v === MINUS || v === "") res[k] = v;
+    }
+  }
+  const llenos = ["l", "t", "b", "r"].filter(k => res[k] !== "");
+  if (llenos.length > 3) res[llenos[3]] = "";
+  return res;
+}
 
 function makeNode(type, x, y, extra) {
   const d = DEF[type];
   const n = Object.assign({ id: uid("n"), type, x, y, w: d.w, h: d.h,
     label: d.label, font: d.font || 14 }, JSON.parse(JSON.stringify(extra || {})));
-  if (type === "sum") { n.signs = Object.assign({}, DEF.sum.signs, n.signs); n.cross = n.cross !== false; }
+  if (type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); n.cross = n.cross !== false; }
   if (type === "marco") completarMarco(n);
   return n;
 }
@@ -48,7 +60,7 @@ function depurarNodos(lista) {
       n.w = num(n.w, d.w); n.h = num(n.h, d.h);
       n.font = num(n.font, d.font || 14);
       if (typeof n.label !== "string") n.label = d.label;
-      if (n.type === "sum" && !esObj(n.signs)) n.signs = Object.assign({}, DEF.sum.signs);
+      if (n.type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); }
       if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); }
       if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       return n;

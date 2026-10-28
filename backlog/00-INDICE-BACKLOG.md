@@ -45,7 +45,7 @@ El orden (`01` a `31`) combina tres factores:
 | **28** | ✅ Hecho | [`28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md) | Pedido Usuario (1 y 2) | Mejora UI / Panel | Bajo (20 min) | Quitar el botón `#n-dup` (`Duplicar`) en las 3 herramientas y quitar `#e-split`, `#e-alt`, `#e-reset` y `#e-flip` del panel de flechas. |
 | **29** | ✅ Hecho | [`29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md`](./29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md) | Pedido Usuario (3) | Bug UX / Interacción | Bajo (25 min) | Eliminar el titileo de los círculos `.port` al pasar el cursor por el perímetro de un elemento en `diagrama-bloque`. |
 | **30** | ✅ Hecho | [`30-trayectoria-ortogonal-en-vista-previa-de-conexion.md`](./30-trayectoria-ortogonal-en-vista-previa-de-conexion.md) | Pedido Usuario (4) | Mejora UX / Lienzo | Bajo (25 min) | Hacer que la vista previa `.ghostline` al tirar una conexión salga en la dirección del puerto y se doble siguiendo al mouse. |
-| **31** | ⏳ Pendiente | [`31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md`](./31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md) | Pedido Usuario (5, 6 y 7) | Dominio / UX | Bajo (25 min) | Quitar `Contenido` de los sumadores, cambiar `"—vacío—"` por `"vacío"` y exigir que tengan hasta 3 signos (1 lado siempre vacío). |
+| **31** | ✅ Hecho | [`31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md`](./31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md) | Pedido Usuario (5, 6 y 7) | Dominio / UX | Bajo (25 min) | Quitar `Contenido` de los sumadores, cambiar `"—vacío—"` por `"vacío"` y exigir que tengan hasta 3 signos (1 lado siempre vacío). |
 
 ---
 

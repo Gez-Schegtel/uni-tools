@@ -17,7 +17,7 @@ function puntoEtiqueta(e) {                    // el medio del tramo más largo,
 function editarElemento(nid, eid) {
   if (nid) {
     const n = getNode(nid);
-    if (!n || n.type === "node") return;        // la bifurcación no tiene contenido
+    if (!n || n.type === "node" || n.type === "sum") return;        // ni la bifurcación ni el sumador tienen contenido
     S.sel = [nid]; S.selEdges = []; render();
     editarEnLaHoja(n.x, n.y, n.label, Math.max(120, n.w * S.zoom + 44), v => n.label = v);
     return;

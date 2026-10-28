@@ -40,26 +40,28 @@ function renderInspector() {
     const n = nsel[0];
     const T = { block: "Bloque", sum: "Sumador", node: "Bifurcación", io: "Entrada / salida",
                 text: "Texto", marco: "Recuadro" }[n.type];
-    h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
-    if (n.type === "marco") {
-      h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
-    } else if (n.type !== "node") {
-      h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
-    } else {
-      h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
+    if (n.type !== "sum") {
+      h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
+      if (n.type === "marco") {
+        h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+      } else if (n.type !== "node") {
+        h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+      } else {
+        h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
+      }
+      if (n.type === "marco") {
+        h += `<div class="hint">Sirve para encuadrar un grupo de elementos y ponerle nombre.
+          No se cablea ni desvía las flechas.</div>`;
+      } else if (n.type !== "node") {
+        h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
+        <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
+        <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
+        <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
+      }
+      h += `</div>`;
     }
-    if (n.type === "marco") {
-      h += `<div class="hint">Sirve para encuadrar un grupo de elementos y ponerle nombre.
-        No se cablea ni desvía las flechas.</div>`;
-    } else if (n.type !== "node") {
-      h += `<div class="hint">Ecuaciones: las barras se apilan a cualquier profundidad —
-      <b>(G_2/H_1)*(G_4/H_2)</b> da dos fracciones multiplicadas y <b>a/b/c</b> una sola con
-      <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
-      <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
-    }
-    h += `</div>`;
 
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
@@ -117,7 +119,7 @@ const portOpts = (v) => ["l", "r", "t", "b"].map(p =>
   `<option value="${p}"${p === v ? " selected" : ""}>${{ l: "Izquierda", r: "Derecha", t: "Arriba", b: "Abajo" }[p]}</option>`).join("");
 function signSel(side, val) {
   const o = (v, t) => `<option value="${v}"${v === val ? " selected" : ""}>${t}</option>`;
-  return `<select class="sgn" data-side="${side}">${o("+", "+")}${o(MINUS, MINUS)}${o("", "—vacío—")}</select>`;
+  return `<select class="sgn" data-side="${side}">${o("+", "+")}${o(MINUS, MINUS)}${o("", "vacío")}</select>`;
 }
 function wireInspector(nsel, esel) {
   const live = (id, fn) => enVivo(id, fn);
@@ -138,7 +140,16 @@ function wireInspector(nsel, esel) {
   const cross = document.getElementById("s-cross");
   if (cross) { cross.value = nsel[0].cross ? "1" : "0"; cross.onchange = () => { nsel.forEach(n => n.cross = cross.value === "1"); commit(); render(); }; }
   document.querySelectorAll(".sgn").forEach(sel => {
-    sel.onchange = () => { nsel.forEach(n => { if (n.signs) n.signs[sel.dataset.side] = sel.value; }); commit(); render(); };
+    sel.onchange = () => {
+      const side = sel.dataset.side, val = sel.value;
+      if (val !== "" && nsel.some(n => n.signs && ["l", "r", "t", "b"].filter(k => (k === side ? val : n.signs[k]) !== "").length > 3)) {
+        toast("El sumador admite hasta tres signos: un lado debe quedar vacío");
+        render();
+        return;
+      }
+      nsel.forEach(n => { if (n.signs) n.signs[side] = val; });
+      commit(); render();
+    };
   });
 
   live("e-label", v => esel.forEach(e => e.label = v));
