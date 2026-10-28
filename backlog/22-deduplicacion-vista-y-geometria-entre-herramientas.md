@@ -54,7 +54,7 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
 ## 3. Especificación de la Solución
 
 1. **En [`src/comun/vista.js`](../src/comun/vista.js):**
-   - Definir una función `fit()` común que consulte `S[HERRAMIENTA.nodos]`, ejecute la preparación previa de rutas si existe (`if (typeof actualizarTamaños === "function") actualizarTamaños(); if (typeof routeAll === "function") routeAll(); if (typeof acomodarRamas === "function") acomodarRamas();`) y llame a `encuadrar(bboxAll(), 60, HERRAMIENTA.zoomMax || 2)`.
+   - Definir una función `fit()` común que consulte `S[HERRAMIENTA.nodos]` y `hojaActiva()` (cuando la herramienta usa `comun/hoja.js`), ejecute la preparación previa de rutas si existe (`if (typeof actualizarTamaños === "function") actualizarTamaños(); if (typeof routeAll === "function") routeAll(); if (typeof acomodarRamas === "function") acomodarRamas();`) y llame a `encuadrar(H ? cajaHoja(H) : bboxAll(), HERRAMIENTA.fitMargen || 60, HERRAMIENTA.zoomMax || 2)`.
 2. **En [`src/simulador/modelo.js:31-40`](../src/simulador/modelo.js):**
    - Unificar `proximoNombreFF()` y `proximaLetra()` en una sola función parametrizada `proximaLetraLibre(tipo)`.
 

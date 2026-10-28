@@ -54,15 +54,12 @@ En [`src/senales/modelo.js:66-72`](../src/senales/modelo.js), normalizar `n.tipo
 function depurarNodos(lista) {
   let hayEntrada = false, haySalida = false;
   return (Array.isArray(lista) ? lista : []).filter(esObj).map(n => {
-    let tipo = "normal";
-    if (n.tipo === "entrada" && !hayEntrada) { tipo = "entrada"; hayEntrada = true; }
-    else if (n.tipo === "salida" && !haySalida) { tipo = "salida"; haySalida = true; }
-    return Object.assign({}, n, {
-      x: num(n.x, 0),
-      y: num(n.y, 0),
-      nombre: texto(n.nombre, ""),
-      tipo
-    });
+    n.x = num(n.x, 0); n.y = num(n.y, 0);
+    if (typeof n.nombre !== "string") n.nombre = n.nombre == null ? "" : String(n.nombre);
+    if (n.tipo === "entrada" && !hayEntrada) { hayEntrada = true; }
+    else if (n.tipo === "salida" && !haySalida) { haySalida = true; }
+    else { n.tipo = "normal"; }
+    return n;
   });
 }
 ```

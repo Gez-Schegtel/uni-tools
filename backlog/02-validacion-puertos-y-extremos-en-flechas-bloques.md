@@ -44,16 +44,18 @@ y lanza `TypeError: Cannot read properties of undefined (reading 'x')`, abortand
 
 ## 3. Especificación de la Solución
 
-En [`src/bloque/modelo.js:58-62`](../src/bloque/modelo.js), definir los puertos válidos (`const PUERTOS_VALIDOS = ["l", "r", "t", "b"];`) y excluir como extremos a los nodos de tipo `"marco"`:
+En [`src/bloque/modelo.js:70-89`](../src/bloque/modelo.js), definir los puertos válidos (`p === "l" || p === "r" || p === "t" || p === "b"`) y excluir como extremos a los nodos sin puertos (`type === "marco"` y `type === "text"`):
 
 ```js
-function depurarFlechas(es) {
-  const ids = new Set(S.nodes.filter(n => n.type !== "marco").map(n => n.id));
+function depurarFlechas(lista, nodos) {
+  const ids = new Set(nodos.filter(n => n.type !== "marco" && n.type !== "text").map(n => n.id));
   const puertoOk = (p) => p === "l" || p === "r" || p === "t" || p === "b";
-  const candidatas = es.filter(e => e && idValido(e.id)
-    && e.from && e.to
-    && ids.has(e.from.id) && ids.has(e.to.id)
-    && puertoOk(e.from.port) && puertoOk(e.to.port));
+  const porId = new Map(nodos.map(n => [n.id, n]));
+  const conEntrada = new Set();                  // bloques que ya tienen su flecha
+  flechasDeMas = 0;
+  return (Array.isArray(lista) ? lista : []).filter(e => {
+    if (!(esObj(e) && esObj(e.from) && esObj(e.to) && ids.has(e.from.id) && ids.has(e.to.id)
+      && puertoOk(e.from.port) && puertoOk(e.to.port))) return false;
 ```
 
 *(Nota: Al impedir que las flechas salgan de un `"marco"`, recordar actualizar en [`tests/specs/archivos-danados.spec.js:72`](../tests/specs/archivos-danados.spec.js) el extremo `from: { id: "m", port: "r" }` para que use un bloque válido `id: "b"` en la prueba de XSS, como se detalla también en la Spec 23).*

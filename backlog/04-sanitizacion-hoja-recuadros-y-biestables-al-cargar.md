@@ -41,13 +41,13 @@ Existen tres huecos de validación al cargar documentos en `abrirTexto()`:
 ## 3. Especificación de la Solución
 
 ### 3.1. En `src/comun/hoja.js` (línea 17)
-Mantener el contrato de retorno de `hojaValida(h)` (devuelve el objeto `h` saneado o `null`, como esperan [`src/bloque/modelo.js:90`](../src/bloque/modelo.js), [`src/simulador/modelo.js:93`](../src/simulador/modelo.js) y [`src/senales/modelo.js:86`](../src/senales/modelo.js)), validando que `w >= 50` y `h >= 50` y que `preset` (si viene) sea una clave válida de `HOJAS` (o `"a4h"` por defecto):
+Mantener el contrato de retorno de `hojaValida(h)` (devuelve el objeto `h` saneado o `null`, como esperan [`src/bloque/modelo.js:93`](../src/bloque/modelo.js) y [`src/simulador/modelo.js:90`](../src/simulador/modelo.js)), validando que `w >= 50` y `h >= 50` y que `preset` sea una clave válida de `HOJAS` (o `"a4-h"` por defecto si no coincide):
 ```js
 function hojaValida(h) {
   if (!esObj(h)) return null;
   const x = num(h.x, null), y = num(h.y, null), w = num(h.w, null), alto = num(h.h, null);
   if (x === null || y === null || w === null || alto === null || w < 50 || alto < 50) return null;
-  const preset = Object.prototype.hasOwnProperty.call(HOJAS, h.preset) && h.preset !== "sin" ? h.preset : "libre";
+  const preset = Object.prototype.hasOwnProperty.call(HOJAS, h.preset) ? h.preset : "a4-h";
   return { preset, x, y, w, h: alto };
 }
 ```

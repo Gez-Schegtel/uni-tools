@@ -53,14 +53,13 @@
 ### 3.1. Redibujar únicamente la capa `gOv` (puertos/pines) cuando cambia `hoverNode` sin arrastre (`!drag`)
 - **⚠️ Garantía Crítica de No Regresión:** En [`src/bloque/dibujo.js:65-75`](../src/bloque/dibujo.js) (`renderPorts()`) y [`src/simulador/dibujo.js:146-161`](../src/simulador/dibujo.js) (`renderPins()`), los puertos/pines azules de conexión se dibujan dentro de la capa `gOv` para los nodos seleccionados **y para el nodo `hoverNode`** (`S.nodes.filter(n => ids.has(n.id) || n.id === hoverNode)`). Si al cambiar `hoverNode` sólo se alternara una clase CSS sin actualizar `gOv`, dejarían de aparecer los puertos/pines al acercar el mouse a un bloque o compuerta.
 - Por lo tanto, la optimización segura cuando cambia `hoverNode` con `!drag` consiste en:
-  - En [`src/bloque/dibujo.js`](../src/bloque/dibujo.js), extraer una función liviana `renderOverlay()` que sólo actualice `gOv`:
+  - En [`src/bloque/dibujo.js`](../src/bloque/dibujo.js), extraer una función liviana `renderOverlay()` que sólo actualice `gOv` (`renderHandles()` ya invoca `renderTiradoresTramo()` internamente):
     ```js
     function renderOverlay() {
       gOv.textContent = "";
       renderHoja();
       renderPorts();
       renderHandles();
-      renderSegHandles();
     }
     ```
   - En [`src/simulador/dibujo.js`](../src/simulador/dibujo.js), extraer `renderOverlay()`:
@@ -69,7 +68,7 @@
       gOv.textContent = "";
       renderHoja();
       renderPins();
-      renderSegHandles();
+      if (typeof renderHandles === "function") renderHandles();
     }
     ```
   - En `pointermove` (`!drag`) de [`src/bloque/interaccion.js`](../src/bloque/interaccion.js) (usando la función estable `nodoCercaDePuertos(ev, w)` introducida en [`SPEC-29`](./29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md)) y [`src/simulador/interaccion.js:103`](../src/simulador/interaccion.js), llamar a `renderOverlay()` en lugar de `render()`. De esta manera **los puertos y pines siguen mostrándose sin titileo al pasar el mouse**, pero se evita ejecutar `actualizarTamaños()`, `correr()`, `routeAll()`, la reconstrucción de `gEdges`/`gNodes` y `renderInspector()`.

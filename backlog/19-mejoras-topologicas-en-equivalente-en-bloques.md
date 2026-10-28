@@ -50,17 +50,47 @@ Y luego, en las líneas 110-121:
 
 ## 3. Especificación de la Solución
 
-En [`src/senales/equivalente.js:92-95`](../src/senales/equivalente.js), reemplazar la condición `!autolazo` / `autolazo` en el nodo de salida por `sal.length === 0` / `sal.length > 0` (dado que cualquier autolazo en la salida ya está incluido en `sal`, pues en la línea 64 `salientes.get(r.de).push(r)` incluye todas las ramas que salen del nodo):
+En [`src/senales/equivalente.js:88-116`](../src/senales/equivalente.js), cuando `n.tipo === "salida"` y de la salida parten ramas (`sal.length > 0`), el rótulo `io()` debe ser el elemento terminal de la cadena (recibiendo la señal por la izquierda), pero las ramas salientes de `n` deben partir de un punto de bifurcación (`node`) situado inmediatamente **antes** del rótulo `io()`:
 
 ```js
-    if (n.tipo === "entrada") {
+    let origenSal = null;
+    if (n.tipo === "entrada" || !ent.length) {     // la entrada, o un nodo sin nada que le entre
       cadena = [io()];
-    } else if (n.tipo === "salida" && sal.length === 0) {
-      cadena = [...sumadores, io()];
-    } else {
-      const necesitaBif = sal.length >= 2 || (n.tipo === "salida" && sal.length > 0) || sumadores.length === 0;
-      cadena = [...sumadores, ...(necesitaBif ? [bif()] : [])];
+    } else if (n.tipo === "salida" && ent.length === 1 && sal.length === 0) {
+      cadena = [io()];                             // la salida con una sola rama y sin salidas: el rótulo y listo
+    } else if (n.tipo === "salida" && ent.length === 1 && sal.length > 0) {
+      const b = agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }));
+      const fin = io();
+      unir(b, "r", fin, "l");
+      cadena = [b, fin];
+      origenSal = b;
+    } else if (ent.length >= 2 || n.tipo === "salida") {
+      const resto = ent.slice();
+      cadena = [];
+      while (resto.length) {
+        const s = sumador(resto.splice(0, cadena.length ? 2 : 3), cadena.length > 0);
+        if (cadena.length) unir(cadena[cadena.length - 1], "r", s, "l");
+        cadena.push(s);
+      }
+      if (n.tipo === "salida") {
+        if (sal.length > 0) {
+          const b = agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }));
+          unir(cadena[cadena.length - 1], "r", b, "l");
+          cadena.push(b);
+          origenSal = b;
+        }
+        const fin = io();
+        unir(cadena[cadena.length - 1], "r", fin, "l");
+        cadena.push(fin);
+      } else if (sal.length >= 2) {
+        cadena.push(agregar(Object.assign(base(), { type: "node", w: 10, h: 10 })));
+        unir(cadena[cadena.length - 2], "r", cadena[cadena.length - 1], "l");
+      }
+    } else {                                       // una sola entrada: un punto sobre la línea
+      cadena = [agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }))];
     }
+    cadenaDe.set(n.id, cadena);
+    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, origenSal || cadena[cadena.length - 1]);
 ```
 
 ### 3.1. Garantías de No Regresión

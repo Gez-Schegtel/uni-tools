@@ -67,10 +67,10 @@ La bandera `inspLock` sólo vale `true` durante los microsegundos que dura el ca
 En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
 1. Agregar un test `"con el reloj automático andando se puede escribir en el panel sin perder el foco"`:
    - Cargar el ejemplo `"cont"` (`cargarEjemplo("cont")`), que tiene un reloj y dos flip-flops JK.
-   - Activar el reloj en modo `"auto"` y `corriendo = true`, llamando a `actualizarReloj()`.
+   - Activar el reloj en modo `"auto"` y `corriendo = true`.
    - Seleccionar la salida `Q0` (`S.sel = [idQ0]; render();`).
-   - Hacer foco en `#n-lab` (`await page.locator("#n-lab").focus()`), vaciarlo y escribir `"Salida_0"` con un retardo entre teclas que supere los 400 ms (`await page.keyboard.type("Salida_0", { delay: 120 })`, total ~960 ms, es decir, al menos 2 pulsos del reloj automático durante la escritura).
-   - Verificar que `#n-lab` siga teniendo el foco (`await expect(page.locator("#n-lab")).toBeFocused()`), que su valor sea `"Salida_0"` y que `getNode(idQ0).label` sea `"Salida_0"`.
+   - Hacer foco en `#n-label` (`await page.locator("#n-label").focus()`), vaciarlo y escribir `"Salida_0"` con un retardo entre teclas que supere los 400 ms (`await page.keyboard.type("Salida_0", { delay: 120 })`, total ~960 ms, es decir, al menos 2 pulsos del reloj automático durante la escritura).
+   - Verificar que `#n-label` siga teniendo el foco (`await expect(page.locator("#n-label")).toBeFocused()`), que su valor sea `"Salida_0"` y que `getNode(idQ0).label` sea `"Salida_0"`.
 
 ---
 
