@@ -1,6 +1,7 @@
 # Spec 26 — Actualización de Documentación (`tests/README.md`, `CLAUDE.md`, Atajos de Ayuda y Workflows)
 
 - **ID:** `SPEC-26`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `6.1`
 - **Prioridad:** Baja (26 / 27)
 - **Esfuerzo estimado:** Bajo (~30 minutos)
@@ -59,7 +60,7 @@
 
 ## 4. Criterios de Aceptación
 
-- [ ] `CLAUDE.md` está presente y sin referencias a ramas inexistentes.
-- [ ] `tests/README.md` refleja exactamente los archivos de `tests/unidades/` y `tests/specs/`.
-- [ ] Todos los atajos implementados en `teclado.js` y `barra.js` figuran en las ventanas `#ov-help` de las tres herramientas.
-- [ ] `node src/construir.js --comprobar` da `"al día"` y pasan las pruebas.
+- [x] `CLAUDE.md` está presente y sin referencias a ramas inexistentes.
+- [x] `tests/README.md` refleja exactamente los archivos de `tests/unidades/` y `tests/specs/`.
+- [x] Todos los atajos implementados en `teclado.js` y `barra.js` figuran en las ventanas `#ov-help` de las tres herramientas.
+- [x] `node src/construir.js --comprobar` da `"al día"` y pasan las pruebas.

@@ -290,7 +290,7 @@ dos. Si se pide alguna, el camino corto es portarla:
 | | colores | área de impresión | recuadros | paleta | selección múltiple |
 |---|---|---|---|---|---|
 | diagrama-bloque | sí | sí | sí | sí | sí |
-| simulador-logico | sí | sí | sí | sí | no (no tiene grupo Modo) |
+| simulador-logico | sí | sí | sí | sí | sí (por banda, `Shift+clic` y `Ctrl+A`; sin botón Modo en la barra) |
 | diagrama-señales | no | no | no | no | sí |
 
 Doble clic para editar el texto y los gestos táctiles (un dedo mueve la hoja, un dedo sobre un

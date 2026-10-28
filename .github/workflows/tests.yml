@@ -1,12 +1,13 @@
-# Pruebas automáticas de las tres herramientas (Playwright + Chromium).
-# Corre en cada push a main o features y en cada pull request. NO despliega nada:
+# Corre las pruebas unitarias (Node) y E2E (Playwright en Chromium y Firefox).
+# Corre en cada push a main o features/** y en cada pull request. NO despliega nada:
 # el despliegue a GitHub Pages sigue siendo static.yml.
 name: Pruebas
 
 on:
   push:
-    branches: ["main", "features"]
+    branches: ["main", "features/**"]
   pull_request:
+    branches: ["main", "features/**"]
   workflow_dispatch:
 
 permissions:

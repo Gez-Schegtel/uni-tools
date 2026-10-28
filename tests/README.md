@@ -63,10 +63,15 @@ y en menos de un segundo (necesita Node ≥ 20; el CI usa 22):
 ```bash
 node --test "unidades/*.test.js"        # desde tests/
 node --test "tests/unidades/*.test.js"  # desde la raíz del repo
+npm --prefix tests run test:unidades    # atajo de npm
 ```
 
-`unidades/cargar.js` pega los fragmentos de `src/` en un contexto de Node igual que lo hace la
-página (mismo scope global, mismo orden de inclusión) y los tests llaman a las funciones reales.
+Archivos de `unidades/`:
+- `cargar.js`: pega los fragmentos de `src/` en un contexto de Node igual que lo hace la página (mismo scope global, mismo orden de inclusión).
+- `ecuaciones.test.js`: parser y maquetador de ecuaciones (`parsearExpr`, `armarCaja`) de `diagrama-bloque`.
+- `logica.test.js`: evaluación de compuertas (`evalGate`), simplificación booleana exacta por Quine–McCluskey (`simplify`) y tablas de verdad (`truthTable`) de `simulador-logico`.
+- `mason.test.js`: búsqueda de trayectorias, lazos, determinante Δ y armado de ecuaciones (`analizar`, `producto`) de `diagrama-señales`.
+
 Fijan los mismos resultados que `correccion.spec.js` verifica en el navegador, sin el costo de
 levantar Chromium o Firefox. Si alguno de esos archivos empezara a tocar el DOM al cargarse, estas
 pruebas fallan: es la señal de que dejó de ser puro y hay que probarlo desde `specs/`.
@@ -82,7 +87,7 @@ pruebas fallan: es la señal de que dejó de ser puro y hay que probarlo desde `
 
 ## En GitHub Actions
 
-`.github/workflows/tests.yml` corre en push a `main` y `features`, en pull requests y a mano
+`.github/workflows/tests.yml` corre en push a `main` y `features/**`, en pull requests y a mano
 (*Actions → Pruebas → Run workflow*). Pasos: verifica que las páginas estén al día con `src/`
 (`node src/construir.js --comprobar`), que el JS de cada página parsea, corre las unidades
 (`node --test`, sin navegador), instala

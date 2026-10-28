@@ -84,7 +84,7 @@ El orden (`01` a `32`) combina tres factores:
 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
-| **26** | ⏳ Pendiente | [`26-actualizacion-documentacion-tests-atajos-y-workflows.md`](./26-actualizacion-documentacion-tests-atajos-y-workflows.md) | Sec. `6.1` | Documentación | Bajo (30 min) | Restaurar `CLAUDE.md`, actualizar `tests/README.md`, completar atajos en modales de ayuda (`?`) y ajustar `tests.yml`. |
+| **26** | ✅ Hecho | [`26-actualizacion-documentacion-tests-atajos-y-workflows.md`](./26-actualizacion-documentacion-tests-atajos-y-workflows.md) | Sec. `6.1` | Documentación | Bajo (30 min) | Restaurar `CLAUDE.md`, actualizar `tests/README.md`, completar atajos en modales de ayuda (`?`) y ajustar `tests.yml`. |
 | **27** | ⏳ Pendiente | [`27-limpieza-de-archivos-huerfanos-y-peso-del-repositorio.md`](./27-limpieza-de-archivos-huerfanos-y-peso-del-repositorio.md) | Sec. `6.2` | Higiene Git | Muy bajo (10 min) | Eliminar `uni-tools-logo.jpg` (2.03 MB sin uso) de Git y limpiar `/node_modules` y `/test-results` huérfanos en la raíz. |
 
 ---

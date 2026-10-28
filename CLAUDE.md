@@ -47,9 +47,9 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 
 ## Cómo se trabaja
 
-- **Los cambios van a la rama `features`.** `main` es lo que se publica en GitHub Pages y sólo se
-  toca cuando el dueño ya comprobó que `features` anda bien (pull request o merge suyo).
-- **Se puede commitear, pero nunca pushear.** Hacer commits está permitido (en `features`, con mensajes
+- **Los cambios van a una rama `features/*`.** `main` es lo que se publica en GitHub Pages y sólo se
+  toca cuando el dueño ya comprobó que la rama de trabajo anda bien (pull request o merge suyo).
+- **Se puede commitear, pero nunca pushear.** Hacer commits está permitido (en `features/*`, con mensajes
   claros y las páginas armadas junto con sus fuentes); `git push`, en cualquiera de sus formas y a
   cualquier rama, no: lo hace el dueño. Al terminar, avisar qué commits quedaron listos para pushear.
 - El código y los comentarios están **en español**, igual que la interfaz. Los nombres de variables
@@ -94,7 +94,7 @@ La suite corre en **Chromium y Firefox**. Además de los comportamientos, `tests
 verifica la exactitud de los resultados (Mason, simplificación, tablas de verdad, biestables y
 ecuaciones) contra referencias independientes: si se toca un cálculo, tiene que seguir pasando.
 `tests/servidor.js` levanta solo el servidor estático; no hace falta abrir nada a mano. En GitHub
-corren solas con `.github/workflows/tests.yml` en cada push a `main` o `features` y en cada pull
+corren solas con `.github/workflows/tests.yml` en cada push a `main` o `features/**` y en cada pull
 request. Detalle de qué cubre cada spec y cómo agregar pruebas: `tests/README.md`.
 
 Los cálculos puros (Mason, la lógica del simulador y el analizador de ecuaciones de los bloques) también tienen pruebas unitarias que corren sin navegador ni dependencias: `node --test "tests/unidades/*.test.js"` (Node ≥ 20). Cargan esos archivos de `src/` en un contexto de Node, así que no pueden empezar a tocar el DOM al cargarse.
