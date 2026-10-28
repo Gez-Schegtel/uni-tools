@@ -32,9 +32,9 @@ function makeNode(type, x, y, extra) {
 const getNode = (id) => S.nodes.find(n => n.id === id);
 const getEdge = (id) => S.edges.find(e => e.id === id);
 /* Un bloque admite una sola entrada: para juntar dos señales está el sumador. */
-const admiteEntrada = (id) => {
+const admiteEntrada = (id, ignorandoFlecha) => {
   const n = getNode(id);
-  return !(n && n.type === "block") || !S.edges.some(e => e.to.id === id);
+  return !(n && n.type === "block") || !S.edges.some(e => e.id !== ignorandoFlecha && e.to.id === id);
 };
 
 /* ======================= el documento =======================

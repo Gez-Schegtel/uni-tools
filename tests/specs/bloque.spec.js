@@ -130,7 +130,7 @@ test.describe("flechas", () => {
     expect(es[0]).toEqual({ dashed: true, width: 3, color: { flecha: "#cc0000" } });
     expect(es[1]).toEqual({ dashed: true, width: 3, color: { flecha: "#cc0000" } });
   });
-  test("el panel de una flecha muestra sus propiedades sin los botones de acción quitados", async ({ page }) => {
+  test("el panel de una flecha muestra sus propiedades y el botón Invertir sentido sin los botones quitados", async ({ page }) => {
     await page.evaluate(() => { loadExample(); S.sel = []; S.selEdges = [S.edges[0].id]; render(); });
     await expect(page.locator("#e-label")).toBeVisible();
     await expect(page.locator("#e-style")).toBeVisible();
@@ -138,7 +138,14 @@ test.describe("flechas", () => {
     await expect(page.locator("#e-width")).toBeVisible();
     await expect(page.locator("#e-fp")).toBeVisible();
     await expect(page.locator("#e-tp")).toBeVisible();
-    await expect(page.locator("#e-split, #e-alt, #e-reset, #e-flip")).toHaveCount(0);
+    await expect(page.locator("#e-flip")).toBeVisible();
+    await expect(page.locator("#e-split, #e-alt, #e-reset")).toHaveCount(0);
+    const antes = await page.evaluate(() => ({ from: S.edges[0].from, to: S.edges[0].to }));
+    await page.click("#e-flip");
+    expect(await page.evaluate(() => ({ from: S.edges[0].from, to: S.edges[0].to }))).toEqual({
+      from: antes.to,
+      to: antes.from,
+    });
   });
   test("cambiar el puerto de origen o destino desde el panel (#e-fp / #e-tp) recalcula la ruta automática de la flecha", async ({ page }) => {
     await page.evaluate(() => {

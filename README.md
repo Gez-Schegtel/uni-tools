@@ -11,7 +11,7 @@ exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servi
 
 | Herramienta | Para qué sirve |
 |---|---|
-| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores y bifurcaciones. Un bloque admite una sola entrada: la segunda flecha avisa y no se crea. Las flechas se rutean solas y, una vez seleccionadas, se pueden correr a mano. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
+| **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores (hasta tres signos y un lado vacío para la salida) y bifurcaciones. Un bloque admite una sola entrada y las flechas deben conectarse siempre a un elemento (no quedan sueltas). Las flechas se rutean solas, muestran vista previa ortogonal y, una vez seleccionadas, se pueden correr a mano o invertir de sentido. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
 | **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión mínima (Quine–McCluskey) y tabla de excitación. Cables que se rutean solos, compuertas giratorias, recuadros, colores y área de impresión. |
 | **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason: ecuaciones, trayectorias, lazos, Δ, cofactores y función de transferencia (simbólica y numérica). Genera el diagrama de bloques equivalente, que se abre en la otra herramienta. |
 
@@ -62,7 +62,7 @@ Las páginas armadas se commitean junto con sus fuentes, así que el sitio se si
 
 ## Pruebas
 
-Hay una suite automática con Playwright en `tests/`, que corre en Chromium y en Firefox. Además de los comportamientos, comprueba que los **resultados** sean correctos contra referencias independientes: Mason contra resolver el sistema lineal del grafo, la simplificación contra una búsqueda exhaustiva del mínimo, las tablas de verdad, los biestables y las ecuaciones de los bloques. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features` y en cada pull request. Para correrla en tu compu:
+Hay una suite automática con Playwright en `tests/`, que corre en Chromium y en Firefox. Además de los comportamientos, comprueba que los **resultados** sean correctos contra referencias independientes: Mason contra resolver el sistema lineal del grafo, la simplificación contra una búsqueda exhaustiva del mínimo, las tablas de verdad, los biestables y las ecuaciones de los bloques. Corre sola en GitHub Actions (`.github/workflows/tests.yml`) en cada push a `main` o `features/**` y en cada pull request. Para correrla en tu compu:
 
 ```bash
 cd tests && npm install && npx playwright install chromium firefox && npm test
@@ -76,8 +76,8 @@ Los cálculos puros (la regla de Mason, la lógica de las compuertas y el analiz
 
 ## Contribuir
 
-Los cambios van a la rama `features` (el flujo de trabajo y las convenciones están en [`CLAUDE.md`](CLAUDE.md)); `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Los cambios se hacen en `src/` (nunca a mano en los HTML de la raíz): después correr `node src/construir.js` y las pruebas.
+Los cambios van a una rama `features/*` (el flujo de trabajo y las convenciones están en [`CLAUDE.md`](CLAUDE.md)); `main` es lo que se publica en GitHub Pages y se actualiza cuando ya se comprobó que todo anda. Los cambios se hacen en `src/` (nunca a mano en los HTML de la raíz): después correr `node src/construir.js` y las pruebas.
 
 ## Licencia
 
-Software libre bajo la **GNU GPL v3 o posterior** (`GPL-3.0-or-later`). Podés usarlo, estudiarlo, modificarlo y redistribuirlo; si distribuís una versión modificada, tiene que seguir siendo libre bajo la misma licencia. Texto completo en [`LICENSE`](LICENSE). Las imágenes del logo (`uni-tools-*.png/jpg`) quedan afuera de esta licencia.
+Software libre bajo la **GNU GPL v3 o posterior** (`GPL-3.0-or-later`). Podés usarlo, estudiarlo, modificarlo y redistribuirlo; si distribuís una versión modificada, tiene que seguir siendo libre bajo la misma licencia. Texto completo en [`LICENSE`](LICENSE). Las imágenes del logo (`logo.png` y `uni-tools-logo.png`) quedan afuera de esta licencia.
