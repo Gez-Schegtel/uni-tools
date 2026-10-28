@@ -16,6 +16,7 @@ function editarEnLaHoja(xMundo, yMundo, valor, ancho, aplicar) {
   cerrarEditor(false);
   const input = document.createElement("input");
   input.type = "text"; input.className = "editor-hoja"; input.value = valor == null ? "" : valor;
+  input.dataset.xMundo = xMundo; input.dataset.yMundo = yMundo;
   input.style.left = (S.pan.x + xMundo * S.zoom) + "px";
   input.style.top = (S.pan.y + yMundo * S.zoom) + "px";
   input.style.width = ancho + "px";
@@ -27,6 +28,7 @@ function editarEnLaHoja(xMundo, yMundo, valor, ancho, aplicar) {
     if (ev.key === "Enter") { ev.preventDefault(); cerrarEditor(true); }
     else if (ev.key === "Escape") { ev.preventDefault(); cerrarEditor(false); }
   });
+  input.addEventListener("wheel", alRueda, { passive: false });
   input.addEventListener("blur", () => cerrarEditor(true));
 }
 /* El doble clic no se puede esperar del navegador: al apretar, el elemento se redibuja y

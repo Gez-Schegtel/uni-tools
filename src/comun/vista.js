@@ -10,6 +10,11 @@ const snapV = (v) => S.snap ? Math.round(v / S.grid) * S.grid : Math.round(v);
    grandes se trababa. Si algo dibujado pasara a depender de S.pan, hay que redibujarlo acá. */
 function moverVista() {
   viewport.setAttribute("transform", `translate(${S.pan.x},${S.pan.y}) scale(${S.zoom})`);
+  const ed = $(".editor-hoja");
+  if (ed) {
+    ed.style.left = (S.pan.x + (+ed.dataset.xMundo) * S.zoom) + "px";
+    ed.style.top = (S.pan.y + (+ed.dataset.yMundo) * S.zoom) + "px";
+  }
 }
 /* Encuadra la caja b (l, t, r, b en coordenadas de la hoja) dejando un margen en pantalla.
    La paleta flota arriba a la izquierda: si queda lugar, lo dibujado se acomoda a su derecha
@@ -26,7 +31,7 @@ function encuadrar(b, margen, zoomMax) {
 }
 /* La rueda mueve la hoja; el pellizco del trackpad llega como rueda con Ctrl apretado,
    y eso es zoom (alrededor del puntero). */
-const instalarRueda = () => svg.addEventListener("wheel", ev => {
+const alRueda = ev => {
   ev.preventDefault();
   const r = svg.getBoundingClientRect();
   if (ev.ctrlKey || ev.metaKey) {
@@ -42,7 +47,8 @@ const instalarRueda = () => svg.addEventListener("wheel", ev => {
     S.pan.y -= dy * f;
   }
   if (ev.ctrlKey || ev.metaKey) render(); else moverVista();   // el zoom sí cambia tamaños
-}, { passive: false });
+};
+const instalarRueda = () => svg.addEventListener("wheel", alRueda, { passive: false });
 $("#b-zoomin").onclick = () => { S.zoom = Math.min(4, S.zoom * 1.2); render(); };
 $("#b-zoomout").onclick = () => { S.zoom = Math.max(.2, S.zoom / 1.2); render(); };
 $("#b-fit").onclick = () => fit();

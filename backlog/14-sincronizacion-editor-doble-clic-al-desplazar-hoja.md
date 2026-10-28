@@ -1,6 +1,7 @@
 # Spec 14 — Sincronización del Editor Flotante de Doble Clic al Desplazar la Hoja
 
 - **ID:** `SPEC-14`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-18`
 - **Prioridad:** Baja (14 / 27)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
@@ -60,5 +61,5 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js) (dentro de `tes
 
 ## 5. Criterios de Aceptación
 
-- [ ] Al desplazar la hoja o hacer zoom con la rueda mientras `.editor-hoja` está abierto, su posición `left`/`top` se actualiza junto con `moverVista()`.
-- [ ] `node src/construir.js` regenera las tres páginas y el nuevo test en `bloque.spec.js` pasa.
+- [x] Al desplazar la hoja o hacer zoom con la rueda mientras `.editor-hoja` está abierto, su posición `left`/`top` se actualiza junto con `moverVista()`.
+- [x] `node src/construir.js` regenera las tres páginas y el nuevo test en `bloque.spec.js` pasa.

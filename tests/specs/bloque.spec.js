@@ -272,6 +272,22 @@ test.describe("doble clic para editar el contenido directamente", () => {
     await page.keyboard.press("Enter");
     expect(await page.evaluate((id) => getEdge(id).label, p.id)).toBe("x1");
   });
+  test("al mover la hoja con la rueda, el editor flotante acompaña al bloque", async ({ page }) => {
+    const id = await idBloque(page), c = await centro(page, id);
+    await page.mouse.dblclick(c.x, c.y);
+    await expect(page.locator(".editor-hoja")).toBeFocused();
+    const antes = await page.evaluate(() => ({
+      top: parseFloat(document.querySelector(".editor-hoja").style.top),
+      panY: S.pan.y,
+    }));
+    await page.mouse.wheel(0, 100);
+    await expect.poll(() => page.evaluate(() => S.pan.y)).not.toBe(antes.panY);
+    const despues = await page.evaluate(() => ({
+      top: parseFloat(document.querySelector(".editor-hoja").style.top),
+      panY: S.pan.y,
+    }));
+    expect(Math.round(despues.top - antes.top)).toBe(Math.round(despues.panY - antes.panY));
+  });
 });
 
 test.describe("copiar y pegar (Ctrl+C / Ctrl+V)", () => {
