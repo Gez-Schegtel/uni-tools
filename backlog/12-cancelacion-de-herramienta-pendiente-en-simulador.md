@@ -1,6 +1,7 @@
 # Spec 12 — Cancelación Limpia de Herramienta Pendiente (`pendiente`) en `simulador-logico`
 
 - **ID:** `SPEC-12`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-22`
 - **Prioridad:** Media / Baja (12 / 27)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
@@ -75,6 +76,6 @@ En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Interactuar con un pin, un nodo o un cable mientras había una herramienta `pendiente` activa limpia `setPendiente(null)`.
-- [ ] Un clic posterior en el fondo vacío simplemente deselecciona sin insertar elementos fantasma.
-- [ ] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test en `simulador.spec.js` pasa.
+- [x] Interactuar con un pin, un nodo o un cable mientras había una herramienta `pendiente` activa limpia `setPendiente(null)`.
+- [x] Un clic posterior en el fondo vacío simplemente deselecciona sin insertar elementos fantasma.
+- [x] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test en `simulador.spec.js` pasa.

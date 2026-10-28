@@ -275,3 +275,28 @@ test("los cables no pasan por encima de la compuerta de la que salen o a la que 
   });
   expect(cruces).toEqual([]);
 });
+
+test("elegir una compuerta en la paleta y luego tocar un elemento existente suelta la herramienta pendiente", async ({ page }) => {
+  await page.evaluate(() => cargarEjemplo("half"));
+  const n0 = await page.evaluate(() => S.nodes.length);
+  await page.keyboard.press("1");
+  expect(await page.evaluate(() => pendiente)).toBe("and");
+  await expect(page.locator('.ptool[data-add="and"]')).toHaveClass(/\bon\b/);
+
+  const pos = await page.evaluate(() => {
+    const n = S.nodes.find((n) => n.type === "in");
+    const r = document.getElementById("canvas").getBoundingClientRect();
+    return {
+      nx: r.left + S.pan.x + n.x * S.zoom,
+      ny: r.top + S.pan.y + n.y * S.zoom,
+      ex: r.left + r.width - 40,
+      ey: r.top + r.height - 40,
+    };
+  });
+  await page.mouse.click(pos.nx, pos.ny);
+  expect(await page.evaluate(() => pendiente)).toBeNull();
+  await expect(page.locator(".ptool.on")).toHaveCount(0);
+
+  await page.mouse.click(pos.ex, pos.ey);
+  expect(await page.evaluate(() => S.nodes.length)).toBe(n0);
+});

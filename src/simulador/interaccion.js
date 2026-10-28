@@ -68,6 +68,7 @@ svg.addEventListener("pointerdown", ev => {
     render(); return;
   }
   if (t.getAttribute && t.getAttribute("data-pid")) {
+    if (pendiente) setPendiente(null);
     const id = t.getAttribute("data-pid"), pin = t.getAttribute("data-pin");
     const n = getNode(id), p = esSalida(pin) ? pin : +pin;   // "o0" es salida; "0" es la entrada 0
     drag = { kind: "connect", fromId: id, fromPin: p, start: pinPoint(n, p), cur: w };
@@ -75,6 +76,7 @@ svg.addEventListener("pointerdown", ev => {
   }
   const wg = t.closest ? t.closest("[data-wid]") : null;
   if (wg) {
+    if (pendiente) setPendiente(null);
     const id = wg.getAttribute("data-wid");
     if (ev.shiftKey) S.selW = S.selW.includes(id) ? S.selW.filter(x => x !== id) : S.selW.concat(id);
     else { S.selW = [id]; S.sel = []; }
@@ -82,6 +84,7 @@ svg.addEventListener("pointerdown", ev => {
   }
   const nid = hitNode(t);
   if (nid) {
+    if (pendiente) setPendiente(null);
     if (ev.shiftKey) S.sel = S.sel.includes(nid) ? S.sel.filter(x => x !== nid) : S.sel.concat(nid);
     else if (!S.sel.includes(nid)) { S.sel = [nid]; S.selW = []; }
     drag = { kind: "move", w0: w, orig: S.sel.map(id => { const n = getNode(id); return { id, x: n.x, y: n.y }; }), moved: false, nid };
