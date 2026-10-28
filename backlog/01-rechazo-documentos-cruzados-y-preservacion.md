@@ -1,6 +1,7 @@
 # Spec 01 — Rechazo de Documentos Cruzados entre Herramientas y Preservación del Estado
 
 - **ID:** `SPEC-01`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-01` y Sección `5.2.1` (Falso positivo en `archivos-danados.spec.js`)
 - **Prioridad:** Crítica (1 / 27)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
@@ -87,8 +88,8 @@ Tanto **Diagramas de bloques** ([`src/bloque/herramienta.js:8`](../src/bloque/he
 
 ## 5. Criterios de Aceptación
 
-- [ ] `docDatos()` incluye `herramienta: HERRAMIENTA.clave` (`"bloque"`, `"simulador"` o `"senales"`).
-- [ ] Abrir un JSON o SVG de `simulador-logico` en `diagrama-bloque` (y viceversa) muestra `HERRAMIENTA.textos.noEsDoc` y no altera `S.nodes`, `S.edges`/`S.wires`, `undoStack` ni `localStorage`.
-- [ ] Abrir un JSON con `nodes: [{ id: "a", type: "inventado", x: 1, y: 1 }]` donde ningún nodo es válido no borra el diagrama existente en pantalla.
-- [ ] `node src/construir.js` regenera las tres páginas sin diferencias pendientes.
-- [ ] Todos los tests de `tests/specs/archivos-danados.spec.js` y `tests/specs/comun.spec.js` pasan en Chromium y Firefox.
+- [x] `docDatos()` incluye `herramienta: HERRAMIENTA.clave` (`"bloque"`, `"simulador"` o `"senales"`).
+- [x] Abrir un JSON o SVG de `simulador-logico` en `diagrama-bloque` (y viceversa) muestra `HERRAMIENTA.textos.noEsDoc` y no altera `S.nodes`, `S.edges`/`S.wires`, `undoStack` ni `localStorage`.
+- [x] Abrir un JSON con `nodes: [{ id: "a", type: "inventado", x: 1, y: 1 }]` donde ningún nodo es válido no borra el diagrama existente en pantalla.
+- [x] `node src/construir.js` regenera las tres páginas sin diferencias pendientes.
+- [x] Todos los tests de `tests/specs/archivos-danados.spec.js` y `tests/specs/comun.spec.js` pasan en Chromium y Firefox.

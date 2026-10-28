@@ -18,14 +18,23 @@ const HERRAMIENTAS = [
   ["simulador-logico.html", "nodes"],
   ["diagrama-señales.html", "nodos"],
 ];
+/* Los de MALOS que sí son un documento válido (mínimo) de esa herramienta: esos se abren */
+const VALIDOS = {
+  "simulador-logico.html": [MALOS[9]],
+  "diagrama-señales.html": [MALOS[7]],
+};
 
 for (const [archivo, clave] of HERRAMIENTAS) {
   test.describe(archivo, () => {
     for (const txt of MALOS) {
       test(`sobrevive a ${JSON.stringify(txt.slice(0, 50))}`, async ({ page }) => {
         const errores = await abrir(page, archivo);
+        const nAntes = await page.evaluate((k) => S[k].length, clave);
         expect(await abrirTexto(page, txt)).toBeNull();
         expect(errores).toEqual([]);
+        // lo que no sirve no borra el diagrama que estaba en pantalla
+        if (!(VALIDOS[archivo] || []).includes(txt))
+          expect(await page.evaluate((k) => S[k].length, clave)).toBe(nAntes);
         // y sigue funcionando: se puede volver a dibujar y deshacer
         await page.evaluate(() => { render(); undo(); render(); });
         expect(errores).toEqual([]);
@@ -123,3 +132,44 @@ for (const archivo of ["diagrama-bloque.html", "simulador-logico.html"]) {
     expect(errores).toEqual([]);
   });
 }
+
+/* Un documento de otra herramienta (nuevo, con su campo herramienta, o viejo, sin él) se rechaza
+   sin tocar el diagrama, el historial ni el autoguardado. */
+test.describe("abrir un documento de otra herramienta", () => {
+  const exportar = async (page, archivo) => {
+    await abrir(page, archivo);
+    return page.evaluate(() => ({
+      json: JSON.stringify(docDatos()),
+      viejo: JSON.stringify(Object.assign(docDatos(), { herramienta: undefined })),
+      svg: new XMLSerializer().serializeToString(buildExportSVG().svg),
+    }));
+  };
+  const PARES = [["diagrama-bloque.html", "simulador-logico.html"], ["simulador-logico.html", "diagrama-bloque.html"],
+                 ["diagrama-señales.html", "diagrama-bloque.html"], ["diagrama-bloque.html", "diagrama-señales.html"]];
+  for (const [origen, destino] of PARES) {
+    test(`${origen} en ${destino}: avisa que no sirve y no toca el diagrama actual`, async ({ page }) => {
+      const docs = await exportar(page, origen);
+      const errores = await abrir(page, destino);
+      await page.evaluate(() => commit());
+      const antes = await page.evaluate(() => ({ doc: JSON.stringify(docDatos()), pila: undoStack.length,
+        guardado: localStorage.getItem("uni-tools-autoguardado-" + HERRAMIENTA.clave) }));
+      for (const txt of [docs.json, docs.viejo, docs.svg]) {
+        await page.evaluate(() => { const t = document.querySelector("#toast .txt"); if (t) t.textContent = ""; });
+        expect(await abrirTexto(page, txt)).toBeNull();
+        await expect(page.locator("#toast")).toContainText(await page.evaluate(() => HERRAMIENTA.textos.noEsDoc));
+        expect(await page.evaluate(() => ({ doc: JSON.stringify(docDatos()), pila: undoStack.length,
+          guardado: localStorage.getItem("uni-tools-autoguardado-" + HERRAMIENTA.clave) }))).toEqual(antes);
+      }
+      expect(errores).toEqual([]);
+    });
+  }
+  test("el equivalente en bloques de diagrama-señales sí se abre en diagrama-bloque", async ({ page }) => {
+    await abrir(page, "diagrama-señales.html");
+    const json = await page.evaluate(() => JSON.stringify(equivalenteEnBloques()));
+    const errores = await abrir(page, "diagrama-bloque.html");
+    await page.evaluate(() => { S.nodes = []; S.edges = []; render(); });
+    expect(await abrirTexto(page, json)).toBeNull();
+    expect(await page.evaluate(() => S.nodes.length)).toBeGreaterThan(0);
+    expect(errores).toEqual([]);
+  });
+});

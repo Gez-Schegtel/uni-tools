@@ -205,7 +205,7 @@ function equivalenteEnBloques() {
     unir(A, pSal, bl, entraAlBloque);
     unir(bl, saleDelBloque, B, pEnt);
   }
-  return { nombre: limpiarNombre(S.nombre) + "-bloques", nodes, edges,
+  return { version: VERSION_DOC, herramienta: "bloque", nombre: limpiarNombre(S.nombre) + "-bloques", nodes, edges,
            tema: { relleno: "#ffffff", borde: "#101418", texto: "#101418",
                    flecha: "#101418", fondo: "#ffffff" }, hoja: null };
 }

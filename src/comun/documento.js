@@ -30,6 +30,16 @@ function datosDeSVG(txt) {
   if (!m || !m.textContent.trim()) throw new Error("ese SVG no trae los datos adentro");
   return JSON.parse(m.textContent);
 }
+/* Un documento de otra herramienta: lo dice su campo herramienta o, en los archivos viejos
+   que no lo traen, que trae las conexiones con el nombre de otra (edges / wires). */
+function docAjeno(d) {
+  if (!esObj(d)) return false;
+  if (typeof d.herramienta === "string" && d.herramienta !== HERRAMIENTA.clave) return true;
+  const K = HERRAMIENTA.conexiones;
+  if (K === "edges") return Array.isArray(d.wires) && !Array.isArray(d.edges);
+  if (K === "wires") return Array.isArray(d.edges) && !Array.isArray(d.wires);
+  return false;
+}
 function abrirTexto(txt, nombreDelArchivo) {
   const t = String(txt || "").trim();
   if (!t) return toast("No hay nada para abrir");
@@ -41,8 +51,15 @@ function abrirTexto(txt, nombreDelArchivo) {
   } catch (e) {
     return toast(/metadata|datos/.test(e.message) ? HERRAMIENTA.textos.svgSinDatos : "Ese archivo no se pudo leer");
   }
-  if (!d || !Array.isArray(d[HERRAMIENTA.nodos])) return toast(HERRAMIENTA.textos.noEsDoc);
+  if (!d || docAjeno(d) || !Array.isArray(d[HERRAMIENTA.nodos])) return toast(HERRAMIENTA.textos.noEsDoc);
+  // si todo lo que traía se descarta por inválido, no era un documento de esta herramienta:
+  // se vuelve al diagrama de antes sin tocar el historial ni el autoguardado
+  const previo = snapshot();
   cargarDoc(d, nombreDelArchivo && nombreDelArchivo.replace(/\.(json|svg)$/i, ""));
+  if (d[HERRAMIENTA.nodos].length > 0 && S[HERRAMIENTA.nodos].length === 0) {
+    restore(previo); render();
+    return toast(HERRAMIENTA.textos.noEsDoc);
+  }
   commit(); fit();
   $("#ov-io").classList.remove("show");
   toast(HERRAMIENTA.textos.cargado);
