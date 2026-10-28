@@ -67,8 +67,13 @@ for (const h of HERRAMIENTAS) {
       await abrir(page, h.archivo);
       await page.evaluate(h.agregar);
       await page.evaluate(h.agregar);
+      await page.evaluate(() => guardarAhora());
       await page.evaluate(() => undo());                 // queda un solo "Nuevo"
       const antes = await etiquetas(page, h.lista);
+      await expect.poll(() => page.evaluate(({ c, k }) => {
+        const g = JSON.parse(localStorage.getItem("uni-tools-autoguardado-" + c) || "{}");
+        return ((g.doc && g.doc[k]) || []).filter((n) => (n.label !== undefined ? n.label : n.nombre) === "Nuevo").length;
+      }, { c: h.clave, k: h.lista })).toBe(1);
       await page.reload();
       await page.waitForFunction(() => typeof autoActivo !== "undefined" && autoActivo);
       expect(await etiquetas(page, h.lista)).toEqual(antes);

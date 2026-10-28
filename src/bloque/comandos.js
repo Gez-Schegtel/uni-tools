@@ -26,8 +26,10 @@ function splitEdge(e) {
   const goingPos = horiz ? best[1].x > best[0].x : best[1].y > best[0].y;
   const inPort = horiz ? (goingPos ? "l" : "r") : (goingPos ? "t" : "b");
   const outPort = { l: "r", r: "l", t: "b", b: "t" }[inPort];
-  S.edges.push({ id: uid("e"), from: { id: nn.id, port: outPort }, to: e.to, variant: 0,
-    label: e.label, dashed: e.dashed, arrow: e.arrow, width: e.width });
+  const nueva = { id: uid("e"), from: { id: nn.id, port: outPort }, to: e.to, variant: 0,
+    label: e.label, dashed: e.dashed, arrow: e.arrow, width: e.width };
+  if (e.color) nueva.color = Object.assign({}, e.color);
+  S.edges.push(nueva);
   e.to = { id: nn.id, port: inPort };
   e.label = ""; rutaAuto(e);
   S.sel = [nn.id]; S.selEdges = [];

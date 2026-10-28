@@ -15,7 +15,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{outline:2px solid v
   grid-template-columns:repeat(3,1fr);gap:4px;align-items:center;justify-items:center}
 .signbox .sgn{width:100%}
 .signbox .mid{width:34px;height:34px;border:1.5px solid var(--ink);border-radius:50%;position:relative}
-.signbox .mid::before,.signbox .mid::after{content:"";position:absolute;inset:0;border-top:1.5px solid var(--ink);top:50%}
+.signbox .mid::before,.signbox .mid::after{content:"";position:absolute;inset:0;margin:auto;height:1.5px;background:var(--ink)}
 .signbox .mid::before{transform:rotate(45deg)}
 .signbox .mid::after{transform:rotate(-45deg)}
 .iconbar .btn{padding:5px 7px}

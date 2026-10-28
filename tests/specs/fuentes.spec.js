@@ -19,6 +19,7 @@ for (const p of PAGINAS) {
     expect(html).not.toMatch(/@incluir/);
     expect(html).not.toMatch(/\{\{[\w-]+\}\}/);
     expect(html).not.toContain("\r");
+    expect(html.match(/<\/head>/g)).toHaveLength(1);
     expect(html.match(/<script>/g)).toHaveLength(1);
     expect(html).not.toMatch(/<script\s+src|<link[^>]+stylesheet/);
   });

@@ -116,6 +116,20 @@ test.describe("flechas", () => {
     await page.evaluate(() => { const b = S.nodes.find((x) => x.type === "block"); b.x += 40; b.y += 40; render(); });
     expect(await page.evaluate(() => S.edges.every((e) => e.pts && e.pts.length >= 2))).toBe(true);
   });
+  test("al partir una flecha con una bifurcación, ambas mitades conservan el estilo, grosor y color", async ({ page }) => {
+    const doc = {
+      nodes: [{ id: "a", type: "block", x: 160, y: 200, w: 72, h: 42, label: "G" },
+              { id: "b", type: "block", x: 440, y: 200, w: 72, h: 42, label: "H" }],
+      edges: [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0,
+                label: "u", dashed: true, width: 3, color: { flecha: "#cc0000" } }],
+    };
+    await abrirTexto(page, JSON.stringify(doc));
+    await page.evaluate(() => { splitEdge(getEdge("e1")); commit(); render(); });
+    const es = await page.evaluate(() => S.edges.map((e) => ({ dashed: e.dashed, width: e.width, color: e.color })));
+    expect(es).toHaveLength(2);
+    expect(es[0]).toEqual({ dashed: true, width: 3, color: { flecha: "#cc0000" } });
+    expect(es[1]).toEqual({ dashed: true, width: 3, color: { flecha: "#cc0000" } });
+  });
 });
 
 test.describe("un bloque tiene una sola entrada", () => {

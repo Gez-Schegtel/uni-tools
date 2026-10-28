@@ -16,9 +16,11 @@ function undo() {
   if (!undoStack.length) return;
   redoStack.push(snapshot());
   const s = undoStack.pop(); restore(s); lastSnap = s; render();
+  autoguardar();
 }
 function redo() {
   if (!redoStack.length) return;
   undoStack.push(snapshot());
   const s = redoStack.pop(); restore(s); lastSnap = s; render();
+  autoguardar();
 }
