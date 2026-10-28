@@ -163,9 +163,23 @@ svg.addEventListener("pointerup", ev => {
   svg.classList.remove("panning");
   drag = null; render();
 });
+const _pulsos = new Map();
 function pulso(n) {
+  if (_pulsos.has(n.id)) {
+    clearTimeout(_pulsos.get(n.id));
+    _pulsos.delete(n.id);
+    n.on = false;
+    correr();
+    commit();
+  }
   n.on = true; render();
-  setTimeout(() => { n.on = false; commit(); render(); }, 140);
+  _pulsos.set(n.id, setTimeout(() => {
+    _pulsos.delete(n.id);
+    n.on = false;
+    correr();
+    commit();
+    render();
+  }, 140));
 }
 /* Los relojes en automático laten solos; se frenan mientras arrastrás algo. */
 const PERIODO = 400;

@@ -1,6 +1,7 @@
 # Spec 13 — Antirrebote y Consistencia de Historial en el Reloj de Pulso (`simulador-logico`)
 
 - **ID:** `SPEC-13`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-17` y Sección `5.4.C.2`
 - **Prioridad:** Baja (13 / 27)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
@@ -79,6 +80,6 @@ En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Dos o más clics rápidos (< 140 ms) sobre un reloj en modo `"pulso"` producen sendos flancos ascendentes efectivos en los biestables conectados.
-- [ ] Al finalizar el pulso, `n.on` queda en `false` y cada pulso suma un único paso coherente en `undoStack`.
-- [ ] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test pasa en Chromium y Firefox.
+- [x] Dos o más clics rápidos (< 140 ms) sobre un reloj en modo `"pulso"` producen sendos flancos ascendentes efectivos en los biestables conectados.
+- [x] Al finalizar el pulso, `n.on` queda en `false` y cada pulso suma un único paso coherente en `undoStack`.
+- [x] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test pasa en Chromium y Firefox.

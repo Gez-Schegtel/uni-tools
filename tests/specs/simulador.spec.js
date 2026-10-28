@@ -300,3 +300,26 @@ test("elegir una compuerta en la paleta y luego tocar un elemento existente suel
   await page.mouse.click(pos.ex, pos.ey);
   expect(await page.evaluate(() => S.nodes.length)).toBe(n0);
 });
+
+test("dos clics rápidos en un reloj de pulso avanzan dos veces el contador y dejan el reloj en 0", async ({ page }) => {
+  await page.evaluate(() => cargarEjemplo("cont"));
+  const leerCuenta = () => page.evaluate(() => {
+    const outs = S.nodes.filter((n) => n.type === "out").sort((a, b) => a.label.localeCompare(b.label));
+    return outs.map((o) => valorDe(o.id, 0) ? 1 : 0);
+  });
+  expect(await leerCuenta()).toEqual([0, 0]);
+
+  await page.evaluate(async () => {
+    const clk = S.nodes.find((n) => n.type === "clk");
+    pulso(clk);
+    await new Promise((r) => setTimeout(r, 30));
+    pulso(clk);
+  });
+  await expect.poll(async () => page.evaluate(() => S.nodes.find((n) => n.type === "clk").on)).toBe(false);
+  // Q0 = bit menos significativo, Q1 = bit más significativo -> 2 en binario: Q0=0, Q1=1
+  expect(await leerCuenta()).toEqual([0, 1]);
+
+  await page.evaluate(() => undo());
+  expect(await leerCuenta()).toEqual([1, 0]);
+  expect(await page.evaluate(() => S.nodes.find((n) => n.type === "clk").on)).toBe(false);
+});
