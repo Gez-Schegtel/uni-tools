@@ -239,10 +239,10 @@ test.describe("doble clic para editar el contenido directamente", () => {
     const ids = await page.evaluate(() => S.nodes.filter((n) => n.type === "block").map((n) => n.id));
     const a = await centro(page, ids[0]), b = await centro(page, ids[1]);
     await page.mouse.click(a.x, a.y);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(430);
     await page.mouse.click(a.x, a.y);
     expect(await hayEditor(page)).toBe(false);
-    await page.waitForTimeout(600);       // si no, este clic y el anterior en A sí son un doble clic
+    await page.waitForTimeout(430);       // si no, este clic y el anterior en A sí son un doble clic
     await page.mouse.click(a.x, a.y);
     await page.mouse.click(b.x, b.y);
     expect(await hayEditor(page)).toBe(false);

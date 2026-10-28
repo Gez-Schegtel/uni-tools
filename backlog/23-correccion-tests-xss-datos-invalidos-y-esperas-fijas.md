@@ -1,6 +1,7 @@
 # Spec 23 — Corrección de Falsos Positivos XSS, Datos Inválidos y Esperas Fijas en `tests/`
 
 - **ID:** `SPEC-23`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** Secciones `5.2.2`, `5.2.3`, `5.2.4` y `5.2.5`
 - **Prioridad:** Media (23 / 27)
 - **Esfuerzo estimado:** Bajo (~30 minutos)
@@ -52,7 +53,7 @@
 
 ## 4. Criterios de Aceptación
 
-- [ ] El test de XSS en `archivos-danados.spec.js` selecciona tanto cada nodo válido (con propiedades `TRAMPA`) como cada conexión (`edges`, `wires`, `ramas`) y verifica que `window.__ejecutado` nunca sea `true`.
-- [ ] `tests/unidades/logica.test.js` usa `pin: "o0"` en todos sus cables de salida simple.
-- [ ] `comun.spec.js` y `bloque.spec.js` verifican los tiempos de `#toast` y de doble clic sin esperas bloqueantes de varios segundos.
-- [ ] Tanto `npm --prefix tests run test:unidades` como `npx --prefix tests playwright test` pasan en Chromium y Firefox en menos tiempo total.
+- [x] El test de XSS en `archivos-danados.spec.js` selecciona tanto cada nodo válido (con propiedades `TRAMPA`) como cada conexión (`edges`, `wires`, `ramas`) y verifica que `window.__ejecutado` nunca sea `true`.
+- [x] `tests/unidades/logica.test.js` usa `pin: "o0"` en todos sus cables de salida simple.
+- [x] `comun.spec.js` y `bloque.spec.js` verifican los tiempos de `#toast` y de doble clic sin esperas bloqueantes de varios segundos.
+- [x] Tanto `npm --prefix tests run test:unidades` como `npx --prefix tests playwright test` pasan en Chromium y Firefox en menos tiempo total.

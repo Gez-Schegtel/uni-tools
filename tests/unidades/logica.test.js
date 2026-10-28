@@ -44,9 +44,9 @@ test("tabla de verdad: una AND de dos entradas", () => {
   conCircuito(
     [nodo("i1", "in", 0, 0, { label: "A" }), nodo("i2", "in", 0, 40, { label: "B" }),
      nodo("g1", "and", 100, 20), nodo("o1", "out", 200, 20, { label: "S" })],
-    [{ from: { id: "i1", pin: "o" }, to: { id: "g1", pin: 0 } },
-     { from: { id: "i2", pin: "o" }, to: { id: "g1", pin: 1 } },
-     { from: { id: "g1", pin: "o" }, to: { id: "o1", pin: 0 } }]
+    [{ from: { id: "i1", pin: "o0" }, to: { id: "g1", pin: 0 } },
+     { from: { id: "i2", pin: "o0" }, to: { id: "g1", pin: 1 } },
+     { from: { id: "g1", pin: "o0" }, to: { id: "o1", pin: 0 } }]
   );
   assert.deepEqual(tabla(clonar(s.truthTable())), ["00→0", "01→0", "10→0", "11→1"]);
 });
@@ -56,8 +56,8 @@ test("tabla de verdad: semisumador (S = A ⊕ B, R = A · B)", () => {
     [nodo("i1", "in", 0, 0, { label: "A" }), nodo("i2", "in", 0, 40, { label: "B" }),
      nodo("h1", "hadd", 120, 20),
      nodo("o1", "out", 240, 0, { label: "S" }), nodo("o2", "out", 240, 40, { label: "R" })],
-    [{ from: { id: "i1", pin: "o" }, to: { id: "h1", pin: 0 } },
-     { from: { id: "i2", pin: "o" }, to: { id: "h1", pin: 1 } },
+    [{ from: { id: "i1", pin: "o0" }, to: { id: "h1", pin: 0 } },
+     { from: { id: "i2", pin: "o0" }, to: { id: "h1", pin: 1 } },
      { from: { id: "h1", pin: "o0" }, to: { id: "o1", pin: 0 } },
      { from: { id: "h1", pin: "o1" }, to: { id: "o2", pin: 0 } }]
   );
