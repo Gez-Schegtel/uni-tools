@@ -14,5 +14,6 @@ function recalcularCables(ids) {
 function fit() {
   const hj = hojaActiva();                      // con área definida, encuadrar es ver la hoja entera
   if (!S.nodes.length && !hj) { S.zoom = 1; S.pan = { x: 80, y: 60 }; render(); return; }
+  routeAll();
   encuadrar(hj ? cajaHoja(hj) : bboxAll(), 70, 1.8);
 }

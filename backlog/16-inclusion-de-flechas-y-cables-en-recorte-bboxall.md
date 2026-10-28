@@ -1,6 +1,7 @@
 # Spec 16 — Inclusión de Flechas y Cables en el Recorte de Exportación y Encuadre (`bboxAll()`)
 
 - **ID:** `SPEC-16`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-12` y Sección `5.4.A.3`
 - **Prioridad:** Media (16 / 27)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
@@ -79,6 +80,6 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ningún punto `p` de `S.edges` ni de `S.wires` queda fuera del `viewBox` devuelto por `buildExportSVG()` cuando no hay hoja fija activa.
-- [ ] `fit()` (`Encuadrar`) también encuadra los tramos manuales lejanos dentro de la vista.
-- [ ] `node src/construir.js` regenera `diagrama-bloque.html` y `simulador-logico.html` y todos los tests de exportación SVG/PNG pasan.
+- [x] Ningún punto `p` de `S.edges` ni de `S.wires` queda fuera del `viewBox` devuelto por `buildExportSVG()` cuando no hay hoja fija activa.
+- [x] `fit()` (`Encuadrar`) también encuadra los tramos manuales lejanos dentro de la vista.
+- [x] `node src/construir.js` regenera `diagrama-bloque.html` y `simulador-logico.html` y todos los tests de exportación SVG/PNG pasan.

@@ -556,3 +556,20 @@ test.describe("alinear y distribuir", () => {
     expect(r.ys).toEqual([100, 200, 300]);
   });
 });
+
+test("al exportar sin hoja fija, un tramo de flecha corrido lejos de los bloques entra entero en el viewBox del SVG", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    loadExample();
+    const s1 = S.nodes.find((n) => n.type === "sum");
+    const br = S.nodes.find((n) => n.type === "node");
+    const e = { id: "e_lejos", from: { id: br.id, port: "b" }, to: { id: s1.id, port: "b" }, variant: 0, manual: { c: [750] } };
+    S.edges.push(e);
+    render();
+    const exp = buildExportSVG();
+    const [vx, vy, vw, vh] = exp.svg.getAttribute("viewBox").split(/\s+/).map(Number);
+    const todosDentro = S.edges.every((ed) => ed.pts.every((p) => p.x >= vx && p.x <= vx + vw && p.y >= vy && p.y <= vy + vh));
+    return { todosDentro, maxY: Math.max(...e.pts.map((p) => p.y)), limY: vy + vh };
+  });
+  expect(r.maxY).toBeGreaterThanOrEqual(750);
+  expect(r.todosDentro).toBe(true);
+});

@@ -95,7 +95,7 @@ function candidatos(A, dA, B, dB, near, all) {
   return out;
 }
 function routeAll() {
-  const placed = [], all = bboxAll();
+  const placed = [], all = bboxNodos();
   for (const w of S.wires) {
     const from = getNode(w.from.id), to = getNode(w.to.id);
     if (!from || !to) { w.pts = null; continue; }

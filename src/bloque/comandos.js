@@ -37,5 +37,6 @@ function splitEdge(e) {
 function fit() {
   const H = hojaActiva();                       // con área definida, encuadrar es ver la hoja entera
   if (!S.nodes.length && !H) { S.zoom = 1; S.pan = { x: 60, y: 40 }; render(); return; }
+  actualizarTamaños(); routeAll();
   encuadrar(H ? cajaHoja(H) : bboxAll(), 60, 2);
 }

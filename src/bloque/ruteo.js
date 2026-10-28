@@ -118,7 +118,7 @@ function aplicarManual(e, A, B) {
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
 function routeAll() {
   const placed = [];
-  const all = bboxAll();
+  const all = bboxNodos();
   for (const e of S.edges) {
     const from = getNode(e.from.id), to = getNode(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
