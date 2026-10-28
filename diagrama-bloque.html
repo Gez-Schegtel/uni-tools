@@ -439,7 +439,7 @@ svg#canvas{
     <tr><td><kbd>B</kbd><kbd>S</kbd><kbd>N</kbd><kbd>E</kbd><kbd>T</kbd><kbd>M</kbd></td><td>Insertar bloque, sumador, bifurcación, entrada-salida, texto, recuadro</td></tr>
     <tr><td>Modos y herramientas</td><td>Son excluyentes: elegir una herramienta sale del modo, y elegir un modo suelta la herramienta. Al colocar el elemento se vuelve a Selección. <kbd>Esc</kbd> suelta la herramienta (o el modo) y vuelve a Selección. Los atajos están siempre en la franja de abajo.</td></tr>
     <tr><td>Bifurcación</td><td>Elegí la herramienta y hacé clic en una flecha: se inserta en el medio y parte la línea en dos</td></tr>
-    <tr><td>Arrastrar desde un punto azul</td><td>Crea una flecha hacia otro elemento; si la soltás sobre la hoja libre, ahí queda una bifurcación</td></tr>
+    <tr><td>Arrastrar desde un punto azul</td><td>Crea una flecha hacia otro elemento (no se permiten flechas sueltas sin destino)</td></tr>
     <tr><td>Entradas de un bloque</td><td>Un bloque tiene una sola entrada: si tirás una segunda flecha, avisa y no la crea (para juntar dos señales usá un sumador). Si un archivo o el autoguardado traen entradas de más, al abrirlo se deja una sola</td></tr>
     <tr><td>Doble clic</td><td>Renombrar el elemento</td></tr>
     <tr><td>Ecuaciones</td><td><kbd>K/(s+1)</kbd> apila la fracción, y también adentro de paréntesis:
@@ -2709,7 +2709,7 @@ svg.addEventListener("pointerdown", ev => {
     }
   }
   if (nid) {
-    if (S.mode === "connect" && !esMarco(getNode(nid))) {
+    if (S.mode === "connect" && esConectable(getNode(nid))) {
       const n = getNode(nid);
       const port = nearestPort(n, w);
       drag = { kind: "connect", fromId: nid, fromPort: port, start: portPoint(n, port), cur: w };
@@ -2740,12 +2740,13 @@ function nearestPort(n, w, fromNode) {
   return best;
 }
 /* Qué hay debajo del puntero al tirar una flecha: un puerto, un elemento, o nada */
+const esConectable = (n) => !!n && !esMarco(n) && n.type !== "text";
 function destinoBajoPuntero(ev, drag, w) {
   const t = document.elementFromPoint(ev.clientX, ev.clientY);
   if (t && t.classList && t.classList.contains("port"))
     return { id: t.getAttribute("data-pid"), port: t.getAttribute("data-port") };
   const nid = t ? hitNode(t) : null;
-  if (nid && !esMarco(getNode(nid)))
+  if (nid && esConectable(getNode(nid)))
     return { id: nid, port: nearestPort(getNode(nid), w, getNode(drag.fromId)) };
   return null;
 }
@@ -2753,7 +2754,7 @@ function nodoCercaDePuertos(ev, w) {
   const t = ev.target;
   if (t && t.getAttribute && t.getAttribute("data-pid")) return t.getAttribute("data-pid");
   const directo = hitNode(t);
-  if (directo && !esMarco(getNode(directo))) return directo;
+  if (directo && esConectable(getNode(directo))) return directo;
   let mejor = null, mejorDist = 1e9;
   for (const n of S.nodes) {
     if (esMarco(n) || n.type === "text") continue;
@@ -2875,13 +2876,10 @@ svg.addEventListener("pointerup", ev => {
   }
   if (drag.kind === "connect") {
     const dst = destinoBajoPuntero(ev, drag, w);
-    let targetId = dst && dst.id, targetPort = dst && dst.port;
+    const targetId = dst && dst.id, targetPort = dst && dst.port;
     if (!targetId) {
-      // soltar en el vacío = crear bifurcación ahí y conectar
-      const nn = makeNode("node", snapV(w.x), snapV(w.y));
-      S.nodes.push(nn); targetId = nn.id; targetPort = "l";
-    }
-    if (targetId !== drag.fromId) {
+      toast("La flecha debe conectarse a un elemento: no puede quedar suelta");
+    } else if (targetId !== drag.fromId) {
       if (admiteEntrada(targetId)) {
         S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
           to: { id: targetId, port: targetPort }, variant: 0 });

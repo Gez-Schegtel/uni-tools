@@ -41,8 +41,8 @@ En `22051e0`, **compartir tronco con puntos de unión automáticos (`junctionDot
 ## 3. Especificación de la Solución (En Dos Niveles: Seguro vs. Opcional)
 
 ### 3.1. Nivel A (100 % Seguro — No rompe ningún test ni flujo actual de `22051e0`)
-Corregir los bugs reales de validación respetando las reglas de `22051e0` y lo definido en las nuevas `SPEC-28` y `SPEC-31`:
-1. *(Nota de coordinación con [`SPEC-28`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md): el botón `#e-flip` "Invertir sentido" se elimina por completo del panel de flechas en `SPEC-28`, por lo que ya no existe esa vía para dejar a un bloque con 2 entradas).*
+Corregir los bugs reales de validación respetando las reglas de `22051e0` y lo definido en las nuevas `SPEC-28`, `SPEC-31` y `SPEC-32`:
+1. *(Nota de coordinación con [`SPEC-28`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md) y [`SPEC-32`](./32-prohibir-flechas-sueltas-sin-conectar.md): el botón `#e-flip` "Invertir sentido" se eliminó en `SPEC-28`, y la prohibición de dejar flechas sueltas al soltar en el vacío se especifica en `SPEC-32`).*
 2. **Extender `admiteEntrada(id, ignorandoFlecha)` a bifurcaciones (`node`) y rótulos (`io`) ([`src/bloque/modelo.js:23-26`](../src/bloque/modelo.js)):**
    - Una bifurcación (`type === "node"`) o un rótulo de salida (`type === "io"`) tampoco pueden recibir 2 flechas entrantes (dos señales no pueden sumarse sin un sumador `type === "sum"`):
      ```js

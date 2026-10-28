@@ -216,12 +216,13 @@ test.describe("un bloque tiene una sola entrada", () => {
     const g2 = await centro(page, '.node[data-id="g2"]');
     await arrastrar(page, desde, [g2.x - desde.x, g2.y - desde.y]);
     expect(await page.evaluate(() => S.edges.map((e) => e.to.id))).toEqual(["g1", "g2"]);
-    // y soltar en el vacío sigue dejando una bifurcación con su flecha
+    // y soltar en el vacío no deja ninguna conexión ni bifurcación suelta y avisa el motivo
     const r = await page.locator("#canvas").boundingBox();
     const libre = { x: r.x + r.width - 50, y: r.y + r.height - 50 };
     await arrastrar(page, desde, [libre.x - desde.x, libre.y - desde.y]);
-    expect(await page.evaluate(() => S.nodes[S.nodes.length - 1].type)).toBe("node");
-    expect(await page.evaluate(() => S.edges.length)).toBe(3);
+    expect(await page.evaluate(() => S.nodes.length)).toBe(3);
+    expect(await page.evaluate(() => S.edges.length)).toBe(2);
+    await expect(page.locator("#toast")).toContainText("La flecha debe conectarse a un elemento: no puede quedar suelta");
   });
   test("abrir un archivo con dos flechas al mismo bloque deja una sola y avisa", async ({ page }) => {
     const d = doc();

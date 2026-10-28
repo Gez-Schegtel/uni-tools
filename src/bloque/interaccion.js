@@ -223,7 +223,7 @@ svg.addEventListener("pointerdown", ev => {
     }
   }
   if (nid) {
-    if (S.mode === "connect" && !esMarco(getNode(nid))) {
+    if (S.mode === "connect" && esConectable(getNode(nid))) {
       const n = getNode(nid);
       const port = nearestPort(n, w);
       drag = { kind: "connect", fromId: nid, fromPort: port, start: portPoint(n, port), cur: w };
@@ -254,12 +254,13 @@ function nearestPort(n, w, fromNode) {
   return best;
 }
 /* Qué hay debajo del puntero al tirar una flecha: un puerto, un elemento, o nada */
+const esConectable = (n) => !!n && !esMarco(n) && n.type !== "text";
 function destinoBajoPuntero(ev, drag, w) {
   const t = document.elementFromPoint(ev.clientX, ev.clientY);
   if (t && t.classList && t.classList.contains("port"))
     return { id: t.getAttribute("data-pid"), port: t.getAttribute("data-port") };
   const nid = t ? hitNode(t) : null;
-  if (nid && !esMarco(getNode(nid)))
+  if (nid && esConectable(getNode(nid)))
     return { id: nid, port: nearestPort(getNode(nid), w, getNode(drag.fromId)) };
   return null;
 }
@@ -267,7 +268,7 @@ function nodoCercaDePuertos(ev, w) {
   const t = ev.target;
   if (t && t.getAttribute && t.getAttribute("data-pid")) return t.getAttribute("data-pid");
   const directo = hitNode(t);
-  if (directo && !esMarco(getNode(directo))) return directo;
+  if (directo && esConectable(getNode(directo))) return directo;
   let mejor = null, mejorDist = 1e9;
   for (const n of S.nodes) {
     if (esMarco(n) || n.type === "text") continue;
@@ -389,13 +390,10 @@ svg.addEventListener("pointerup", ev => {
   }
   if (drag.kind === "connect") {
     const dst = destinoBajoPuntero(ev, drag, w);
-    let targetId = dst && dst.id, targetPort = dst && dst.port;
+    const targetId = dst && dst.id, targetPort = dst && dst.port;
     if (!targetId) {
-      // soltar en el vacío = crear bifurcación ahí y conectar
-      const nn = makeNode("node", snapV(w.x), snapV(w.y));
-      S.nodes.push(nn); targetId = nn.id; targetPort = "l";
-    }
-    if (targetId !== drag.fromId) {
+      toast("La flecha debe conectarse a un elemento: no puede quedar suelta");
+    } else if (targetId !== drag.fromId) {
       if (admiteEntrada(targetId)) {
         S.edges.push({ id: uid("e"), from: { id: drag.fromId, port: drag.fromPort },
           to: { id: targetId, port: targetPort }, variant: 0 });
