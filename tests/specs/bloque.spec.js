@@ -140,6 +140,28 @@ test.describe("flechas", () => {
     await expect(page.locator("#e-tp")).toBeVisible();
     await expect(page.locator("#e-split, #e-alt, #e-reset, #e-flip")).toHaveCount(0);
   });
+  test("cambiar el puerto de origen o destino desde el panel (#e-fp / #e-tp) recalcula la ruta automática de la flecha", async ({ page }) => {
+    await page.evaluate(() => {
+      S.nodes = [
+        makeNode("block", 200, 200, { id: "a", label: "G1" }),
+        makeNode("block", 480, 320, { id: "b", label: "G2" }),
+      ];
+      S.edges = [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0, manual: { c: [340] } }];
+      S.sel = []; S.selEdges = ["e1"];
+      commit(); render();
+    });
+    expect(await page.evaluate(() => Boolean(getEdge("e1").manual))).toBe(true);
+    await page.selectOption("#e-fp", "b");
+    expect(await page.evaluate(() => ({ fromPort: getEdge("e1").from.port, manual: getEdge("e1").manual }))).toEqual({
+      fromPort: "b",
+      manual: undefined,
+    });
+    await page.selectOption("#e-tp", "t");
+    expect(await page.evaluate(() => ({ toPort: getEdge("e1").to.port, manual: getEdge("e1").manual }))).toEqual({
+      toPort: "t",
+      manual: undefined,
+    });
+  });
   test("al pasar el mouse sobre un bloque o bifurcación y luego sobre su puerto perimetral, el puerto no titila ni desaparece", async ({ page }) => {
     const pts = await page.evaluate(() => {
       S.sel = []; S.selEdges = []; hoverNode = null; render();

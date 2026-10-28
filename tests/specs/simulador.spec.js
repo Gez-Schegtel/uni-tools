@@ -237,3 +237,41 @@ test("dos clics rápidos en un reloj de pulso avanzan dos veces el contador y de
   expect(await leerCuenta()).toEqual([1, 0]);
   expect(await page.evaluate(() => S.nodes.find((n) => n.type === "clk").on)).toBe(false);
 });
+
+test("un lazo inestable (NOT realimentada a sí misma) se detecta como oscilación sin colgar la página", async ({ page }) => {
+  await page.evaluate(() => {
+    S.nodes = [makeNode("not", 200, 200, { id: "g" })];
+    S.wires = [{ id: "w1", from: { id: "g", pin: "o0" }, to: { id: "g", pin: 0 }, variant: 0 }];
+    correr(); render();
+  });
+  expect(await page.evaluate(() => OSC)).toBe(true);
+  await expect(page.locator("#st-warn .warn")).toHaveText("el circuito oscila: revisá la realimentación");
+});
+
+test("bajar la cantidad de entradas de una compuerta borra los cables de las patas que ya no existen, y R la gira", async ({ page }) => {
+  await page.evaluate(() => {
+    S.nodes = [
+      makeNode("in", 80, 80, { id: "i0", label: "A" }),
+      makeNode("in", 80, 140, { id: "i1", label: "B" }),
+      makeNode("in", 80, 200, { id: "i2", label: "C" }),
+      makeNode("in", 80, 260, { id: "i3", label: "D" }),
+      makeNode("and", 260, 170, { id: "g", pins: 4 }),
+    ];
+    S.wires = [0, 1, 2, 3].map((p) => ({ id: "w" + p, from: { id: "i" + p, pin: "o0" }, to: { id: "g", pin: p }, variant: 0 }));
+    S.sel = ["g"]; S.selW = [];
+    commit(); render();
+  });
+  await page.selectOption("#n-pins", "2");
+  expect(await page.evaluate(() => ({ pins: getNode("g").pins, patas: S.wires.map((w) => w.to.pin) }))).toEqual({
+    pins: 2,
+    patas: [0, 1],
+  });
+  await page.keyboard.press("Control+z");
+  expect(await page.evaluate(() => ({ pins: getNode("g").pins, patas: S.wires.map((w) => w.to.pin) }))).toEqual({
+    pins: 4,
+    patas: [0, 1, 2, 3],
+  });
+  await page.evaluate(() => { S.sel = ["g"]; render(); });
+  await page.keyboard.press("r");
+  expect(await page.evaluate(() => getNode("g").rot)).toBe(90);
+});

@@ -1,6 +1,7 @@
 # Spec 25 — Nuevos Tests para Huecos de Cobertura (Oscilación, Rotación/Pines y Rutas)
 
 - **ID:** `SPEC-25`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** Secciones `5.4.B.4`, `5.4.C.3` y `5.4.C.6`
 - **Prioridad:** Media (25 / 27)
 - **Esfuerzo estimado:** Medio (~40 minutos)
@@ -49,5 +50,5 @@
 
 ## 4. Criterios de Aceptación
 
-- [ ] Los 3 nuevos tests en `simulador.spec.js` y `bloque.spec.js` están implementados y pasan en Chromium y Firefox.
-- [ ] Quedan cubiertos el detector de oscilación (`OSC`), la poda de cables al reducir `#n-pins`, la rotación con `R` y el recálculo de ruta al cambiar `#e-fp` / `#e-tp`.
+- [x] Los 3 nuevos tests en `simulador.spec.js` y `bloque.spec.js` están implementados y pasan en Chromium y Firefox.
+- [x] Quedan cubiertos el detector de oscilación (`OSC`), la poda de cables al reducir `#n-pins`, la rotación con `R` y el recálculo de ruta al cambiar `#e-fp` / `#e-tp`.
