@@ -1,6 +1,7 @@
 # Spec 15 — Validación al Distribuir (`dh`/`dv`), Ajuste a Grilla en `alinear()` y Suite de Tests
 
 - **ID:** `SPEC-15`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-21` y Sección `5.4.A.2`
 - **Prioridad:** Baja / Media (15 / 27)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -71,7 +72,7 @@ En [`tests/specs/comun.spec.js`](../tests/specs/comun.spec.js) (o en `bloque.spe
 
 ## 5. Criterios de Aceptación
 
-- [ ] `alinear("dh")` y `alinear("dv")` con menos de 3 elementos avisan con `toast` y no modifican rutas ni historial.
-- [ ] Al alinear elementos, sólo se recalcula la ruta automática de las conexiones vinculadas a los nodos alineados.
-- [ ] Existen tests automatizados para todas las variantes de `alinear()`.
-- [ ] `node src/construir.js` regenera las páginas y los tests pasan en Chromium y Firefox.
+- [x] `alinear("dh")` y `alinear("dv")` con menos de 3 elementos avisan con `toast` y no modifican rutas ni historial.
+- [x] Al alinear elementos, sólo se recalcula la ruta automática de las conexiones vinculadas a los nodos alineados.
+- [x] Existen tests automatizados para todas las variantes de `alinear()`.
+- [x] `node src/construir.js` regenera las páginas y los tests pasan en Chromium y Firefox.

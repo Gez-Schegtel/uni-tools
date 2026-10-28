@@ -1246,12 +1246,16 @@ function bboxAll() {
 /* Alinea o reparte la selección; después las conexiones vuelven a su ruta automática */
 function alinear(kind) {
   const ns = S.sel.map(buscarNodo).filter(Boolean);
+  if ((kind === "dh" || kind === "dv") && ns.length < 3) {
+    toast("Elegí al menos 3 elementos para distribuir");
+    return;
+  }
   if (ns.length < 2) { toast("Elegí al menos dos elementos"); return; }
   const rs = ns.map(rectOf);
-  if (kind === "left") { const v = Math.min(...rs.map(r => r.l)); ns.forEach((n, i) => n.x += v - rs[i].l); }
-  if (kind === "right") { const v = Math.max(...rs.map(r => r.r)); ns.forEach((n, i) => n.x += v - rs[i].r); }
-  if (kind === "top") { const v = Math.min(...rs.map(r => r.t)); ns.forEach((n, i) => n.y += v - rs[i].t); }
-  if (kind === "bottom") { const v = Math.max(...rs.map(r => r.b)); ns.forEach((n, i) => n.y += v - rs[i].b); }
+  if (kind === "left") { const v = Math.min(...rs.map(r => r.l)); ns.forEach((n, i) => n.x = snapV(n.x + v - rs[i].l)); }
+  if (kind === "right") { const v = Math.max(...rs.map(r => r.r)); ns.forEach((n, i) => n.x = snapV(n.x + v - rs[i].r)); }
+  if (kind === "top") { const v = Math.min(...rs.map(r => r.t)); ns.forEach((n, i) => n.y = snapV(n.y + v - rs[i].t)); }
+  if (kind === "bottom") { const v = Math.max(...rs.map(r => r.b)); ns.forEach((n, i) => n.y = snapV(n.y + v - rs[i].b)); }
   if (kind === "cx") { const v = ns.reduce((a, n) => a + n.x, 0) / ns.length; ns.forEach(n => n.x = snapV(v)); }
   if (kind === "cy") { const v = ns.reduce((a, n) => a + n.y, 0) / ns.length; ns.forEach(n => n.y = snapV(v)); }
   if (kind === "dh") {
@@ -1264,7 +1268,8 @@ function alinear(kind) {
     const step = (s[s.length - 1].y - s[0].y) / (s.length - 1);
     s.forEach((n, i) => n.y = snapV(s[0].y + step * i));
   }
-  S[HERRAMIENTA.conexiones].forEach(rutaAuto);
+  const movidos = new Set(ns.map(n => n.id));
+  S[HERRAMIENTA.conexiones].forEach(c => { if (movidos.has(c.from.id) || movidos.has(c.to.id)) rutaAuto(c); });
   commit(); render();
 }
 

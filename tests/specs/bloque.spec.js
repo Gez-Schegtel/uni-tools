@@ -482,3 +482,77 @@ test.describe("ecuaciones dentro de los bloques", () => {
     expect((await dibujado(page, "s^{\\frac{3.5}{s/s}}")).dentro).toBe(true);
   });
 });
+
+test.describe("alinear y distribuir", () => {
+  test("alinea por bordes o centros ajustando a la grilla y se puede deshacer", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      S.nodes = [
+        makeNode("block", 100, 100, { w: 80, h: 40 }),
+        makeNode("block", 260, 220, { w: 80, h: 40 }),
+      ];
+      S.edges = [];
+      S.sel = S.nodes.map((n) => n.id);
+      commit(); render();
+      alinear("left");
+      const leftX = S.nodes.map((n) => n.x);
+      undo();
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("right");
+      const rightX = S.nodes.map((n) => n.x);
+      undo();
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("top");
+      const topY = S.nodes.map((n) => n.y);
+      undo();
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("bottom");
+      const bottomY = S.nodes.map((n) => n.y);
+      undo();
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("cx");
+      const cxX = S.nodes.map((n) => n.x);
+      undo();
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("cy");
+      const cyY = S.nodes.map((n) => n.y);
+      return { leftX, rightX, topY, bottomY, cxX, cyY };
+    });
+    expect(r.leftX).toEqual([100, 100]);
+    expect(r.rightX).toEqual([260, 260]);
+    expect(r.topY).toEqual([100, 100]);
+    expect(r.bottomY).toEqual([220, 220]);
+    expect(r.cxX).toEqual([180, 180]);
+    expect(r.cyY).toEqual([160, 160]);
+  });
+
+  test("distribuir requiere al menos 3 elementos y no toca rutas ajenas ni historial cuando hay menos", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      S.nodes = [
+        makeNode("block", 100, 100),
+        makeNode("block", 200, 160),
+        makeNode("block", 400, 300),
+      ];
+      const eAjena = { id: "e1", from: { id: S.nodes[0].id, port: "r" }, to: { id: S.nodes[1].id, port: "l" }, manual: [{ x: 140, y: 100 }, { x: 140, y: 80 }, { x: 160, y: 80 }, { x: 160, y: 160 }] };
+      S.edges = [eAjena];
+      S.sel = [S.nodes[0].id, S.nodes[1].id];
+      render();
+      const u0 = undoStack.length;
+      alinear("dh");
+      const aviso = document.getElementById("toast").querySelector(".txt").textContent;
+      const u1 = undoStack.length;
+      const conservoManual = !!S.edges[0].manual;
+
+      S.sel = S.nodes.map((n) => n.id);
+      alinear("dh");
+      const xs = S.nodes.map((n) => n.x);
+      alinear("dv");
+      const ys = S.nodes.map((n) => n.y);
+      return { aviso, u0, u1, conservoManual, xs, ys };
+    });
+    expect(r.aviso).toBe("Elegí al menos 3 elementos para distribuir");
+    expect(r.u1).toBe(r.u0);
+    expect(r.conservoManual).toBe(true);
+    expect(r.xs).toEqual([100, 260, 400]);
+    expect(r.ys).toEqual([100, 200, 300]);
+  });
+});
