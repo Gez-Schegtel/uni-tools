@@ -295,6 +295,22 @@ test("en modo selección múltiple (X) o con Shift, la banda suma nodos a la sel
   expect(await page.evaluate(() => S.sel)).toEqual([id0, id2]);
 });
 
+test("pasar el recuadro de selección sobre una rama la deja seleccionada", async ({ page }) => {
+  const { rid, p1, p2 } = await page.evaluate(() => {
+    cargarEjemplo("simple");
+    S.sel = []; S.selR = []; render();
+    const rm = S.ramas[0], c = curvaDe(rm);
+    const r = document.getElementById("canvas").getBoundingClientRect();
+    const aPantalla = (x, y) => ({ x: r.left + S.pan.x + x * S.zoom, y: r.top + S.pan.y + y * S.zoom });
+    return { rid: rm.id, p1: aPantalla(c.px - 10, c.py - 15), p2: aPantalla(c.px + 10, c.py + 15) };
+  });
+  await page.mouse.move(p1.x, p1.y);
+  await page.mouse.down();
+  await page.mouse.move(p2.x, p2.y, { steps: 5 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => S.selR)).toContain(rid);
+});
+
 test("crear una rama arrastrando entre dos nodos, curvarla y fijarla con clic o con Esc la deja en el historial", async ({ page }) => {
   await page.evaluate(() => cargarEjemplo("simple"));
   const r0 = await page.evaluate(() => S.ramas.length);

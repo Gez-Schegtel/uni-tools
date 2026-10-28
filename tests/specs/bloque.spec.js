@@ -162,6 +162,39 @@ test.describe("flechas", () => {
       manual: undefined,
     });
   });
+  test("pasar el recuadro de selección sobre una flecha la deja seleccionada", async ({ page }) => {
+    const { p1, p2, q1, q2 } = await page.evaluate(() => {
+      S.nodes = [
+        makeNode("block", 160, 200, { id: "a", label: "G1" }),
+        makeNode("block", 440, 200, { id: "b", label: "G2" }),
+        makeNode("block", 440, 360, { id: "c", label: "G3" }),
+      ];
+      S.edges = [
+        { id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0 },
+        { id: "e2", from: { id: "a", port: "b" }, to: { id: "c", port: "l" }, variant: 0 },
+      ];
+      S.sel = []; S.selEdges = [];
+      commit(); render();
+      const r = document.getElementById("canvas").getBoundingClientRect();
+      const scr = (wx, wy) => ({ x: r.left + S.pan.x + wx * S.zoom, y: r.top + S.pan.y + wy * S.zoom });
+      return {
+        p1: scr(290, 180),
+        p2: scr(310, 220),
+        q1: scr(290, 340),
+        q2: scr(310, 380),
+      };
+    });
+    await arrastrar(page, p1, [p2.x - p1.x, p2.y - p1.y]);
+    expect(await page.evaluate(() => ({ sel: S.sel, selEdges: S.selEdges }))).toEqual({
+      sel: [],
+      selEdges: ["e1"],
+    });
+    // Con Shift suma la segunda flecha a la selección
+    await page.keyboard.down("Shift");
+    await arrastrar(page, q1, [q2.x - q1.x, q2.y - q1.y]);
+    await page.keyboard.up("Shift");
+    expect(await page.evaluate(() => S.selEdges)).toEqual(["e1", "e2"]);
+  });
   test("al pasar el mouse sobre un bloque o bifurcación y luego sobre su puerto perimetral, el puerto no titila ni desaparece", async ({ page }) => {
     const pts = await page.evaluate(() => {
       S.sel = []; S.selEdges = []; hoverNode = null; render();

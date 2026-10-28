@@ -110,3 +110,53 @@ function ramaCerca(w) {                        // la rama más cercana al punter
   }
   return best;
 }
+function segEnCaja(p, q, l, t, r, b) {
+  let t0 = 0, t1 = 1;
+  const dx = q.x - p.x, dy = q.y - p.y;
+  for (const [pk, qk] of [[-dx, p.x - l], [dx, r - p.x], [-dy, p.y - t], [dy, b - p.y]]) {
+    if (pk === 0) { if (qk < 0) return false; }
+    else {
+      const u = qk / pk;
+      if (pk < 0) { if (u > t1) return false; if (u > t0) t0 = u; }
+      else { if (u < t0) return false; if (u < t1) t1 = u; }
+    }
+  }
+  return t0 <= t1;
+}
+function ramaTocaCaja(rm, l, t, r, b) {
+  const A = getNodo(rm.de), B = getNodo(rm.a);
+  if (!A || !B) return false;
+  const N = 24;
+  let prev = null;
+  if (rm.de === rm.a) {
+    const h = Math.abs(rm.curva) || 46, s = rm.curva < 0 ? -1 : 1;
+    const p0 = { x: A.x, y: A.y - s * R_NODO };
+    const c1 = { x: A.x - h * .72, y: A.y - s * h * 1.5 };
+    const c2 = { x: A.x + h * .72, y: A.y - s * h * 1.5 };
+    for (let k = 0; k <= N; k++) {
+      const u = k / N, v = 1 - u;
+      const cur = {
+        x: v * v * v * p0.x + 3 * v * v * u * c1.x + 3 * v * u * u * c2.x + u * u * u * p0.x,
+        y: v * v * v * p0.y + 3 * v * v * u * c1.y + 3 * v * u * u * c2.y + u * u * u * p0.y,
+      };
+      if (prev && segEnCaja(prev, cur, l, t, r, b)) return true;
+      prev = cur;
+    }
+    return false;
+  }
+  const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1;
+  const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  const a = { x: A.x + ux * R_NODO, y: A.y + uy * R_NODO };
+  const fin = { x: B.x - ux * R_NODO, y: B.y - uy * R_NODO };
+  const ctrl = { x: (a.x + fin.x) / 2 + nx * rm.curva, y: (a.y + fin.y) / 2 + ny * rm.curva };
+  for (let k = 0; k <= N; k++) {
+    const u = k / N, v = 1 - u;
+    const cur = {
+      x: v * v * a.x + 2 * v * u * ctrl.x + u * u * fin.x,
+      y: v * v * a.y + 2 * v * u * ctrl.y + u * u * fin.y,
+    };
+    if (prev && segEnCaja(prev, cur, l, t, r, b)) return true;
+    prev = cur;
+  }
+  return false;
+}

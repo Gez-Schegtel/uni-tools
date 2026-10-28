@@ -275,3 +275,23 @@ test("bajar la cantidad de entradas de una compuerta borra los cables de las pat
   await page.keyboard.press("r");
   expect(await page.evaluate(() => getNode("g").rot)).toBe(90);
 });
+
+test("pasar el recuadro de selección sobre un cable lo deja seleccionado", async ({ page }) => {
+  const { p1, p2 } = await page.evaluate(() => {
+    S.nodes = [
+      makeNode("in", 120, 200, { id: "i0", label: "A" }),
+      makeNode("out", 400, 200, { id: "o0", label: "S" }),
+    ];
+    S.wires = [{ id: "w1", from: { id: "i0", pin: "o0" }, to: { id: "o0", pin: 0 }, variant: 0 }];
+    S.sel = []; S.selW = [];
+    commit(); render();
+    const r = document.getElementById("canvas").getBoundingClientRect();
+    const scr = (wx, wy) => ({ x: r.left + S.pan.x + wx * S.zoom, y: r.top + S.pan.y + wy * S.zoom });
+    return { p1: scr(250, 180), p2: scr(270, 220) };
+  });
+  await page.mouse.move(p1.x, p1.y);
+  await page.mouse.down();
+  await page.mouse.move(p2.x, p2.y, { steps: 5 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => ({ sel: S.sel, selW: S.selW }))).toEqual({ sel: [], selW: ["w1"] });
+});

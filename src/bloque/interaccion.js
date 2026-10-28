@@ -407,6 +407,10 @@ svg.addEventListener("pointerup", ev => {
     const R = { l: Math.min(b.x1, b.x2), r: Math.max(b.x1, b.x2), t: Math.min(b.y1, b.y2), b: Math.max(b.y1, b.y2) };
     const inside = S.nodes.filter(n => { const r = rectOf(n); return r.l >= R.l && r.r <= R.r && r.t >= R.t && r.b <= R.b; }).map(n => n.id);
     S.sel = drag.add ? Array.from(new Set(S.sel.concat(inside))) : inside;
+    if (R.r - R.l > 2 || R.b - R.t > 2) {
+      const tocadas = S.edges.filter(e => e.pts && segsOf(e.pts).some(seg => segRect(seg, R))).map(e => e.id);
+      S.selEdges = drag.add ? Array.from(new Set(S.selEdges.concat(tocadas))) : tocadas;
+    }
     if (Math.abs(b.x2 - b.x1) < 3 && Math.abs(b.y2 - b.y1) < 3 && pendingAdd) {
       if (pendingAdd === "node") toast("La bifurcación va sobre una flecha: hacé clic en una línea");
       else addAt(pendingAdd, snapV(w.x), snapV(w.y));

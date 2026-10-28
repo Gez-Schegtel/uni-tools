@@ -144,6 +144,10 @@ svg.addEventListener("pointerup", ev => {
     const R = { l: Math.min(b.x1, b.x2), r: Math.max(b.x1, b.x2), t: Math.min(b.y1, b.y2), b: Math.max(b.y1, b.y2) };
     const dentro = S.nodes.filter(n => { const q = rectOf(n); return q.l >= R.l && q.r <= R.r && q.t >= R.t && q.b <= R.b; }).map(n => n.id);
     S.sel = drag.add ? Array.from(new Set(S.sel.concat(dentro))) : dentro;
+    if (R.r - R.l > 2 || R.b - R.t > 2) {
+      const tocados = S.wires.filter(w => w.pts && segsOf(w.pts).some(seg => segRect(seg, R))).map(w => w.id);
+      S.selW = drag.add ? Array.from(new Set(S.selW.concat(tocados))) : tocados;
+    }
     if (Math.abs(b.x2 - b.x1) < 3 && Math.abs(b.y2 - b.y1) < 3 && pendiente) {
       const n = makeNode(pendiente, snapV(w.x), snapV(w.y));
       S.nodes.push(n); S.sel = [n.id]; S.selW = []; setPendiente(null); commit();

@@ -1,10 +1,10 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **32 especificaciones técnicas e historias de usuario autocontenidas** para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **33 especificaciones técnicas e historias de usuario autocontenidas** para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
-El orden (`01` a `32`) combina tres factores:
+El orden (`01` a `33`) combina tres factores:
 1. **Riesgo e Impacto (Primero lo crítico):** Primero se resuelven los bugs que provocan pérdida silenciosa de datos (`01`), caídas por `TypeError` (`02`), corrupción de estado al cargar (`03`, `04`), resultados incorrectos en tablas de verdad (`05`), bloqueo de edición con el reloj (`06`) o congelamiento del navegador (`07`).
 2. **Relación Impacto / Esfuerzo (Quick Wins temprano):** A continuación (`08` a `16`) se ubican las correcciones rápidas de unas pocas líneas en CSS, HTML y manejadores de eventos que tienen bajo riesgo de regresión y alto valor percibido.
 3. **Dependencias lógicas:** Las mejoras de dominio (`17` a `19`) y de arquitectura/rendimiento (`20` a `22`) van antes del saneamiento final de la suite de pruebas (`23` a `25`) y del cierre de documentación e higiene (`26`, `27`).
@@ -47,6 +47,7 @@ El orden (`01` a `32`) combina tres factores:
 | **30** | ✅ Hecho | [`30-trayectoria-ortogonal-en-vista-previa-de-conexion.md`](./30-trayectoria-ortogonal-en-vista-previa-de-conexion.md) | Pedido Usuario (4) | Mejora UX / Lienzo | Bajo (25 min) | Hacer que la vista previa `.ghostline` al tirar una conexión salga en la dirección del puerto y se doble siguiendo al mouse. |
 | **31** | ✅ Hecho | [`31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md`](./31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md) | Pedido Usuario (5, 6 y 7) | Dominio / UX | Bajo (25 min) | Quitar `Contenido` de los sumadores, cambiar `"—vacío—"` por `"vacío"` y exigir que tengan hasta 3 signos (1 lado siempre vacío). |
 | **32** | ✅ Hecho | [`32-prohibir-flechas-sueltas-sin-conectar.md`](./32-prohibir-flechas-sueltas-sin-conectar.md) | Pedido Usuario (8) | Dominio / UX | Bajo (15 min) | Impedir que al soltar una flecha en el vacío quede una conexión/bifurcación suelta y avisar con `toast` el motivo. |
+| **33** | ✅ Hecho | [`33-seleccion-de-conexiones-con-recuadro-banda.md`](./33-seleccion-de-conexiones-con-recuadro-banda.md) | Pedido Usuario (9) | UX / Interacción | Bajo (20 min) | Hacer que el recuadro de selección por banda seleccione también las flechas, cables y ramas que toque o cruce. |
 
 ---
 

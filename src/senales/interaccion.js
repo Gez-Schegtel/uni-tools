@@ -176,7 +176,9 @@ svg.addEventListener("pointerup", ev => {
     const t = Math.min(b.y1, b.y2), bo = Math.max(b.y1, b.y2);
     if (Math.abs(r - l) > 4 || Math.abs(bo - t) > 4) {
       const nuevos = S.nodos.filter(n => n.x >= l && n.x <= r && n.y >= t && n.y <= bo).map(n => n.id);
+      const ramas = S.ramas.filter(rm => ramaTocaCaja(rm, l, t, r, bo)).map(rm => rm.id);
       S.sel = drag.add ? Array.from(new Set(S.sel.concat(nuevos))) : nuevos;
+      S.selR = drag.add ? Array.from(new Set(S.selR.concat(ramas))) : ramas;
     }
   }
   if (drag.kind === "move" || drag.kind === "curve") commit();
