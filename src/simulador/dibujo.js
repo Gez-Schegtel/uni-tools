@@ -190,8 +190,10 @@ function render() {
   for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
   renderHoja();
   renderPins();
-  if (drag && drag.kind === "connect" && drag.cur)
-    el("path", { class: "ghostline", d: `M ${drag.start.x} ${drag.start.y} L ${drag.cur.x} ${drag.start.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+  if (drag && drag.kind === "connect" && drag.cur) {
+    const pts = ptsPrevia(drag.start, pinDir(getNode(drag.fromId), drag.fromPin), drag.cur);
+    el("path", { class: "ghostline", d: pathD(pts, 5) }, gOv);
+  }
   if (drag && drag.kind === "band") {
     const b = drag.band;
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),

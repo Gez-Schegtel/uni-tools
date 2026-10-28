@@ -1,7 +1,7 @@
 # Spec 30 — Trayectoria Ortogonal Dinámica en la Línea de Vista Previa al Conectar (`.ghostline`)
 
 - **ID:** `SPEC-30`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Pedido directo del usuario (Punto 4)
 - **Prioridad:** Media / UX (Integrada al Bloque 2)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -76,6 +76,6 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Al arrastrar desde un puerto horizontal (`l`, `r`) o vertical (`t`, `b`), `.ghostline` sale siempre en el sentido del puerto y se dobla en Z o en U acompañando al mouse sin atravesar hacia atrás el punto de salida.
-- [ ] Funciona tanto en `diagrama-bloque` como en `simulador-logico`.
-- [ ] `node src/construir.js` actualiza las páginas y los tests pasan en Chromium y Firefox.
+- [x] Al arrastrar desde un puerto horizontal (`l`, `r`) o vertical (`t`, `b`), `.ghostline` sale siempre en el sentido del puerto y se dobla en Z o en U acompañando al mouse sin atravesar hacia atrás el punto de salida.
+- [x] Funciona tanto en `diagrama-bloque` como en `simulador-logico`.
+- [x] `node src/construir.js` actualiza las páginas y los tests pasan en Chromium y Firefox.

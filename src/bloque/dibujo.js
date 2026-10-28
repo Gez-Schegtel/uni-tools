@@ -155,8 +155,8 @@ function render() {
   renderPorts();
   renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
-    const a = drag.start;
-    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    const pts = ptsPrevia(drag.start, dirOf(drag.fromPort), drag.cur);
+    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: pathD(pts, 6) }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;

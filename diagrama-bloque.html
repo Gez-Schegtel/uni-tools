@@ -1396,6 +1396,24 @@ function pathD(pts, r) {
   d += ` L ${e.x} ${e.y}`;
   return d;
 }
+/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión */
+function ptsPrevia(A, dA, B) {
+  const stub = 20;
+  const h = dA.x !== 0;
+  const avanza = h ? (B.x - A.x) * dA.x >= stub : (B.y - A.y) * dA.y >= stub;
+  if (avanza) {
+    if (h) {
+      const mx = Math.round((A.x + B.x) / 2);
+      return cleanPts([A, { x: mx, y: A.y }, { x: mx, y: B.y }, B]);
+    }
+    const my = Math.round((A.y + B.y) / 2);
+    return cleanPts([A, { x: A.x, y: my }, { x: B.x, y: my }, B]);
+  }
+  const a1 = { x: A.x + dA.x * stub, y: A.y + dA.y * stub };
+  return h
+    ? cleanPts([A, a1, { x: a1.x, y: B.y }, B])
+    : cleanPts([A, a1, { x: B.x, y: a1.y }, B]);
+}
 /* Donde una conexión se desprende del tronco que comparte con su hermana va un punto de
    unión. hermanas(a, b) dice qué pares cuentan; dato(a, p) es lo que se devuelve por punto. */
 function puntosDeUnion(conexiones, hermanas, dato) {
@@ -2104,8 +2122,8 @@ function render() {
   renderPorts();
   renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
-    const a = drag.start;
-    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: `M ${a.x} ${a.y} L ${drag.cur.x} ${a.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    const pts = ptsPrevia(drag.start, dirOf(drag.fromPort), drag.cur);
+    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: pathD(pts, 6) }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;

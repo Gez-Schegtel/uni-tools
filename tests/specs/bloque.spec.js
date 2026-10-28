@@ -172,6 +172,20 @@ test.describe("flechas", () => {
     expect(await page.evaluate(() => hoverNode)).toBe(pts.ndId);
     await expect(page.locator(`.port[data-pid="${pts.ndId}"][data-port="t"]`)).toBeVisible();
   });
+  test("al arrastrar una conexión nueva, la línea de vista previa sale en la dirección del puerto y se dobla siguiendo al mouse", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      // Hacia adelante desde puerto derecho ("r"): quiebre en Z por el punto medio mx
+      const zDer = ptsPrevia({ x: 100, y: 100 }, dirOf("r"), { x: 240, y: 200 });
+      // Hacia atrás desde puerto derecho ("r"): sale 20 px a la derecha antes de doblar
+      const uDer = ptsPrevia({ x: 100, y: 100 }, dirOf("r"), { x: 40, y: 200 });
+      // Hacia abajo desde puerto inferior ("b"): sale verticalmente hacia abajo y dobla en my
+      const zAbajo = ptsPrevia({ x: 100, y: 100 }, dirOf("b"), { x: 220, y: 260 });
+      return { zDer, uDer, zAbajo };
+    });
+    expect(r.zDer).toEqual([{ x: 100, y: 100 }, { x: 170, y: 100 }, { x: 170, y: 200 }, { x: 240, y: 200 }]);
+    expect(r.uDer).toEqual([{ x: 100, y: 100 }, { x: 120, y: 100 }, { x: 120, y: 200 }, { x: 40, y: 200 }]);
+    expect(r.zAbajo).toEqual([{ x: 100, y: 100 }, { x: 100, y: 180 }, { x: 220, y: 180 }, { x: 220, y: 260 }]);
+  });
 });
 
 test.describe("un bloque tiene una sola entrada", () => {
