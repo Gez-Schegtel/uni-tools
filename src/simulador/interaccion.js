@@ -192,7 +192,7 @@ setInterval(() => {
   const activos = S.nodes.filter(n => n.type === "clk" && n.modo === "auto" && n.corriendo);
   if (!activos.length) return;
   activos.forEach(n => n.on = !n.on);
-  render();
+  render(true);
 }, PERIODO);
 function conectar(fromId, fromPin, toId, toPin) {
   let a = { id: fromId, pin: fromPin }, b = { id: toId, pin: toPin };

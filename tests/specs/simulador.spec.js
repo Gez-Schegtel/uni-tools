@@ -121,6 +121,26 @@ test.describe("biestables", () => {
     });
     expect(filas).toEqual(["00→1", "01→0", "10→0", "11→0"]);
   });
+
+  test("con el reloj automático andando se puede escribir en el panel sin perder el foco", async ({ page }) => {
+    const idQ0 = await page.evaluate(() => {
+      cargarEjemplo("cont");
+      const clk = S.nodes.find((n) => n.type === "clk");
+      clk.modo = "auto";
+      clk.corriendo = true;
+      const out = S.nodes.find((n) => n.type === "out");
+      S.sel = [out.id];
+      render();
+      return out.id;
+    });
+    const campo = page.locator("#n-label");
+    await campo.focus();
+    await campo.fill("");
+    await page.keyboard.type("Salida_0", { delay: 120 });
+    await expect(campo).toBeFocused();
+    await expect(campo).toHaveValue("Salida_0");
+    expect(await page.evaluate((id) => getNode(id).label, idQ0)).toBe("Salida_0");
+  });
 });
 
 test.describe("guardar y abrir", () => {

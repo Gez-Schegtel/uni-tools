@@ -176,7 +176,7 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
-function render() {
+function render(soloLienzo) {
   correr(); routeAll(); aplicarTema();
   gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
   moverVista();
@@ -211,5 +211,6 @@ function render() {
   if (document.activeElement !== $("#b-nombre")) $("#b-nombre").value = S.nombre || "";
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
-  renderInspector();
+  if (soloLienzo) actualizarEstadoInspector();
+  else renderInspector();
 }

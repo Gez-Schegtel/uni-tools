@@ -67,7 +67,7 @@ function renderInspector() {
     : `<div class="hint">Todavía no hay interruptores. Insertá uno con <kbd>I</kbd>.</div>`;
   h += `</div><div class="sec"><h3>Salidas</h3>`;
   h += outs.length ? outs.map(n => { const v = valorDe(n.id, 0);
-      return `<div class="io-row"><span class="io-name">${esc(n.label)}</span>
+      return `<div class="io-row" data-out="${n.id}"><span class="io-name">${esc(n.label)}</span>
         <span class="lamp${v ? " on" : ""}"></span><span class="bit${v ? " on" : ""}">${v ? 1 : 0}</span></div>`; }).join("")
     : `<div class="hint">Agregá una salida con <kbd>O</kbd> para ver el resultado.</div>`;
   h += `</div>`;
@@ -77,6 +77,19 @@ function renderInspector() {
   h += seccionHoja() + seccionTema() + seccionPaleta();
   box.innerHTML = h;
   wireInspector(nsel, wsel);
+}
+function actualizarEstadoInspector() {
+  for (const el of document.querySelectorAll("#insp [data-out]")) {
+    const v = valorDe(el.dataset.out, 0);
+    const lamp = el.querySelector(".lamp"), bit = el.querySelector(".bit");
+    if (lamp) lamp.classList.toggle("on", v);
+    if (bit) { bit.classList.toggle("on", v); bit.textContent = v ? 1 : 0; }
+  }
+  const ffq = $("#ff-q");
+  if (ffq && S.sel.length) {
+    const n = getNode(S.sel[0]);
+    if (n && n.type === "ff") ffq.textContent = n.q ? "1 — poner en 0" : "0 — poner en 1";
+  }
 }
 function panelBiestable(n) {
   const idx = datosDe(n), d = idx.length, tab = tablaDe(n);

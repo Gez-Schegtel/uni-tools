@@ -1,6 +1,7 @@
 # Spec 06 — Proteger el Foco y Edición del Panel Inspector Durante el Reloj Automático (`simulador-logico`)
 
 - **ID:** `SPEC-06`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-04` y Sección `5.4.C.1`
 - **Prioridad:** Alta (6 / 27)
 - **Esfuerzo estimado:** Medio (~30 minutos)
@@ -76,6 +77,6 @@ En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Con un reloj en `modo: "auto"` y `corriendo: true`, escribir pausadamente en `#n-lab`, `#m-w`, `#m-h` o abrir `#n-pins` en el panel derecho nunca pierde el foco ni reinicia el cursor.
-- [ ] El estado visual del circuito en el lienzo (y el indicador de estado en el panel si corresponde) sigue actualizándose cada 400 ms.
-- [ ] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test en `simulador.spec.js` pasa en Chromium y Firefox.
+- [x] Con un reloj en `modo: "auto"` y `corriendo: true`, escribir pausadamente en `#n-label`, `#m-w`, `#m-h` o abrir `#n-pins` en el panel derecho nunca pierde el foco ni reinicia el cursor.
+- [x] El estado visual del circuito en el lienzo (y el indicador de estado en el panel si corresponde) sigue actualizándose cada 400 ms.
+- [x] `node src/construir.js` actualiza `simulador-logico.html` y el nuevo test en `simulador.spec.js` pasa en Chromium y Firefox.

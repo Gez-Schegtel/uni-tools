@@ -2126,7 +2126,7 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
-function render() {
+function render(soloLienzo) {
   correr(); routeAll(); aplicarTema();
   gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
   moverVista();
@@ -2161,7 +2161,8 @@ function render() {
   if (document.activeElement !== $("#b-nombre")) $("#b-nombre").value = S.nombre || "";
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
-  renderInspector();
+  if (soloLienzo) actualizarEstadoInspector();
+  else renderInspector();
 }
 /* ======================= inspector ======================= */
 function renderInspector() {
@@ -2232,7 +2233,7 @@ function renderInspector() {
     : `<div class="hint">Todavía no hay interruptores. Insertá uno con <kbd>I</kbd>.</div>`;
   h += `</div><div class="sec"><h3>Salidas</h3>`;
   h += outs.length ? outs.map(n => { const v = valorDe(n.id, 0);
-      return `<div class="io-row"><span class="io-name">${esc(n.label)}</span>
+      return `<div class="io-row" data-out="${n.id}"><span class="io-name">${esc(n.label)}</span>
         <span class="lamp${v ? " on" : ""}"></span><span class="bit${v ? " on" : ""}">${v ? 1 : 0}</span></div>`; }).join("")
     : `<div class="hint">Agregá una salida con <kbd>O</kbd> para ver el resultado.</div>`;
   h += `</div>`;
@@ -2242,6 +2243,19 @@ function renderInspector() {
   h += seccionHoja() + seccionTema() + seccionPaleta();
   box.innerHTML = h;
   wireInspector(nsel, wsel);
+}
+function actualizarEstadoInspector() {
+  for (const el of document.querySelectorAll("#insp [data-out]")) {
+    const v = valorDe(el.dataset.out, 0);
+    const lamp = el.querySelector(".lamp"), bit = el.querySelector(".bit");
+    if (lamp) lamp.classList.toggle("on", v);
+    if (bit) { bit.classList.toggle("on", v); bit.textContent = v ? 1 : 0; }
+  }
+  const ffq = $("#ff-q");
+  if (ffq && S.sel.length) {
+    const n = getNode(S.sel[0]);
+    if (n && n.type === "ff") ffq.textContent = n.q ? "1 — poner en 0" : "0 — poner en 1";
+  }
 }
 function panelBiestable(n) {
   const idx = datosDe(n), d = idx.length, tab = tablaDe(n);
@@ -2790,7 +2804,7 @@ setInterval(() => {
   const activos = S.nodes.filter(n => n.type === "clk" && n.modo === "auto" && n.corriendo);
   if (!activos.length) return;
   activos.forEach(n => n.on = !n.on);
-  render();
+  render(true);
 }, PERIODO);
 function conectar(fromId, fromPin, toId, toPin) {
   let a = { id: fromId, pin: fromPin }, b = { id: toId, pin: toPin };
