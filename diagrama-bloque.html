@@ -1532,12 +1532,14 @@ function depurarNodos(lista) {
 }
 let flechasDeMas = 0;                            // entradas repetidas que descartó la última depuración
 function depurarFlechas(lista, nodos) {
-  const ids = new Set(nodos.map(n => n.id));
+  const ids = new Set(nodos.filter(n => n.type !== "marco" && n.type !== "text").map(n => n.id));
+  const puertoOk = (p) => p === "l" || p === "r" || p === "t" || p === "b";
   const porId = new Map(nodos.map(n => [n.id, n]));
   const conEntrada = new Set();                  // bloques que ya tienen su flecha
   flechasDeMas = 0;
   return (Array.isArray(lista) ? lista : []).filter(e => {
-    if (!(esObj(e) && esObj(e.from) && esObj(e.to) && ids.has(e.from.id) && ids.has(e.to.id))) return false;
+    if (!(esObj(e) && esObj(e.from) && esObj(e.to) && ids.has(e.from.id) && ids.has(e.to.id)
+      && puertoOk(e.from.port) && puertoOk(e.to.port))) return false;
     const destino = porId.get(e.to.id);
     if (destino.type === "block") {              // un bloque admite una sola entrada
       if (conEntrada.has(destino.id)) { flechasDeMas++; return false; }

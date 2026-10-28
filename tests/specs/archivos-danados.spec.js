@@ -45,15 +45,21 @@ for (const [archivo, clave] of HERRAMIENTAS) {
 }
 
 test("diagrama-bloque: descarta flechas colgadas y conserva lo válido", async ({ page }) => {
-  await abrir(page, "diagrama-bloque.html");
+  const errores = await abrir(page, "diagrama-bloque.html");
   const doc = {
     nodes: [{ id: "a", type: "block", x: 100, y: 100, w: 72, h: 42, label: "G" }, null,
-            { id: "b", type: "block", x: 300, y: 100, w: 72, h: 42, label: "H" }, { type: "inventado" }],
+            { id: "b", type: "block", x: 300, y: 100, w: 72, h: 42, label: "H" },
+            { id: "m", type: "marco", x: 50, y: 50, w: 200, h: 120, label: "M" },
+            { type: "inventado" }],
     edges: [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0 },
-            { id: "e2", from: { id: "a", port: "r" }, to: { id: "fantasma", port: "l" }, variant: 0 }],
+            { id: "e2", from: { id: "a", port: "r" }, to: { id: "fantasma", port: "l" }, variant: 0 },
+            { id: "e3", from: { id: "a", port: "zzz" }, to: { id: "b", port: "l" } },
+            { id: "e4", from: { id: "a" }, to: { id: "b", port: "l" } },
+            { id: "e5", from: { id: "m", port: "r" }, to: { id: "b", port: "l" } }],
   };
   await abrirTexto(page, JSON.stringify(doc));
-  expect(await page.evaluate(() => [S.nodes.length, S.edges.length])).toEqual([2, 1]);
+  expect(errores).toEqual([]);
+  expect(await page.evaluate(() => [S.nodes.length, S.edges.map((e) => e.id)])).toEqual([3, ["e1"]]);
 });
 
 test("simulador: descarta cables a patas que no existen y conserva lo válido", async ({ page }) => {

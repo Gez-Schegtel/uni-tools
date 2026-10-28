@@ -1,6 +1,7 @@
 # Spec 02 — Validación de Puertos y Extremos en `depurarFlechas()` (`diagrama-bloque`)
 
 - **ID:** `SPEC-02`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-02` y Sección `5.4.B.1`
 - **Prioridad:** Crítica (2 / 27)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
@@ -75,7 +76,7 @@ En [`tests/specs/archivos-danados.spec.js`](../tests/specs/archivos-danados.spec
 
 ## 5. Criterios de Aceptación
 
-- [ ] `depurarFlechas()` descarta cualquier flecha cuyo `from.port` o `to.port` no sea `"l"`, `"r"`, `"t"` o `"b"`.
-- [ ] `depurarFlechas()` descarta cualquier flecha cuyo origen o destino sea un nodo con `type === "marco"`.
-- [ ] Abrir un JSON con puertos inválidos o ausentes no lanza `TypeError` en `routeAll()` ni deja el lienzo en blanco.
-- [ ] `node src/construir.js` actualiza `diagrama-bloque.html` y las pruebas de `archivos-danados.spec.js` pasan.
+- [x] `depurarFlechas()` descarta cualquier flecha cuyo `from.port` o `to.port` no sea `"l"`, `"r"`, `"t"` o `"b"`.
+- [x] `depurarFlechas()` descarta cualquier flecha cuyo origen o destino sea un nodo con `type === "marco"`.
+- [x] Abrir un JSON con puertos inválidos o ausentes no lanza `TypeError` en `routeAll()` ni deja el lienzo en blanco.
+- [x] `node src/construir.js` actualiza `diagrama-bloque.html` y las pruebas de `archivos-danados.spec.js` pasan.
