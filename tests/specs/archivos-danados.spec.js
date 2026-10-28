@@ -179,3 +179,24 @@ test.describe("abrir un documento de otra herramienta", () => {
     expect(errores).toEqual([]);
   });
 });
+
+test("diagrama-señales: normaliza tipos de nodo ausentes, inválidos o duplicados al abrir", async ({ page }) => {
+  const errores = await abrir(page, "diagrama-señales.html");
+  const doc = {
+    nodos: [
+      { id: "n1", nombre: "x1", x: 100, y: 100 },
+      { id: "n2", nombre: "x2", x: 200, y: 100, tipo: "cualquiera" },
+      { id: "n3", nombre: "x3", x: 300, y: 100, tipo: "entrada" },
+      { id: "n4", nombre: "x4", x: 400, y: 100, tipo: "entrada" },
+      { id: "n5", nombre: "x5", x: 500, y: 100, tipo: "salida" },
+      { id: "n6", nombre: "x6", x: 600, y: 100, tipo: "salida" },
+    ],
+    ramas: [],
+  };
+  await abrirTexto(page, JSON.stringify(doc));
+  expect(errores).toEqual([]);
+  expect(await page.evaluate(() => S.nodos.map((n) => n.tipo))).toEqual([
+    "normal", "normal", "entrada", "normal", "salida", "normal",
+  ]);
+  await expect(page.locator(".n-rol")).toHaveCount(2);
+});

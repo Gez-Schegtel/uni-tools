@@ -875,9 +875,13 @@ function restore(js) {
 /* Lo que llega de un archivo (o del autoguardado) se depura: se descarta lo que no se
    puede dibujar y se completa lo que falte, sin tocar lo que ya está bien. */
 function depurarNodos(lista) {
+  let hayEntrada = false, haySalida = false;
   return (Array.isArray(lista) ? lista : []).filter(esObj).map(n => {
     n.x = num(n.x, 0); n.y = num(n.y, 0);
     if (typeof n.nombre !== "string") n.nombre = n.nombre == null ? "" : String(n.nombre);
+    if (n.tipo === "entrada" && !hayEntrada) { hayEntrada = true; }
+    else if (n.tipo === "salida" && !haySalida) { haySalida = true; }
+    else { n.tipo = "normal"; }
     return n;
   });
 }

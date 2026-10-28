@@ -1,6 +1,7 @@
 # Spec 03 — Validación de `n.tipo` y Unicidad de Entrada/Salida en `depurarNodos()` (`diagrama-señales`)
 
 - **ID:** `SPEC-03`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-10` y Sección `5.4.D.3`
 - **Prioridad:** Alta (3 / 27)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
@@ -83,6 +84,6 @@ En [`tests/specs/archivos-danados.spec.js`](../tests/specs/archivos-danados.spec
 
 ## 5. Criterios de Aceptación
 
-- [ ] Un nodo sin `tipo` o con `tipo` desconocido queda con `n.tipo === "normal"` al cargarse y no muestra el cartel `"SALIDA"`.
-- [ ] Si un archivo contiene múltiples nodos `"entrada"` o `"salida"`, sólo el primero de cada clase conserva ese rol y los demás pasan a `"normal"`.
-- [ ] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test pasa en Chromium y Firefox.
+- [x] Un nodo sin `tipo` o con `tipo` desconocido queda con `n.tipo === "normal"` al cargarse y no muestra el cartel `"SALIDA"`.
+- [x] Si un archivo contiene múltiples nodos `"entrada"` o `"salida"`, sólo el primero de cada clase conserva ese rol y los demás pasan a `"normal"`.
+- [x] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test pasa en Chromium y Firefox.
