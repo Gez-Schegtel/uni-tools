@@ -21,6 +21,7 @@ function teclaPropia(k) {
   return true;
 }
 function alEscape() {
+  cerrarCurvaNueva();
   setPendiente(null); S.sel = []; S.selR = [];
-  render();
+  setModo("select"); render();
 }

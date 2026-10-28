@@ -3,7 +3,14 @@ let modo = "select", pendiente = null;
 const idDeNodo = (t) => { const g = t.closest ? t.closest("[data-id]") : null; return g && g.getAttribute("data-id"); };
 const idDeRama = (t) => { const g = t.closest ? t.closest("[data-rid]") : null; return g && g.getAttribute("data-rid"); };
 
+function cerrarCurvaNueva() {
+  if (drag && drag.kind === "curve-new") {
+    drag = null;
+    commit();
+  }
+}
 function setModo(m) {
+  cerrarCurvaNueva();
   modo = m;
   svg.classList.toggle("mode-connect", m === "connect");
   $("#m-select").classList.toggle("on", m === "select");
@@ -15,6 +22,7 @@ function setModo(m) {
 /* En selección múltiple cada clic suma o saca, igual que si tuvieras Shift apretado */
 const sumandoALaSeleccion = (ev) => ev.shiftKey || modo === "multi";
 function setPendiente(t) {
+  cerrarCurvaNueva();
   pendiente = t;
   document.querySelectorAll(".ptool").forEach(b => b.classList.toggle("on", b.dataset.add === t));
   $("#st-hint").textContent = t ? "Hacé clic en la hoja para poner el nodo · Esc cancela" : "";
@@ -59,7 +67,7 @@ svg.addEventListener("pointerdown", ev => {
   capturarPuntero(ev);
 
   if (drag && drag.kind === "curve-new") {
-    commit(); drag = null; render(); return;
+    cerrarCurvaNueva(); render(); return;
   }
 
   // un dedo en el fondo mueve la hoja (con el mouse eso es la banda de selección)

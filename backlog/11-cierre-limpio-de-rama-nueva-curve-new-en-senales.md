@@ -1,6 +1,7 @@
 # Spec 11 — Cierre Limpio de la Creación de Rama en Dos Pasos (`curve-new`) en `diagrama-señales`
 
 - **ID:** `SPEC-11`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-08` y Sección `5.4.D.1`
 - **Prioridad:** Media (11 / 27)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -89,6 +90,6 @@ En [`tests/specs/senales.spec.js`](../tests/specs/senales.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Apretar `Esc`, cambiar de modo o abrir Análisis mientras se está en `curve-new` fija la rama, registra el paso en `undoStack` (`commit()`) y limpia `drag = null`.
-- [ ] `Ctrl+Z` deshace limpiamente una rama recién creada tanto si se fijó con clic como si se cerró con `Esc` o cambio de herramienta.
-- [ ] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test en `senales.spec.js` pasa.
+- [x] Apretar `Esc`, cambiar de modo o abrir Análisis mientras se está en `curve-new` fija la rama, registra el paso en `undoStack` (`commit()`) y limpia `drag = null`.
+- [x] `Ctrl+Z` deshace limpiamente una rama recién creada tanto si se fijó con clic como si se cerró con `Esc` o cambio de herramienta.
+- [x] `node src/construir.js` actualiza `diagrama-señales.html` y el nuevo test en `senales.spec.js` pasa.

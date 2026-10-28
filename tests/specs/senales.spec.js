@@ -307,3 +307,44 @@ test("en modo selección múltiple (X) o con Shift, la banda suma nodos a la sel
   await page.mouse.up();
   expect(await page.evaluate(() => S.sel)).toEqual([id0, id2]);
 });
+
+test("crear una rama arrastrando entre dos nodos, curvarla y fijarla con clic o con Esc la deja en el historial", async ({ page }) => {
+  await page.evaluate(() => cargarEjemplo("simple"));
+  const r0 = await page.evaluate(() => S.ramas.length);
+  await page.keyboard.press("c");
+  const { p0, p2, medio } = await page.evaluate(() => {
+    const a = S.nodos[0], b = S.nodos[2], r = document.getElementById("canvas").getBoundingClientRect();
+    const aPantalla = (x, y) => ({ x: r.left + S.pan.x + x * S.zoom, y: r.top + S.pan.y + y * S.zoom });
+    return {
+      p0: aPantalla(a.x, a.y),
+      p2: aPantalla(b.x, b.y),
+      medio: aPantalla((a.x + b.x) / 2, b.y - 60),
+    };
+  });
+  // 1) Crear rama y fijarla con clic
+  await page.mouse.move(p0.x, p0.y);
+  await page.mouse.down();
+  await page.mouse.move(p2.x, p2.y, { steps: 5 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => drag && drag.kind)).toBe("curve-new");
+  await page.mouse.move(medio.x, medio.y, { steps: 4 });
+  await page.mouse.click(medio.x, medio.y);
+  expect(await page.evaluate(() => [drag, S.ramas.length])).toEqual([null, r0 + 1]);
+  await page.evaluate(() => undo());
+  expect(await page.evaluate(() => S.ramas.length)).toBe(r0);
+
+  // 2) Crear rama y salir con Escape durante curve-new: queda confirmada y se puede deshacer
+  await page.keyboard.press("c");
+  await page.mouse.move(p0.x, p0.y);
+  await page.mouse.down();
+  await page.mouse.move(p2.x, p2.y, { steps: 5 });
+  await page.mouse.up();
+  expect(await page.evaluate(() => drag && drag.kind)).toBe("curve-new");
+  await page.keyboard.press("Escape");
+  expect(await page.evaluate(() => [drag, S.ramas.length])).toEqual([null, r0 + 1]);
+  const curvaFijada = await page.evaluate(() => S.ramas[S.ramas.length - 1].curva);
+  await page.mouse.move(medio.x, medio.y + 80, { steps: 4 });
+  expect(await page.evaluate(() => S.ramas[S.ramas.length - 1].curva)).toBe(curvaFijada);
+  await page.evaluate(() => undo());
+  expect(await page.evaluate(() => S.ramas.length)).toBe(r0);
+});

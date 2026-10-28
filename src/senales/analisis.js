@@ -1,5 +1,6 @@
 /* ======================= ventana de análisis ======================= */
 function mostrarMason() {
+  if (typeof cerrarCurvaNueva === "function") cerrarCurvaNueva();
   const A = analizar();
   conValores(A.P); conValores(A.L);
   const elSub = $("#mason-sub"), body = $("#mason-body");
