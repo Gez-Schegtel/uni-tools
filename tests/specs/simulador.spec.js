@@ -97,11 +97,29 @@ test.describe("tabla de verdad en pantalla", () => {
 });
 
 test.describe("biestables", () => {
-  test("la tabla de verdad no cambia el estado del circuito", async ({ page }) => {
+  test("la tabla de verdad no cambia el estado del circuito ni arrastra estado entre filas", async ({ page }) => {
     await page.evaluate(() => cargarEjemplo("regd"));
     const antes = await page.evaluate(() => JSON.stringify(S.nodes.map((n) => [n.id, n.on, n.q])));
     await page.evaluate(() => truthTable());
     expect(await page.evaluate(() => JSON.stringify(S.nodes.map((n) => [n.id, n.on, n.q])))).toBe(antes);
+
+    const filas = await page.evaluate(() => {
+      S.nodes = [
+        makeNode("in", 0, 0, { id: "i1", label: "A" }),
+        makeNode("in", 0, 40, { id: "i2", label: "R" }),
+        makeNode("not", 80, 0, { id: "n1" }),
+        makeNode("ff:rs-sin", 160, 20, { id: "f1", q: 0 }),
+        makeNode("out", 260, 20, { id: "o1", label: "Q" }),
+      ];
+      S.wires = [
+        { id: "w1", from: { id: "i1", pin: "o0" }, to: { id: "n1", pin: 0 } },
+        { id: "w2", from: { id: "n1", pin: "o0" }, to: { id: "f1", pin: 0 } },
+        { id: "w3", from: { id: "i2", pin: "o0" }, to: { id: "f1", pin: 1 } },
+        { id: "w4", from: { id: "f1", pin: "o0" }, to: { id: "o1", pin: 0 } },
+      ];
+      return truthTable().rows.map((r) => r.in.join("") + "→" + r.out.join(""));
+    });
+    expect(filas).toEqual(["00→1", "01→0", "10→0", "11→0"]);
   });
 });
 

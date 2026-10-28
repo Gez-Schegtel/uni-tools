@@ -158,3 +158,20 @@ test("tabla de verdad: semisumador (S = A ⊕ B, R = A · B)", () => {
   );
   assert.deepEqual(tabla(clonar(s.truthTable())), ["00→00", "01→10", "10→10", "11→01"]);
 });
+
+test("truthTable: cada fila parte del estado original sin contaminar las filas siguientes", () => {
+  // Entrada A invertida a S de un latch RS sin reloj (q inicial = 0), y R = 0.
+  // En m=0 (A=0 -> S=1, R=0) Q pasa a 1; en m=1 (A=1 -> S=0, R=0) retiene el q inicial (0), no el 1 de m=0.
+  const ff = nodo("f1", "ff", 160, 20, { kind: "rs", conClk: false, pins: s.pinsDe("rs", false), q: 0 });
+  s.tablaDe(ff);
+  conCircuito(
+    [nodo("i1", "in", 0, 0, { label: "A" }), nodo("i2", "in", 0, 40, { label: "R" }),
+     nodo("n1", "not", 80, 0), ff, nodo("o1", "out", 260, 20, { label: "Q" })],
+    [{ from: { id: "i1", pin: "o0" }, to: { id: "n1", pin: 0 } },
+     { from: { id: "n1", pin: "o0" }, to: { id: "f1", pin: 0 } },
+     { from: { id: "i2", pin: "o0" }, to: { id: "f1", pin: 1 } },
+     { from: { id: "f1", pin: "o0" }, to: { id: "o1", pin: 0 } }]
+  );
+  assert.deepEqual(tabla(clonar(s.truthTable())), ["00→1", "01→0", "10→0", "11→0"]);
+  assert.equal(ff.q, 0);
+});

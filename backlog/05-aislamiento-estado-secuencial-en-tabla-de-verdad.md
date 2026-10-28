@@ -1,6 +1,7 @@
 # Spec 05 — Aislamiento del Estado Secuencial entre Filas en `truthTable()` (`simulador-logico`)
 
 - **ID:** `SPEC-05`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-05` y Sección `5.4.C.4`
 - **Prioridad:** Alta (5 / 27)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
@@ -83,6 +84,6 @@ Además, al clonar cada nodo para evaluar una fila estática de la tabla de verd
 
 ## 5. Criterios de Aceptación
 
-- [ ] El resultado de cualquier fila `m` en `truthTable()` es independiente de las filas `0 .. m-1`.
-- [ ] `S.nodes` del circuito activo sigue sin mutar al abrir la tabla de verdad.
-- [ ] `node src/construir.js` actualiza `simulador-logico.html` y pasan tanto `npm --prefix tests run test:unidades` como Playwright.
+- [x] El resultado de cualquier fila `m` en `truthTable()` es independiente de las filas `0 .. m-1`.
+- [x] `S.nodes` del circuito activo sigue sin mutar al abrir la tabla de verdad.
+- [x] `node src/construir.js` actualiza `simulador-logico.html` y pasan tanto `npm --prefix tests run test:unidades` como Playwright.

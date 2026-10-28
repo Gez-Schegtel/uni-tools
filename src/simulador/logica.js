@@ -84,9 +84,9 @@ function truthTable() {
   const outs = S.nodes.filter(n => n.type === "out").sort((a, b) => a.y - b.y || a.x - b.x);
   if (!ins.length || !outs.length) return null;
   if (ins.length > 10) return { demasiadas: ins.length };
-  const copia = S.nodes.map(n => JSON.parse(JSON.stringify(n)));   // los biestables no deben cambiar de estado
   const rows = [], total = 1 << ins.length;
   for (let m = 0; m < total; m++) {
+    const copia = S.nodes.map(n => Object.assign({}, n, n.type === "ff" ? { clkArranque: false } : null));
     for (let i = 0; i < ins.length; i++)
       copia.find(n => n.id === ins[i].id).on = !!((m >> (ins.length - 1 - i)) & 1);
     const { val, osc } = simulate(copia, S.wires);
