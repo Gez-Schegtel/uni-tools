@@ -2646,7 +2646,7 @@ svg.addEventListener("pointermove", ev => {
   }
   const w = toWorld(ev);
   if (!drag) {
-    const nid = nodoCerca(w);
+    const nid = (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-pid")) || nodoCerca(w);
     if (nid !== hoverNode) { hoverNode = nid; render(); }
     return;
   }

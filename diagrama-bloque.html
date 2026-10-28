@@ -2709,6 +2709,30 @@ function destinoBajoPuntero(ev, drag, w) {
     return { id: nid, port: nearestPort(getNode(nid), w, getNode(drag.fromId)) };
   return null;
 }
+function nodoCercaDePuertos(ev, w) {
+  const t = ev.target;
+  if (t && t.getAttribute && t.getAttribute("data-pid")) return t.getAttribute("data-pid");
+  const directo = hitNode(t);
+  if (directo && !esMarco(getNode(directo))) return directo;
+  let mejor = null, mejorDist = 1e9;
+  for (const n of S.nodes) {
+    if (esMarco(n) || n.type === "text") continue;
+    const extra = n.id === hoverNode ? 4 : 0;
+    if (n.type === "node") {
+      const d = Math.hypot(w.x - n.x, w.y - n.y);
+      if (d <= 22 + extra && d < mejorDist) { mejorDist = d; mejor = n.id; }
+      continue;
+    }
+    const R = rectOf(n), m = 10 + extra;
+    const dx = Math.max(R.l - m - w.x, 0, w.x - (R.r + m));
+    const dy = Math.max(R.t - m - w.y, 0, w.y - (R.b + m));
+    if (dx === 0 && dy === 0) {
+      const d = Math.hypot(w.x - n.x, w.y - n.y);
+      if (d < mejorDist) { mejorDist = d; mejor = n.id; }
+    }
+  }
+  return mejor;
+}
 svg.addEventListener("pointermove", ev => {
   if (ev.pointerType === "touch") {
     if (dedos.has(ev.pointerId)) dedos.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -2717,7 +2741,7 @@ svg.addEventListener("pointermove", ev => {
   }
   const w = toWorld(ev);
   if (!drag) {
-    const nid = hitNode(ev.target);
+    const nid = nodoCercaDePuertos(ev, w);
     if (nid !== hoverNode) { hoverNode = nid; render(); }
     return;
   }

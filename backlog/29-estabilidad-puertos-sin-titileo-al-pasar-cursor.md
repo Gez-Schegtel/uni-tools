@@ -1,7 +1,7 @@
 # Spec 29 — Estabilidad de los Puertos de Conexión al Pasar el Cursor (Sin Titileo)
 
 - **ID:** `SPEC-29`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Pedido directo del usuario (Punto 3)
 - **Prioridad:** Alta / UX (Integrada al Bloque 2)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -107,6 +107,6 @@ En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Apoyar el puntero sobre cualquiera de los círculos `.port` de un bloque, sumador, entrada/salida o bifurcación nunca apaga `hoverNode` ni hace titilar el círculo.
-- [ ] Mover el cursor desde el centro de una bifurcación (`node`) hacia cualquiera de sus 4 puertos a 15 px mantiene los puertos visibles durante todo el trayecto.
-- [ ] `node src/construir.js` actualiza `diagrama-bloque.html` y el nuevo test pasa en Chromium y Firefox.
+- [x] Apoyar el puntero sobre cualquiera de los círculos `.port` de un bloque, sumador, entrada/salida o bifurcación nunca apaga `hoverNode` ni hace titilar el círculo.
+- [x] Mover el cursor desde el centro de una bifurcación (`node`) hacia cualquiera de sus 4 puertos a 15 px mantiene los puertos visibles durante todo el trayecto.
+- [x] `node src/construir.js` actualiza `diagrama-bloque.html` y el nuevo test pasa en Chromium y Firefox.

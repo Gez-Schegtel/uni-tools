@@ -140,6 +140,38 @@ test.describe("flechas", () => {
     await expect(page.locator("#e-tp")).toBeVisible();
     await expect(page.locator("#e-split, #e-alt, #e-reset, #e-flip")).toHaveCount(0);
   });
+  test("al pasar el mouse sobre un bloque o bifurcación y luego sobre su puerto perimetral, el puerto no titila ni desaparece", async ({ page }) => {
+    const pts = await page.evaluate(() => {
+      S.sel = []; S.selEdges = []; hoverNode = null; render();
+      const b = S.nodes.find((n) => n.type === "block");
+      const nd = S.nodes.find((n) => n.type === "node");
+      const r = document.getElementById("canvas").getBoundingClientRect();
+      const scr = (wx, wy) => ({ x: r.left + S.pan.x + wx * S.zoom, y: r.top + S.pan.y + wy * S.zoom });
+      return {
+        bId: b.id,
+        bCentro: scr(b.x, b.y),
+        bPuertoDer: scr(b.x + b.w / 2, b.y),
+        ndId: nd.id,
+        ndCentro: scr(nd.x, nd.y),
+        ndPuertoArr: scr(nd.x, nd.y - 15),
+      };
+    });
+    await page.mouse.move(pts.bCentro.x, pts.bCentro.y);
+    expect(await page.evaluate(() => hoverNode)).toBe(pts.bId);
+    await expect(page.locator(`.port[data-pid="${pts.bId}"]`)).toHaveCount(4);
+
+    // Mover paso a paso hasta el borde del puerto derecho y unos píxeles más afuera: no debe perder hoverNode
+    await page.mouse.move(pts.bPuertoDer.x, pts.bPuertoDer.y, { steps: 6 });
+    expect(await page.evaluate(() => hoverNode)).toBe(pts.bId);
+    await expect(page.locator(`.port[data-pid="${pts.bId}"][data-port="r"]`)).toBeVisible();
+
+    // Lo mismo sobre una bifurcación (cuyos puertos están a 15 px del centro)
+    await page.mouse.move(pts.ndCentro.x, pts.ndCentro.y);
+    expect(await page.evaluate(() => hoverNode)).toBe(pts.ndId);
+    await page.mouse.move(pts.ndPuertoArr.x, pts.ndPuertoArr.y, { steps: 6 });
+    expect(await page.evaluate(() => hoverNode)).toBe(pts.ndId);
+    await expect(page.locator(`.port[data-pid="${pts.ndId}"][data-port="t"]`)).toBeVisible();
+  });
 });
 
 test.describe("un bloque tiene una sola entrada", () => {
