@@ -41,16 +41,8 @@ En `22051e0`, **compartir tronco con puntos de unión automáticos (`junctionDot
 ## 3. Especificación de la Solución (En Dos Niveles: Seguro vs. Opcional)
 
 ### 3.1. Nivel A (100 % Seguro — No rompe ningún test ni flujo actual de `22051e0`)
-Corregir los bugs reales de validación que violan las propias reglas de `22051e0`:
-1. **Validar `admiteEntrada()` al pulsar `"Invertir sentido"` (`#e-flip`) y al cambiar `#e-tp` en [`src/bloque/panel.js:163-166`](../src/bloque/panel.js):**
-   - Hoy, si un bloque `G` ya tiene una flecha entrante (`r → G`) y una saliente (`G → H`), seleccionar la flecha `G → H` y apretar `"Invertir sentido"` (`#e-flip`) ejecuta `[e.from, e.to] = [e.to, e.from]` **sin llamar a `admiteEntrada(e.from.id, e.id)`**, dejando al bloque `G` con **2 entradas** (violando la regla de entrada única del propio `22051e0`).
-   - Solución en `#e-flip` ([`src/bloque/panel.js:163`](../src/bloque/panel.js)):
-     ```js
-     document.getElementById("e-flip").onclick = () => {
-       if (!admiteEntrada(e.from.id, e.id)) { toast("Un bloque admite una sola entrada"); return; }
-       [e.from, e.to] = [e.to, e.from]; rutaAuto(e); commit(); render();
-     };
-     ```
+Corregir los bugs reales de validación respetando las reglas de `22051e0` y lo definido en las nuevas `SPEC-28` y `SPEC-31`:
+1. *(Nota de coordinación con [`SPEC-28`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md): el botón `#e-flip` "Invertir sentido" se elimina por completo del panel de flechas en `SPEC-28`, por lo que ya no existe esa vía para dejar a un bloque con 2 entradas).*
 2. **Extender `admiteEntrada(id, ignorandoFlecha)` a bifurcaciones (`node`) y rótulos (`io`) ([`src/bloque/modelo.js:23-26`](../src/bloque/modelo.js)):**
    - Una bifurcación (`type === "node"`) o un rótulo de salida (`type === "io"`) tampoco pueden recibir 2 flechas entrantes (dos señales no pueden sumarse sin un sumador `type === "sum"`):
      ```js
@@ -64,8 +56,8 @@ Corregir los bugs reales de validación que violan las propias reglas de `22051e
      ```
    - Este cambio conserva intacta la capacidad de sacar múltiples salidas desde un `io`, `block` o `node` (tronco compartido con `junctionDots()`), por lo que **`bloque.spec.js:132-155` y `equivalenteEnBloques()` siguen pasando al 100 %**.
 
-3. **Impedir conectar una flecha entrante a una pata de sumador que tenga signo vacío (`""`):**
-   - Si `n.type === "sum"` y `!(n.signs && (n.signs[port] === "+" || n.signs[port] === "−"))`, rechazar la entrada en ese puerto mostrando `toast("Esa pata del sumador no tiene signo")` (o bien activar automáticamente `"+"` en esa pata al conectarle una flecha, que es aún más amigable y nunca rechaza la acción del usuario).
+3. **Impedir conectar una flecha entrante a una pata de sumador que tenga signo `"vacío"` (`""`) (coordinado con [`SPEC-31`](./31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md)):**
+   - Como establece la `SPEC-31`, un sumador tiene hasta 3 signos y al menos 1 lado `"vacío"` (`""`, reservado para la salida). Si el usuario intenta meter una flecha entrante por el lado `"vacío"` (`n.type === "sum"` y `!n.signs[port]`), rechazar la entrada en ese puerto mostrando `toast("Ese lado del sumador está vacío: elegí una pata con signo + o −")` (y validar lo mismo si cambia el selector `#e-tp` de destino en el panel).
 
 ### 3.2. Nivel B (Opcional — Reglas estrictas de `520e9a1`, sólo si se desea cambiar el modelo de uso)
 Si en el futuro se quisiera obligar a usar nodos `bifurcación` explícitos prohibiendo que salgan 2 flechas de un bloque o de una entrada `io`:
@@ -78,10 +70,9 @@ Si en el futuro se quisiera obligar a usar nodos `bifurcación` explícitos proh
 
 En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):
 1. Conservar intacto el test existente `"permite varias salidas desde una entrada y entradas a un sumador"` (líneas 132-155).
-2. Agregar un test `"invertir sentido (#e-flip) no permite dejar un bloque ni una bifurcación con dos entradas"`:
-   - Armar `r → g1 → g2` (donde `g1` ya tiene la entrada desde `r`).
-   - Seleccionar la flecha `g1 → g2` y hacer clic en `#e-flip`.
-   - Verificar que la flecha **no** se invierta (`e.from.id === "g1"`, `e.to.id === "g2"`) y que `#toast` muestre el aviso correspondiente.
+2. Agregar un test `"una bifurcación admite una sola entrada y un sumador no admite entradas por su lado vacío"`:
+   - Armar dos bloques e intentar conectar ambos como entrada a la misma bifurcación (`node`) o al lado vacío (`""`) de un sumador.
+   - Verificar que la segunda entrada a la bifurcación y la entrada al lado vacío del sumador sean rechazadas con su aviso en `#toast`.
 
 ---
 

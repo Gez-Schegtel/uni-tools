@@ -1,10 +1,10 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md), desglosado en **27 especificaciones técnicas e historias de usuario autocontenidas** para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **31 especificaciones técnicas e historias de usuario autocontenidas** para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
-El orden (`01` a `27`) combina tres factores:
+El orden (`01` a `31`) combina tres factores:
 1. **Riesgo e Impacto (Primero lo crítico):** Primero se resuelven los bugs que provocan pérdida silenciosa de datos (`01`), caídas por `TypeError` (`02`), corrupción de estado al cargar (`03`, `04`), resultados incorrectos en tablas de verdad (`05`), bloqueo de edición con el reloj (`06`) o congelamiento del navegador (`07`).
 2. **Relación Impacto / Esfuerzo (Quick Wins temprano):** A continuación (`08` a `16`) se ubican las correcciones rápidas de unas pocas líneas en CSS, HTML y manejadores de eventos que tienen bajo riesgo de regresión y alto valor percibido.
 3. **Dependencias lógicas:** Las mejoras de dominio (`17` a `19`) y de arquitectura/rendimiento (`20` a `22`) van antes del saneamiento final de la suite de pruebas (`23` a `25`) y del cierre de documentación e higiene (`26`, `27`).
@@ -42,6 +42,10 @@ El orden (`01` a `27`) combina tres factores:
 | **14** | ⏳ Pendiente | [`14-sincronizacion-editor-doble-clic-al-desplazar-hoja.md`](./14-sincronizacion-editor-doble-clic-al-desplazar-hoja.md) | `BUG-18` | Bug Bajo | Bajo (15 min) | Reposicionar o confirmar el `.editor-hoja` de doble clic cuando se mueve el lienzo con la rueda del mouse. |
 | **15** | ⏳ Pendiente | [`15-validacion-distribuir-y-grilla-en-alinear.md`](./15-validacion-distribuir-y-grilla-en-alinear.md) | `BUG-21` + Test `5.4.A.2` | Bug Bajo + Test | Bajo (25 min) | Exigir ≥ 3 elementos al distribuir (`dh`/`dv`), ajustar todas las alineaciones con `snapV()` y agregar tests de `alinear()`. |
 | **16** | ⏳ Pendiente | [`16-inclusion-de-flechas-y-cables-en-recorte-bboxall.md`](./16-inclusion-de-flechas-y-cables-en-recorte-bboxall.md) | `BUG-12` | Bug Medio | Bajo (20 min) | Incluir los puntos `pts` de flechas y cables en `bboxAll()` para que los lazos externos no se corten al exportar a SVG/PNG. |
+| **28** | ⏳ Pendiente | [`28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md) | Pedido Usuario (1 y 2) | Mejora UI / Panel | Bajo (20 min) | Quitar el botón `#n-dup` (`Duplicar`) en las 3 herramientas y quitar `#e-split`, `#e-alt`, `#e-reset` y `#e-flip` del panel de flechas. |
+| **29** | ⏳ Pendiente | [`29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md`](./29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md) | Pedido Usuario (3) | Bug UX / Interacción | Bajo (25 min) | Eliminar el titileo de los círculos `.port` al pasar el cursor por el perímetro de un elemento en `diagrama-bloque`. |
+| **30** | ⏳ Pendiente | [`30-trayectoria-ortogonal-en-vista-previa-de-conexion.md`](./30-trayectoria-ortogonal-en-vista-previa-de-conexion.md) | Pedido Usuario (4) | Mejora UX / Lienzo | Bajo (25 min) | Hacer que la vista previa `.ghostline` al tirar una conexión salga en la dirección del puerto y se doble siguiendo al mouse. |
+| **31** | ⏳ Pendiente | [`31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md`](./31-sumador-sin-contenido-texto-vacio-y-maximo-tres-signos.md) | Pedido Usuario (5, 6 y 7) | Dominio / UX | Bajo (25 min) | Quitar `Contenido` de los sumadores, cambiar `"—vacío—"` por `"vacío"` y exigir que tengan hasta 3 signos (1 lado siempre vacío). |
 
 ---
 
@@ -92,9 +96,9 @@ El orden (`01` a `27`) combina tres factores:
    ```bash
    node src/construir.js
    ```
-4. Ejecutar las pruebas unitarias y las especificaciones de Playwright afectadas:
+4. Ejecutar las pruebas unitarias y las especificaciones de Playwright afectadas en **ambos navegadores (Chromium y Firefox)**:
    ```bash
    npm --prefix tests run test:unidades
-   npx --prefix tests playwright test --project=chromium
+   cd tests && npx playwright test
    ```
 5. Marcar los criterios de aceptación de la spec y realizar el commit atómico.

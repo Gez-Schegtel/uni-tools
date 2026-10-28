@@ -20,11 +20,11 @@
 
 1. **Detección de oscilación (`OSC === true`) en `simulador-logico` (`src/simulador/logica.js:37, 67` y `src/simulador/dibujo.js:138`):**
    - En `simulador.spec.js:58` se comprueba que los 6 ejemplos predefinidos tengan `OSC === false`, pero **ningún test en toda la suite** construye un circuito que oscile para verificar que el bucle de convergencia de 40 iteraciones corte a tiempo, marque `OSC = true` y muestre `"Oscilación / lazo inestable"` con clase `.warn` en `#st-sim`.
-2. **Rotación de compuertas (`R` / `#n-rot`) y reducción de entradas (`#n-pins`) en `simulador-logico` (`src/simulador/panel.js:138-140` y `src/simulador/barra.js:51`):**
-   - Cuando una compuerta de 4 entradas pasa a 2 entradas desde `#n-pins`, la línea 139 de `src/simulador/panel.js` debe eliminar automáticamente los cables conectados a las patas `2` y `3` (`S.wires = S.wires.filter(w => !(w.to.id === n.id && w.to.pin >= n.pins))`). Hoy no tiene ningún test.
+2. **Rotación de compuertas (`R` / `#rot-der` / `#rot-izq`) y reducción de entradas (`#n-pins`) en `simulador-logico` (`src/simulador/panel.js:156-164, 192-200`):**
+   - Cuando una compuerta de 4 entradas pasa a 2 entradas desde `#n-pins`, la línea 160 de `src/simulador/panel.js` debe eliminar automáticamente los cables conectados a las patas `2` y `3` (`S.wires = S.wires.filter(w => !(w.to.id === n.id && w.to.pin >= k))`). Hoy no tiene ningún test.
    - Tampoco se prueba que presionar la tecla `r` con una compuerta seleccionada sume `90°` a `n.rot` y reinicie las rutas manuales de sus cables.
-3. **Botones `#e-reroute` ("Otra ruta") y `#e-auto` ("Volver a ruta automática") en `diagrama-bloque` (`src/bloque/panel.js:161-162`):**
-   - Ningún test verifica que cambiar la variante de ruta (`e.variant`) desde el inspector cambie el recorrido ortogonal ni que `#e-auto` limpie `e.manual` (`e.manual === null`).
+3. **Botones `#w-alt` ("Ruta alternativa") y `#w-reset` ("Ruta automática") en cables de `simulador-logico` (`src/simulador/panel.js:9-10, 167-168`):**
+   - *(Nota de coordinación con [`SPEC-28`](./28-simplificacion-panel-sin-duplicar-ni-botones-flecha.md): en `diagrama-bloque` los botones de ruta del panel de flechas se eliminaron por pedido del usuario en `SPEC-28`, por lo que este test se enfoca en los cables de `simulador-logico` o en el cambio de puertos `#e-fp`/`#e-tp` en `diagrama-bloque`).*
 
 ---
 
@@ -34,7 +34,7 @@
 1. **Test `"un lazo inestable (NOT realimentada a sí misma) se detecta como oscilación sin colgar la página"`:**
    - Crear una compuerta `NOT` (`id: "g"`) y un cable de su salida `"o0"` a su propia entrada `0`.
    - Llamar a `correr(); render();`.
-   - Verificar que `OSC` sea `true` y que `#st-sim` tenga el texto `"Oscilación / lazo inestable"` y la clase `"warn"`.
+   - Verificar que `OSC` sea `true` y que `#st-warn .warn` muestre `"el circuito oscila: revisá la realimentación"`.
 2. **Test `"bajar la cantidad de entradas de una compuerta borra los cables de las patas que ya no existen, y R la gira"`:**
    - Armar una `AND` de 4 entradas con 4 cables conectados a las patas `0, 1, 2, 3`.
    - Seleccionar la `AND` y cambiar `#n-pins` a `"2"`.
@@ -42,13 +42,12 @@
    - Con la `AND` seleccionada, presionar `r` y verificar que `n.rot` pase de `0` a `90`.
 
 ### 3.2. En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js)
-1. **Test `"los botones Otra ruta y Volver a ruta automática del panel cambian y restauran el recorrido de la flecha"`:**
-   - En el bloque `test.describe("flechas")` (línea 93), tras mover a mano un tramo de `"e1"` (`Boolean(e.manual) === true`), hacer clic en `#e-auto` y verificar que `e.manual` pase a `null` y la ruta vuelva al trazado automático.
-   - Luego hacer clic en `#e-reroute` y verificar que `e.variant` se incremente y cambie el recorrido `e.pts`.
+1. **Test `"cambiar el puerto de origen o destino desde el panel (#e-fp / #e-tp) recalcula la ruta automática de la flecha"`:**
+   - Seleccionar una flecha con ruta manual (`Boolean(e.manual) === true`), cambiar `#e-fp` o `#e-tp` en el panel y verificar que `e.manual` se limpie (`undefined`) y la flecha se conecte al nuevo puerto.
 
 ---
 
 ## 4. Criterios de Aceptación
 
 - [ ] Los 3 nuevos tests en `simulador.spec.js` y `bloque.spec.js` están implementados y pasan en Chromium y Firefox.
-- [ ] Quedan cubiertos el detector de oscilación (`OSC`), la poda de cables al reducir `#n-pins`, la rotación con `R` y los botones `#e-reroute` / `#e-auto`.
+- [ ] Quedan cubiertos el detector de oscilación (`OSC`), la poda de cables al reducir `#n-pins`, la rotación con `R` y el recálculo de ruta al cambiar `#e-fp` / `#e-tp`.

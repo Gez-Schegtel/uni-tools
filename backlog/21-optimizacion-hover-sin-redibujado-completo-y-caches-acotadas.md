@@ -72,7 +72,7 @@
       renderSegHandles();
     }
     ```
-  - En `pointermove` (`!drag`) de [`src/bloque/interaccion.js:274`](../src/bloque/interaccion.js) y [`src/simulador/interaccion.js:103`](../src/simulador/interaccion.js), llamar a `renderOverlay()` en lugar de `render()`. De esta manera **los puertos y pines siguen mostrándose exactamente igual al pasar el mouse**, pero se evita ejecutar `actualizarTamaños()`, `correr()`, `routeAll()`, la reconstrucción de `gEdges`/`gNodes` y `renderInspector()`.
+  - En `pointermove` (`!drag`) de [`src/bloque/interaccion.js`](../src/bloque/interaccion.js) (usando la función estable `nodoCercaDePuertos(ev, w)` introducida en [`SPEC-29`](./29-estabilidad-puertos-sin-titileo-al-pasar-cursor.md)) y [`src/simulador/interaccion.js:103`](../src/simulador/interaccion.js), llamar a `renderOverlay()` en lugar de `render()`. De esta manera **los puertos y pines siguen mostrándose sin titileo al pasar el mouse**, pero se evita ejecutar `actualizarTamaños()`, `correr()`, `routeAll()`, la reconstrucción de `gEdges`/`gNodes` y `renderInspector()`.
 
 ### 3.2. Acotar `_mcache` y `_bcache` en `src/bloque/ecuaciones.js`
 - Antes de hacer `.set(k, v)` en `_mcache` (línea 172) y en `_bcache` (línea 254), si `map.size >= 500`, eliminar la clave más antigua: `map.delete(map.keys().next().value);`.
