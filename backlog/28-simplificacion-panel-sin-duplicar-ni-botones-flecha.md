@@ -1,7 +1,7 @@
 # Spec 28 — Simplificación del Panel Inspector: Quitar Botón `Duplicar` y Botones de Acción en Flechas
 
 - **ID:** `SPEC-28`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Pedido directo del usuario (Puntos 1 y 2)
 - **Prioridad:** Media / Quick Win (Integrada al Bloque 2)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
@@ -73,6 +73,6 @@ En [`src/bloque/panel.js:30-38, 160-163`](../src/bloque/panel.js), al selecciona
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ninguna de las tres herramientas muestra el botón `#n-dup` en el panel derecho, y `Ctrl+D` sigue funcionando igual.
-- [ ] El panel de `Flecha` en `diagrama-bloque` no muestra `#e-split`, `#e-alt`, `#e-reset` ni `#e-flip`.
-- [ ] `node src/construir.js` actualiza las tres páginas y todos los tests pasan en Chromium y Firefox.
+- [x] Ninguna de las tres herramientas muestra el botón `#n-dup` en el panel derecho, y `Ctrl+D` sigue funcionando igual.
+- [x] El panel de `Flecha` en `diagrama-bloque` no muestra `#e-split`, `#e-alt`, `#e-reset` ni `#e-flip`.
+- [x] `node src/construir.js` actualiza las tres páginas y todos los tests pasan en Chromium y Firefox.

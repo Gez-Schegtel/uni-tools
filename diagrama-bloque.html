@@ -2161,15 +2161,8 @@ function renderInspector() {
       <div class="row"><label>Punta</label><div class="fill"><select id="e-arrow">
         <option value="1">Con flecha</option><option value="0">Sin flecha</option></select></div></div>
       <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${e.width || 1.6}"></div></div>
-      <div class="iconbar" style="margin-top:10px">
-        <button class="btn" id="e-split">Insertar bifurcación</button>
-        <button class="btn" id="e-alt">Ruta alternativa</button>
-        <button class="btn" id="e-reset">Ruta automática</button>
-        <button class="btn" id="e-flip">Invertir sentido</button>
-      </div>
       <div class="hint" style="margin-top:8px">Las flechas se rutean solas esquivando bloques y otras líneas. Con la flecha
-        seleccionada, arrastrá los cuadraditos de sus tramos (o la línea misma) para acomodarla a mano;
-        «Ruta automática» la suelta de nuevo. También podés probar rutas alternativas.</div>
+        seleccionada, arrastrá los cuadraditos de sus tramos (o la línea misma) para acomodarla a mano.</div>
       <div class="row" style="margin-top:10px"><label>Origen</label><div class="fill"><select id="e-fp">
         ${portOpts(e.from.port)}</select></div></div>
       <div class="row"><label>Destino</label><div class="fill"><select id="e-tp">
@@ -2200,9 +2193,7 @@ function renderInspector() {
       <b>b·c</b> abajo. Además <b>s^2</b> o <b>s^-1</b> exponente, <b>H_2</b> o <b>H2</b> subíndice (<b>H_{ent}</b> si son varias letras),
       <b>\\omega \\zeta \\tau</b> griegas y <b>\\frac{a}{b}</b> para forzar la fracción.</div>`;
     }
-    h += `<div class="row" style="margin-top:10px"><div class="fill">
-      <button class="btn" id="n-dup" style="width:100%;display:flex;align-items:center;justify-content:space-between" title="Duplicar selección (Ctrl+D)"><span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Duplicar</span><kbd>Ctrl+D</kbd></button>
-    </div></div></div>`;
+    h += `</div>`;
 
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
@@ -2283,7 +2274,6 @@ function wireInspector(nsel, esel) {
   document.querySelectorAll(".sgn").forEach(sel => {
     sel.onchange = () => { nsel.forEach(n => { if (n.signs) n.signs[sel.dataset.side] = sel.value; }); commit(); render(); };
   });
-  if ($("#n-dup")) $("#n-dup").onclick = duplicar;        // duplicar() ya guarda y redibuja
 
   live("e-label", v => esel.forEach(e => e.label = v));
   live("e-width", v => esel.forEach(e => e.width = +v || 1.6));
@@ -2291,10 +2281,6 @@ function wireInspector(nsel, esel) {
   if (st) { st.value = esel[0].dashed ? "dashed" : "solid"; st.onchange = () => { esel.forEach(e => e.dashed = st.value === "dashed"); commit(); render(); }; }
   const ar = document.getElementById("e-arrow");
   if (ar) { ar.value = esel[0].arrow === false ? "0" : "1"; ar.onchange = () => { esel.forEach(e => e.arrow = ar.value === "1"); commit(); render(); }; }
-  alClic("e-split", () => esel.forEach(splitEdge));
-  alClic("e-alt", () => esel.forEach(e => { e.variant = (e.variant || 0) + 1; delete e.manual; }));
-  alClic("e-reset", () => esel.forEach(rutaAuto));
-  alClic("e-flip", () => esel.forEach(e => { const f = e.from; e.from = e.to; e.to = f; rutaAuto(e); }));
   const fp = document.getElementById("e-fp"), tp = document.getElementById("e-tp");
   if (fp) fp.onchange = () => { esel.forEach(e => { e.from.port = fp.value; rutaAuto(e); }); commit(); render(); };
   if (tp) tp.onchange = () => { esel.forEach(e => { e.to.port = tp.value; rutaAuto(e); }); commit(); render(); };

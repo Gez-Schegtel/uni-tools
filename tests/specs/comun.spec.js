@@ -62,9 +62,8 @@ for (const h of HERRAMIENTAS) {
 
     test("duplicar deja un solo paso en el historial: un Ctrl+Z lo deshace entero", async ({ page }) => {
       const [n0, deshacer0] = await page.evaluate((l) => { S.sel = [S[l][0].id, S[l][1].id]; render(); return [S[l].length, undoStack.length]; }, h.lista);
-      // por el botón del panel donde lo hay (bloques y simulador), si no por el teclado
-      const boton = page.locator("#n-dup");
-      if (await boton.count()) await boton.click(); else await page.keyboard.press("Control+d");
+      await expect(page.locator("#n-dup")).toHaveCount(0);
+      await page.keyboard.press("Control+d");
       expect(await page.evaluate(([l, d]) => [S[l].length, undoStack.length - d], [h.lista, deshacer0])).toEqual([n0 + 2, 1]);
       await page.keyboard.press("Control+z");
       expect(await page.evaluate((l) => S[l].length, h.lista)).toBe(n0);

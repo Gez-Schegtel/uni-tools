@@ -43,9 +43,6 @@ function renderInspector() {
         <input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
       <div class="iconbar" style="margin-top:10px">
         <button class="btn" id="n-auto">Autolazo</button></div>
-      <div class="row" style="margin-top:8px"><div class="fill">
-        <button class="btn" id="n-dup" style="width:100%;display:flex;align-items:center;justify-content:space-between" title="Duplicar selección (Ctrl+D)"><span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>Duplicar</span><kbd>Ctrl+D</kbd></button>
-      </div></div>
       <div class="hint" style="margin-top:8px">Los nodos van en minúscula —las mayúsculas son las
         ganancias— y el subíndice recién aparece cuando hay que repetir una letra. Sólo puede haber
         una entrada y una salida: al marcar una, la anterior vuelve a ser nodo interno.</div></div>`;
@@ -101,7 +98,6 @@ function wireInspector(nsel, rsel) {
   alClic("r-espejo", () => rsel.forEach(r => { r.curva = -r.curva || -ARCO_BASE; r.curvaFija = true; }));
   alClic("r-auto", () => rsel.forEach(r => delete r.curvaFija));
   alClic("n-auto", () => nsel.forEach(n => S.ramas.push(nuevaRama(n.id, n.id))));
-  if ($("#n-dup")) $("#n-dup").onclick = duplicar;
   const m = document.getElementById("b-mason2");
   if (m) m.onclick = mostrarMason;
 }
