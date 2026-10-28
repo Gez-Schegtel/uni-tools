@@ -967,9 +967,9 @@ const TRAZOS = { solid: "Continuo", dashed: "Rayado", dotted: "Punteado" };
 const RELLENOS = { no: "Sin relleno", suave: "Suave (color del trazo)", solido: "Sólido (color de fondo)" };
 /* Los valores por defecto de un recuadro nuevo */
 function completarMarco(n) {
-  n.trazo = n.trazo || "dashed";
+  if (!Object.prototype.hasOwnProperty.call(TRAZOS, n.trazo)) n.trazo = "dashed";
   n.grosor = n.grosor || 1.4;
-  n.relleno = n.relleno || "no";
+  if (!Object.prototype.hasOwnProperty.call(RELLENOS, n.relleno)) n.relleno = "no";
   n.atras = !!n.atras;                 // arranca adelante: sin relleno no tapa nada
   n.radio = n.radio === undefined ? 6 : n.radio;
 }
@@ -1164,7 +1164,13 @@ const HOJAS = {
   "1-1":     { nombre: "Cuadrada",      w: 900,  h: 900 }
 };
 const hojaActiva = () => S.hoja && S.hoja.preset ? S.hoja : null;
-const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
+function hojaValida(h) {
+  if (!esObj(h)) return null;
+  const x = num(h.x, null), y = num(h.y, null), w = num(h.w, null), alto = num(h.h, null);
+  if (x === null || y === null || w === null || alto === null || w < 50 || alto < 50) return null;
+  const preset = Object.prototype.hasOwnProperty.call(HOJAS, h.preset) ? h.preset : "a4-h";
+  return { preset, x, y, w, h: alto };
+}
 /* El área se guarda con su propio ancho y alto: si después la estirás a mano,
    el preset queda como referencia pero mandan los números. */
 function ponerHoja(preset) {
@@ -1525,7 +1531,7 @@ function depurarNodos(lista) {
       n.font = num(n.font, d.font || 14);
       if (typeof n.label !== "string") n.label = d.label;
       if (n.type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); }
-      if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); }
+      if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); completarMarco(n); }
       if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       return n;
     });

@@ -61,7 +61,7 @@ function depurarNodos(lista) {
       n.font = num(n.font, d.font || 14);
       if (typeof n.label !== "string") n.label = d.label;
       if (n.type === "sum") { n.label = ""; n.signs = sanearSignos(n.signs); }
-      if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); }
+      if (n.type === "marco") { n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6); completarMarco(n); }
       if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       return n;
     });

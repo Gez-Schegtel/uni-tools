@@ -200,3 +200,45 @@ test("diagrama-señales: normaliza tipos de nodo ausentes, inválidos o duplicad
   ]);
   await expect(page.locator(".n-rol")).toHaveCount(2);
 });
+
+test("hoja con dimensiones negativas o cero se descarta al abrir", async ({ page }) => {
+  const errores = await abrir(page, "simulador-logico.html");
+  const doc = {
+    nodes: [{ id: "a", type: "in", x: 100, y: 100 }],
+    wires: [],
+    hoja: { preset: "a4h", x: 0, y: 0, w: -200, h: 0 },
+  };
+  await abrirTexto(page, JSON.stringify(doc));
+  expect(errores).toEqual([]);
+  expect(await page.evaluate(() => !!hojaActiva())).toBe(false);
+});
+
+test("simulador: un biestable con pines o etiquetas corruptas se sanea al abrir", async ({ page }) => {
+  const errores = await abrir(page, "simulador-logico.html");
+  const doc = {
+    nodes: [{ id: "f1", type: "ff", kind: "jk", x: 100, y: 100, pins: [null, 5], rot: 33 },
+            { id: "m1", type: "marco", x: 200, y: 200, trazo: "inventado", relleno: "inventado" }],
+    wires: [],
+  };
+  await abrirTexto(page, JSON.stringify(doc));
+  expect(errores).toEqual([]);
+  const datos = await page.evaluate(() => {
+    const f = getNode("f1"), m = getNode("m1");
+    return {
+      pins: f.pins,
+      rot: f.rot,
+      salida: f.salida,
+      salidaNeg: f.salidaNeg,
+      trazo: m.trazo,
+      relleno: m.relleno,
+      texto: document.getElementById("canvas").textContent,
+    };
+  });
+  expect(datos.pins.every((p) => p && typeof p.n === "string" && p.n.length > 0)).toBe(true);
+  expect(datos.rot).toBe(0);
+  expect(datos.salida).toBe("Q");
+  expect(datos.salidaNeg).toBe("Q");
+  expect(datos.trazo).toBe("dashed");
+  expect(datos.relleno).toBe("no");
+  expect(datos.texto).not.toContain("undefined");
+});

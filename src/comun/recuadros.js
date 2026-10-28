@@ -6,9 +6,9 @@ const TRAZOS = { solid: "Continuo", dashed: "Rayado", dotted: "Punteado" };
 const RELLENOS = { no: "Sin relleno", suave: "Suave (color del trazo)", solido: "Sólido (color de fondo)" };
 /* Los valores por defecto de un recuadro nuevo */
 function completarMarco(n) {
-  n.trazo = n.trazo || "dashed";
+  if (!Object.prototype.hasOwnProperty.call(TRAZOS, n.trazo)) n.trazo = "dashed";
   n.grosor = n.grosor || 1.4;
-  n.relleno = n.relleno || "no";
+  if (!Object.prototype.hasOwnProperty.call(RELLENOS, n.relleno)) n.relleno = "no";
   n.atras = !!n.atras;                 // arranca adelante: sin relleno no tapa nada
   n.radio = n.radio === undefined ? 6 : n.radio;
 }

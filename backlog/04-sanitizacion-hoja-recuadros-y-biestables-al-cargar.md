@@ -1,6 +1,7 @@
 # Spec 04 — Sanitización de Hoja de Impresión, Recuadros (`marco`) y Biestables al Cargar
 
 - **ID:** `SPEC-04`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-20` y Sección `5.4.A.5`
 - **Prioridad:** Media / Alta (4 / 27)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -80,7 +81,7 @@ En [`tests/specs/archivos-danados.spec.js`](../tests/specs/archivos-danados.spec
 
 ## 5. Criterios de Aceptación
 
-- [ ] `hojaValida()` rechaza hojas con `w < 50`, `h < 50` o `preset` inexistente en `HOJAS`.
-- [ ] Los nodos `"marco"` cargados desde JSON pasan por `completarMarco(n)` en `diagrama-bloque` y `simulador-logico`.
-- [ ] Los nodos `ff:*` cargados desde JSON tienen siempre `pins`, `salida`, `salidaNeg`, `tabla` y `rot` válidos.
-- [ ] `node src/construir.js` regenera las tres páginas y los nuevos tests en `archivos-danados.spec.js` pasan.
+- [x] `hojaValida()` rechaza hojas con `w < 50`, `h < 50` o `preset` inexistente en `HOJAS`.
+- [x] Los nodos `"marco"` cargados desde JSON pasan por `completarMarco(n)` en `diagrama-bloque` y `simulador-logico`.
+- [x] Los nodos `ff:*` cargados desde JSON tienen siempre `pins`, `salida`, `salidaNeg`, `tabla` y `rot` válidos.
+- [x] `node src/construir.js` regenera las tres páginas y los nuevos tests en `archivos-danados.spec.js` pasan.

@@ -57,13 +57,25 @@ function restore(js) {
    puede dibujar y se completa lo que falte, sin tocar lo que ya está bien. */
 function depurarNodos(lista) {
   return (Array.isArray(lista) ? lista : []).filter(n => esObj(n) && Object.prototype.hasOwnProperty.call(T, n.type)
-      && (n.type !== "ff" || (typeof n.kind === "string" && Object.prototype.hasOwnProperty.call(BIESTABLES, n.kind) && Array.isArray(n.pins))))
+      && (n.type !== "ff" || (typeof n.kind === "string" && Object.prototype.hasOwnProperty.call(BIESTABLES, n.kind))))
     .map(n => {
       n.x = num(n.x, 0); n.y = num(n.y, 0);
+      n.rot = [0, 90, 180, 270].includes(n.rot) ? n.rot : 0;
       if (typeof n.label !== "string") n.label = "";
       if (n.type === "marco") {
         n.w = num(n.w, T.marco.w); n.h = num(n.h, T.marco.h);
         n.font = num(n.font, 12); n.grosor = num(n.grosor, 1.4); n.radio = num(n.radio, 6);
+        completarMarco(n);
+      }
+      if (n.type === "ff") {
+        n.conClk = n.conClk !== false;
+        if (!Array.isArray(n.pins) || !n.pins.length || !n.pins.every(p => esObj(p) && typeof p.n === "string" && p.n))
+          n.pins = pinsDe(n.kind, n.conClk);
+        n.salida = typeof n.salida === "string" && n.salida ? n.salida : "Q";
+        n.salidaNeg = typeof n.salidaNeg === "string" && n.salidaNeg ? n.salidaNeg : "Q";
+        n.q = n.q ? 1 : 0; n.clkPrev = 0; n.clkArranque = false;
+        tablaDe(n);
+        n.tabla = n.tabla.map(v => v === null ? null : (v ? 1 : 0));
       }
       if (n.color !== undefined) { n.color = soloColores(n.color); if (!n.color) delete n.color; }
       if (T[n.type].var && !(Number.isInteger(n.pins) && n.pins >= 1)) n.pins = T[n.type].pins;

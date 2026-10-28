@@ -14,7 +14,13 @@ const HOJAS = {
   "1-1":     { nombre: "Cuadrada",      w: 900,  h: 900 }
 };
 const hojaActiva = () => S.hoja && S.hoja.preset ? S.hoja : null;
-const hojaValida = (h) => esObj(h) && ["x", "y", "w", "h"].every(k => num(h[k], null) !== null) ? h : null;
+function hojaValida(h) {
+  if (!esObj(h)) return null;
+  const x = num(h.x, null), y = num(h.y, null), w = num(h.w, null), alto = num(h.h, null);
+  if (x === null || y === null || w === null || alto === null || w < 50 || alto < 50) return null;
+  const preset = Object.prototype.hasOwnProperty.call(HOJAS, h.preset) ? h.preset : "a4-h";
+  return { preset, x, y, w, h: alto };
+}
 /* El área se guarda con su propio ancho y alto: si después la estirás a mano,
    el preset queda como referencia pero mandan los números. */
 function ponerHoja(preset) {
