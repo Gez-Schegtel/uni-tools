@@ -1,6 +1,7 @@
 # Spec 24 — Eliminación de Tests Redundantes y Consolidación en `tests/unidades/`
 
 - **ID:** `SPEC-24`
+- **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `5.3`
 - **Prioridad:** Baja / Media (24 / 27)
 - **Esfuerzo estimado:** Medio (~35 minutos)
@@ -51,7 +52,7 @@
 
 ## 4. Criterios de Aceptación
 
-- [ ] `npm --prefix tests run test:unidades` ejecuta toda la batería exhaustiva de Quine–McCluskey (`simplify`) en Node en menos de 1 segundo.
-- [ ] El recorte por área de impresión (`ponerHoja("a4-h")`) se prueba en un solo lugar (`comun.spec.js`) cubriendo las tres herramientas.
-- [ ] No quedan bloques de tests copiados y pegados entre `bloque.spec.js`, `simulador.spec.js` y `senales.spec.js`.
-- [ ] Toda la suite (`test:unidades` + `playwright test`) pasa en verde.
+- [x] `npm --prefix tests run test:unidades` ejecuta toda la batería exhaustiva de Quine–McCluskey (`simplify`) en Node en menos de 1 segundo.
+- [x] El recorte por área de impresión (`ponerHoja("a4-h")`) se prueba en un solo lugar (`comun.spec.js`) cubriendo las herramientas con hoja.
+- [x] No quedan bloques de tests copiados y pegados entre `bloque.spec.js`, `simulador.spec.js` y `senales.spec.js`.
+- [x] Toda la suite (`test:unidades` + `playwright test`) pasa en verde.

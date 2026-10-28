@@ -24,3 +24,9 @@ for (const p of PAGINAS) {
     expect(html).not.toMatch(/<script\s+src|<link[^>]+stylesheet/);
   });
 }
+
+test("index.html tampoco tiene <script src> ni hojas de estilo externas", () => {
+  const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+  expect(html).not.toMatch(/<script[^>]+\bsrc\s*=/i);
+  expect(html).not.toMatch(/<link[^>]+rel=["']stylesheet["']/i);
+});

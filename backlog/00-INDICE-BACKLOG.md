@@ -74,7 +74,7 @@ El orden (`01` a `31`) combina tres factores:
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **23** | ✅ Hecho | [`23-correccion-tests-xss-datos-invalidos-y-esperas-fijas.md`](./23-correccion-tests-xss-datos-invalidos-y-esperas-fijas.md) | Sec. `5.2.2` a `5.2.5` | Tests (Calidad) | Bajo (30 min) | Seleccionar conexiones en el test XSS, corregir `pin: "o"` → `"o0"` en `logica.test.js` y usar `page.clock` en esperas fijas. |
-| **24** | ⏳ Pendiente | [`24-eliminacion-de-tests-redundantes-y-migracion-a-unitarios.md`](./24-eliminacion-de-tests-redundantes-y-migracion-a-unitarios.md) | Sec. `5.3` | Tests (Velocidad) | Medio (35 min) | Consolidar `simplify()` y `limpiarNombre()` en `tests/unidades/` y eliminar tests duplicados de pan/rueda y área de impresión. |
+| **24** | ✅ Hecho | [`24-eliminacion-de-tests-redundantes-y-migracion-a-unitarios.md`](./24-eliminacion-de-tests-redundantes-y-migracion-a-unitarios.md) | Sec. `5.3` | Tests (Velocidad) | Medio (35 min) | Consolidar `simplify()` y `limpiarNombre()` en `tests/unidades/` y eliminar tests duplicados de pan/rueda y área de impresión. |
 | **25** | ⏳ Pendiente | [`25-nuevos-tests-faltantes-de-interaccion-y-oscilacion.md`](./25-nuevos-tests-faltantes-de-interaccion-y-oscilacion.md) | Sec. `5.4` | Tests (Cobertura) | Medio (40 min) | Agregar tests de detección de oscilación (`OSC === true`), rotación/pines de compuertas y botones `#e-reroute`/`#e-auto`. |
 
 ---

@@ -27,11 +27,3 @@ test("la portada enlaza a las tres herramientas y los enlaces andan", async ({ p
     expect(r.ok(), h).toBeTruthy();
   }
 });
-
-test("cada herramienta es un único archivo: sin <script src> ni hojas de estilo externas", async ({ request }) => {
-  for (const archivo of PAGINAS) {
-    const html = await (await request.get("/" + encodeURI(archivo))).text();
-    expect(html, archivo).not.toMatch(/<script[^>]+\bsrc\s*=/i);
-    expect(html, archivo).not.toMatch(/<link[^>]+rel=["']stylesheet["']/i);
-  }
-});

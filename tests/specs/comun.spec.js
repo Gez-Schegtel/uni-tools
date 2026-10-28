@@ -156,6 +156,22 @@ for (const h of HERRAMIENTAS) {
       expect(enSVG).toBe(v[0]);
     });
 
+    if (!h.archivo.startsWith("diagrama-se")) {
+      test("con hoja, la exportación es exactamente ese recorte", async ({ page }) => {
+        const r = await page.evaluate(() => {
+          const sin = buildExportSVG();
+          ponerHoja("a4-h");
+          const con = buildExportSVG();
+          const hj = hojaActiva();
+          return { sin: [sin.W, sin.H], con: [con.W, con.H],
+                   viewBox: con.svg.getAttribute("viewBox"), caja: [hj.x, hj.y, hj.w, hj.h] };
+        });
+        expect(r.con).toEqual([1123, 794]);
+        expect(r.viewBox).toBe(r.caja.join(" "));
+        expect(r.sin[0]).not.toBe(r.con[0]);
+      });
+    }
+
     test("gestos táctiles: un dedo en el fondo mueve la hoja y dos dedos hacen zoom", async ({ page }) => {
       const puntero = (tipo, id, x, y) => page.evaluate(([tipo, id, x, y]) => {
         document.getElementById("canvas").dispatchEvent(new PointerEvent(tipo, {

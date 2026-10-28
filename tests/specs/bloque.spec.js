@@ -408,15 +408,6 @@ test.describe("mover la hoja", () => {
   const pan = (page) => page.evaluate(() => [S.pan.x, S.pan.y]);
   const sobreFondo = (page) => page.evaluate(() => { const r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + r.width - 80, y: r.top + r.height - 80 }; });
 
-  test("Ctrl + clic izquierdo y arrastrar mueve la hoja", async ({ page }) => {
-    const antes = await pan(page), p = await sobreFondo(page);
-    await page.keyboard.down("Control");
-    await arrastrar(page, p, [-60, -40]);
-    await page.keyboard.up("Control");
-    const despues = await pan(page);
-    expect(despues[0] - antes[0]).toBeCloseTo(-60, 0);
-    expect(despues[1] - antes[1]).toBeCloseTo(-40, 0);
-  });
   test("con Ctrl se mueve la hoja aunque se agarre sobre un bloque, sin seleccionarlo ni moverlo", async ({ page }) => {
     const id = await page.evaluate(() => S.nodes.find((n) => n.type === "block").id);
     const c = await page.evaluate((id) => { const n = getNode(id), r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + S.pan.x + n.x * S.zoom, y: r.top + S.pan.y + n.y * S.zoom, nx: n.x, ny: n.y }; }, id);
@@ -427,26 +418,6 @@ test.describe("mover la hoja", () => {
     expect((await pan(page))[0] - antes[0]).toBeCloseTo(50, 0);
     expect(await page.evaluate((id) => [getNode(id).x, getNode(id).y], id)).toEqual([c.nx, c.ny]);
     expect(await page.evaluate(() => S.sel)).toEqual([]);
-  });
-  test("sin Ctrl, arrastrar un bloque sigue moviendo el bloque y no la hoja", async ({ page }) => {
-    const id = await page.evaluate(() => S.nodes.find((n) => n.type === "block").id);
-    const c = await page.evaluate((id) => { const n = getNode(id), r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + S.pan.x + n.x * S.zoom, y: r.top + S.pan.y + n.y * S.zoom, nx: n.x }; }, id);
-    const antes = await pan(page);
-    await arrastrar(page, c, [60, 0]);
-    expect(await pan(page)).toEqual(antes);
-    expect(await page.evaluate((id) => getNode(id).x, id)).toBeGreaterThan(c.nx);
-  });
-  test("la rueda del mouse sigue moviendo la hoja (y Ctrl + rueda sigue haciendo zoom)", async ({ page }) => {
-    const p = await sobreFondo(page);
-    await page.mouse.move(p.x, p.y);
-    const antes = await pan(page);
-    await page.mouse.wheel(0, 100);
-    await expect.poll(async () => (await pan(page))[1]).toBeLessThan(antes[1]);
-    const z0 = await page.evaluate(() => S.zoom);
-    await page.keyboard.down("Control");
-    await page.mouse.wheel(0, -200);
-    await page.keyboard.up("Control");
-    await expect.poll(() => page.evaluate(() => S.zoom)).toBeGreaterThan(z0);
   });
   test("el botón del medio y la barra espaciadora siguen moviendo la hoja", async ({ page }) => {
     const p = await sobreFondo(page), antes = await pan(page);
@@ -464,20 +435,6 @@ test.describe("mover la hoja", () => {
 });
 
 test.describe("área de impresión", () => {
-  test("con hoja, la exportación es exactamente ese recorte", async ({ page }) => {
-    const r = await page.evaluate(() => {
-      loadExample();
-      const sin = buildExportSVG();
-      ponerHoja("a4-h");
-      const con = buildExportSVG();
-      const h = hojaActiva();
-      return { sin: [sin.W, sin.H], con: [con.W, con.H],
-               viewBox: con.svg.getAttribute("viewBox"), caja: [h.x, h.y, h.w, h.h] };
-    });
-    expect(r.con).toEqual([1123, 794]);               // A4 apaisada, 1 px = 1 unidad
-    expect(r.viewBox).toBe(r.caja.join(" "));         // el viewBox es justo la hoja
-    expect(r.sin[0]).not.toBe(r.con[0]);              // sin área, se recorta alrededor de lo dibujado
-  });
   test("el selector de la barra cambia la hoja y avisa del recorte", async ({ page }) => {
     await page.locator(".glab", { hasText: "Archivo" }).click();      // despliega el grupo
     await page.selectOption("#b-hoja", "a4-v");
