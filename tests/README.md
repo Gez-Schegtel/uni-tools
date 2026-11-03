@@ -72,7 +72,7 @@ Archivos de `unidades/`:
 - `ecuaciones.test.js`: parser y maquetador de ecuaciones (`parsearExpr`, `armarCaja`) de `diagrama-bloque`.
 - `logica.test.js`: evaluación de compuertas (`evalGate`), simplificación booleana exacta por Quine–McCluskey (`simplify`) y tablas de verdad (`truthTable`) de `simulador-logico`.
 - `mason.test.js`: búsqueda de trayectorias, lazos, determinante Δ y armado de ecuaciones (`analizar`, `producto`) de `diagrama-señales`.
-- `lgr.test.js`: el lugar geométrico de las raíces (`src/lgr/calculo.js`): lectura de polinomios y listas, tope de grado, un caso de libro resuelto a mano y los ejercicios de la Guía 3 contra referencias independientes (otro resolvedor de raíces para el K crítico y la estabilidad por tramos, perturbación de K para los ángulos de salida, raíz doble en los puntos de ruptura) y la condición de ángulo sobre las ramas trazadas.
+- `lgr.test.js`: el lugar geométrico de las raíces (`src/lgr/calculo.js`): lectura de polinomios y listas, tope de grado, un caso de libro resuelto a mano (también escalado por 10^±4 y 10^±6), polos y ceros cancelados, la coma decimal y la K en la entrada, y los ejercicios de la Guía 3 contra referencias independientes (otro resolvedor de raíces para el K crítico y la estabilidad por tramos, perturbación de K para los ángulos de salida, raíz doble en los puntos de ruptura) y la condición de ángulo sobre las ramas trazadas.
 
 Fijan los mismos resultados que `correccion.spec.js` verifica en el navegador, sin el costo de
 levantar Chromium o Firefox. Si alguno de esos archivos empezara a tocar el DOM al cargarse, estas

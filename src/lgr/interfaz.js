@@ -60,11 +60,11 @@ function calcular() {
   dibujarResumen(); dibujarDetalles(); ajustarVista(); dibujar();
 }
 function cancelaciones(modelo) {
-  const msj = $('msj'), c = [];
-  Rg.polos.forEach(p => Rg.ceros.forEach(z => { if (cAbs(cSub(p.z, z.z)) < 1e-6 * (1 + cAbs(p.z))) c.push(fcomp(p.z)); }));
+  const msj = $('msj'), c = Rg.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : ''));
   if (c.length) {
     msj.className = 'on'; msj.style.color = 'var(--warn)';
-    msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'Hay un polo y un cero en el mismo punto (' + c.map(esc).join('; ') + '): se cancelan en la función de transferencia.';
+    msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'Hay un polo y un cero en el mismo punto (' + c.map(esc).join('; ') +
+      '): se cancelan en la función de transferencia. El LGR se calcula con la función simplificada; el par queda marcado aparte.';
   }
 }
 
@@ -75,7 +75,7 @@ function dibujarResumen() {
   if (Rg.modo === 'ec')
     el.innerHTML = 'Ceros (<b>m = ' + Rg.m + '</b>): ' + lista(Rg.ceros) + '<br>Polos (<b>n = ' + Rg.n + '</b>): ' + lista(Rg.polos);
   else
-    el.innerHTML = 'Ecuación característica: <b>1 + K · ' + fr(polyHTML(Rg.N), polyHTML(Rg.D)) + ' = 0</b>';
+    el.innerHTML = 'Ecuación característica: <b>1 + K · ' + fr(polyHTML(Rg.Nsin), polyHTML(Rg.Dsin)) + ' = 0</b>';
 }
 
 /* ---------- vista ---------- */
@@ -194,6 +194,12 @@ function dibujar() {
       o += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="6" fill="#fff" stroke="#12181f" stroke-width="2"/>';
       if (g.mult > 1) o += txt(px + 8, py - 8, '×' + g.mult, '#12181f');
     });
+    // un polo y un cero cancelados: la cruz dentro del círculo, sin ángulos ni ramas
+    Rg.cancelados.forEach(g => {
+      const px = X(g.z.re), py = Y(g.z.im);
+      o += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="7" fill="#fff" stroke="#8a97a5" stroke-width="1.6"/>';
+      o += '<path d="M' + f1(px - 4) + ' ' + f1(py - 4) + ' l8 8 M' + f1(px - 4) + ' ' + f1(py + 4) + ' l8 -8" stroke="#8a97a5" stroke-width="1.8" stroke-linecap="round"/>';
+    });
     Rg.polos.forEach(g => {
       const px = X(g.z.re), py = Y(g.z.im);
       o += '<path d="M' + f1(px - 5.5) + ' ' + f1(py - 5.5) + ' l11 11 M' + f1(px - 5.5) + ' ' + f1(py + 5.5) + ' l11 -11" stroke="#12181f" stroke-width="2.4" stroke-linecap="round"/>';
@@ -208,7 +214,8 @@ function dibujar() {
       '<div><svg viewBox="0 0 16 12"><path d="M3 1 l10 10 M3 11 l10 -10" stroke="#12181f" stroke-width="2.2"/></svg>polos</div>' +
       '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="4.5" fill="#fff" stroke="#12181f" stroke-width="2"/></svg>ceros</div>' +
       '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#0d5bd6" stroke-width="2.2"/></svg>LGR (K &gt; 0)</div>' +
-      '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#7b8896" stroke-width="1.4" stroke-dasharray="4 3"/></svg>asíntotas</div>';
+      '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#7b8896" stroke-width="1.4" stroke-dasharray="4 3"/></svg>asíntotas</div>' +
+      (Rg.cancelados.length ? '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="5" fill="#fff" stroke="#8a97a5" stroke-width="1.4"/><path d="M5 3 l6 6 M5 9 l6 -6" stroke="#8a97a5" stroke-width="1.4"/></svg>polo y cero cancelados</div>' : '');
   }
 }
 
@@ -313,11 +320,13 @@ function dibujarDetalles() {
   let b = '';
   if (R.modo === 'zp') {
     b += '<p>La ecuación característica es <b>1 + K · G(s)H(s) = 0</b>, con los factores de los ceros arriba y los de los polos abajo:</p>';
-    b += ec('1 + K · ' + fr(factoresSimples(R.ceros), factoresSimples(R.polos)) + ' = 0');
+    // tal como se ingresaron: con los pares cancelados, si los hay (se simplifican más abajo)
+    const todos = gs => gs.concat(R.cancelados).sort((a, b) => b.z.re - a.z.re || b.z.im - a.z.im);
+    b += ec('1 + K · ' + fr(factoresSimples(todos(R.ceros)), factoresSimples(todos(R.polos))) + ' = 0');
     b += '<p>Agrupando cada par de complejos conjugados en un polinomio de segundo grado:</p>';
-    b += ec('1 + K · ' + fr(factoresAgrupados(R.ceros), factoresAgrupados(R.polos)) + ' = 0');
+    b += ec('1 + K · ' + fr(factoresAgrupados(todos(R.ceros)), factoresAgrupados(todos(R.polos))) + ' = 0');
     b += '<p>Desarrollando los productos:</p>';
-    b += ec('1 + K · ' + fr(polyHTML(R.N), polyHTML(R.D)) + ' = 0');
+    b += ec('1 + K · ' + fr(polyHTML(R.Nsin), polyHTML(R.Dsin)) + ' = 0');
   } else {
     b += '<p>Dato: <b>1 + K · N(s)/D(s) = 0</b>.</p>';
     b += ec('1 + K · ' + fr(polyHTML(R.N0), polyHTML(R.D0)) + ' = 0');
@@ -325,6 +334,12 @@ function dibujarDetalles() {
     b += '<p>Los <b>ceros</b> son las raíces de N(s) = 0 y los <b>polos</b>, las de D(s) = 0:</p>';
     b += ec('N(s) = ' + factoresSimples(R.ceros) + (R.m ? '' : ' (constante)'), true);
     b += ec('D(s) = ' + factoresSimples(R.polos), true);
+  }
+  if (R.cancelados.length) {
+    b += '<p>Hay polos y ceros en el mismo punto: <b>' + R.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : '')).join(' ; ') +
+      '</b>. Se cancelan en G(s)H(s), así que el lugar de raíces se calcula con la función simplificada:</p>';
+    b += ec('1 + K · ' + fr(factoresSimples(R.ceros), factoresSimples(R.polos)) + ' = 0', true);
+    b += '<p>Ojo: en D(s) + K·N(s) sin simplificar, ese punto sigue siendo raíz para todo K (un modo que la realimentación no mueve). Se tiene en cuenta en la conclusión.</p>';
   }
   b += '<p>Forma polinómica: <b>D(s) + K·N(s) = 0</b></p>';
   b += ec(polyHTML(R.D) + ' + K·(' + polyHTML(R.N) + ') = 0', true);
@@ -446,6 +461,11 @@ function dibujarDetalles() {
   if (R.crit.length) b += '<div class="res">Los polos de lazo cerrado cruzan el eje imaginario en K = ' + R.crit.map(fnum).join(' ; ') + '. ' +
     (t0.spd === 0 && tN.spd > 0 ? 'El sistema es estable para K &lt; ' + fnum(R.crit[0]) + ' e inestable para K mayor.' : t0.spd > 0 && tN.spd === 0 ? 'El sistema es inestable para K pequeños y se estabiliza al superar K = ' + fnum(R.crit[R.crit.length - 1]) + '.' : 'La estabilidad cambia al cruzar esos valores de K.') + '</div>';
   else b += '<div class="res ' + (t0.spd === 0 ? '' : 'no-res') + '">' + (t0.spd === 0 ? 'Todos los polos de lazo cerrado quedan en el semiplano izquierdo para cualquier K &gt; 0: el sistema es <b>estable para todo K</b>.' : 'Hay ' + t0.spd + ' polo(s) en el semiplano derecho y no cruzan el eje: el sistema es <b>inestable para todo K &gt; 0</b>.') + '</div>';
+  if (R.cancelados.length) {
+    const fuera = R.cancelados.filter(g => g.z.re >= -1e-7 * Math.max(1, R.escala));
+    b += '<p>Los polos cancelados (' + R.cancelados.map(g => fcomp(g.z)).join(' ; ') + ') siguen siendo polos de lazo cerrado para todo K: ' +
+      (fuera.length ? '<b>como ' + (fuera.length > 1 ? 'hay' : 'hay uno') + ' en el semiplano derecho o sobre el eje, están contados en la tabla</b>.' : 'están en el semiplano izquierdo, así que no cambian la estabilidad.') + '</p>';
+  }
   h += paso('con', 8, 'Conclusión sobre los polos de lazo cerrado', b);
 
   /* 9. Comandos equivalentes */

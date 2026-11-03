@@ -148,27 +148,41 @@ function parsearComplejo(t) {
   }
   return C(re, im);
 }
+/* La coma es decimal (−3,5): «1,2» es un número, no dos. Como se puede querer decir lo
+   otro, si aparece y no hay «;» en la lista, se deja una nota (lista.notaComa). */
 function parsearLista(txt) {
   let t = txt.replace(/[−–]/g, '-').replace(/[\[\]]/g, ' ');
   if (/^\s*(no\s+existen?|ninguno|ninguna|-|—)?\s*$/i.test(t)) return [];
+  const comas = t.match(/\d,\d+/g);
+  const ambigua = !!comas && !t.includes(';');
   t = t.replace(/(\d),(\d)/g, '$1.$2');
   t = t.replace(/(\d|\.)\s*([+-])\s*((?:\d+\.?\d*|\.\d+)?[ji])(?![\w.])/gi, '$1$2$3');
-  return t.split(/[;,\s]+/).filter(Boolean).map(x => {
+  const lista = t.split(/[;,\s]+/).filter(Boolean).map(x => {
     const z = parsearComplejo(x);
     if (!z) throw new Error('No entiendo «' + x + '». Usá, por ejemplo, 2; -3,5; -2+3j');
     return z;
   });
+  if (ambigua) lista.notaComa = comas.join(', ');
+  return lista;
 }
-function parsearPoli(txt) {
+/* La K va afuera: N(s) y D(s) se escriben sin ella. En el numerador se acepta como primer
+   factor («K(s+1)», «K·(s+1)», «K»), que es como se lo copia de la guía; en cualquier otro
+   lugar se rechaza, porque antes se tomaba como 1 y «s² + Ks + 1» daba otro problema. */
+function parsearPoli(txt, conK) {
   let t = txt.replace(/[−–]/g, '-').replace(/[·×]/g, '*').replace(/(\d),(\d)/g, '$1.$2')
     .replace(/[²³⁴⁵⁶⁷⁸⁹]/g, c => '^' + (2 + '²³⁴⁵⁶⁷⁸⁹'.indexOf(c))).trim();
+  if (conK) {
+    const sinK = t.replace(/^[kK](?![\w])\s*\*?\s*/, '');
+    if (sinK !== t) t = sinK || '1';
+  }
+  if (/[kK]/.test(t)) throw new Error(conK ? 'La K va adelante, como factor de todo el numerador: K(s + 1)' : 'La K no va en el denominador: escribí D(s) sin K');
   if (!t) throw new Error('Falta completar el polinomio');
   if (t[0] === '[') {
     const v = t.replace(/[\[\]]/g, ' ').split(/[\s;,]+/).filter(Boolean).map(Number);
     if (!v.length || v.some(isNaN)) throw new Error('El vector de coeficientes no es válido');
     return pTrim(v);
   }
-  const tok = [], re = /((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|[sSkK]|[()+\-*\/^])/y;
+  const tok = [], re = /((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|[sS]|[()+\-*\/^])/y;
   let i = 0;
   while (i < t.length) {
     if (/\s/.test(t[i])) { i++; continue; }
@@ -184,7 +198,6 @@ function parsearPoli(txt) {
     if (x === undefined) throw new Error('La expresión está incompleta');
     if (x === '(') { const r = expr(); if (tok[p++] !== ')') throw new Error('Falta cerrar un paréntesis'); return r; }
     if (/^[sS]$/.test(x)) return [1, 0];
-    if (/^[kK]$/.test(x)) return [1];
     if (/^[\d.]/.test(x)) return [parseFloat(x)];
     throw new Error('No se esperaba «' + x + '»');
   }
@@ -216,7 +229,7 @@ function parsearPoli(txt) {
         const q = pTrim(unario());
         if (q.length > 1) throw new Error('Sólo se puede dividir por un número: usá N(s) y D(s) por separado');
         r = pScale(r, 1 / q[0]);
-      } else if (x !== undefined && /^[\d.sSkK(]/.test(x)) r = pMul(r, potencia());
+      } else if (x !== undefined && /^[\d.sS(]/.test(x)) r = pMul(r, potencia());
       else break;
     }
     return r;
@@ -290,8 +303,99 @@ const mod360 = a => { a = ((a % 360) + 360) % 360; return (360 - a < 1e-9) ? 0 :
 const angDe = z => Math.atan2(z.im, z.re) * 180 / Math.PI;
 const fang = a => fnum(a, 2) + '°';
 
-/* ---------- análisis completo (los pasos de la teoría) ---------- */
+/* ---------- análisis completo (los pasos de la teoría) ----------
+   analizar() prepara el problema y analizarDirecto() hace los pasos:
+   1) un polo y un cero en el mismo punto se cancelan: se analiza la función reducida y el
+      par queda aparte (sigue siendo raíz de D + K·N para todo K);
+   2) si los polos y ceros están lejos de la escala 1 (constantes de tiempo de milisegundos,
+      frecuencias de miles de rad/s), las tolerancias fijas dejan de servir. Se analiza en
+      σ = s/α, con α la escala típica, y al final se vuelve a s. */
+const TOL_CANCELA = 1e-6;
+function separarCancelados(cerosL, polosL) {
+  const ceros = [], polos = polosL.slice(), cancelados = [];
+  for (const z of cerosL) {
+    const i = polos.findIndex(p => cAbs(cSub(p, z)) < TOL_CANCELA * (1 + cAbs(p)));
+    if (i >= 0) cancelados.push(polos.splice(i, 1)[0]); else ceros.push(z);
+  }
+  return { ceros, polos, cancelados };
+}
+/* escala típica: media geométrica de los módulos no nulos (1 si ya está cerca de 1) */
+function escalaTipica(raices) {
+  const ms = raices.map(cAbs).filter(x => x > 0);
+  if (!ms.length) return 1;
+  const a = Math.exp(ms.reduce((s, x) => s + Math.log(x), 0) / ms.length);
+  return a > 0.1 && a < 10 ? 1 : a;
+}
+/* p(α·σ) llevado a mónico: el coeficiente i (potencias descendentes) acompaña a α^(g−i);
+   dividido por el principal (c₀·α^g) queda cᵢ / (c₀·α^i) */
+const pEscalar = (p, a) => p.map((c, i) => c / p[0] / Math.pow(a, i));
+/* D(jω) y N(jω) separados en parte real e imaginaria (polinomios en ω), y el polinomio
+   Q(ω) = Im D·Re N − Re D·Im N, que se anula donde las dos ecuaciones dan el mismo K */
+function partesEnJw(N, D, tolQ) {
+  const parte = (p, que) => {
+    const g = p.length - 1, r = new Array(g + 1).fill(0);
+    p.forEach((c, i) => {
+      const k = g - i;
+      if (que === 're' && k % 2 === 0) r[g - k] += c * (k % 4 === 0 ? 1 : -1);
+      if (que === 'im' && k % 2 === 1) r[g - k] += c * (k % 4 === 1 ? 1 : -1);
+    });
+    return pTrim(r);
+  };
+  const Dr = parte(D, 're'), Di = parte(D, 'im'), Nr = parte(N, 're'), Ni = parte(N, 'im');
+  const Q = pTrim(pAdd(pMul(Di, Nr), pScale(pMul(Dr, Ni), -1)), tolQ);
+  return { Dr, Di, Nr, Ni, Q };
+}
 function analizar(e) {
+  const sep = separarCancelados(e.cerosL, e.polosL);
+  let base = e;
+  if (sep.cancelados.length) {
+    if (!sep.polos.length) throw new ErrorEntrada('Al cancelar los ceros con los polos no queda ningún polo: no hay lugar de raíces.', { campo: e.modo === 'ec' ? 'D' : 'P' });
+    base = { ...e, cerosL: sep.ceros, polosL: sep.polos, N: pDesdeRaices(sep.ceros), D: pDesdeRaices(sep.polos) };
+  }
+  const a = escalaTipica(base.cerosL.concat(base.polosL));
+  let R;
+  if (a === 1) R = analizarDirecto(base);
+  else {
+    const div = z => C(z.re / a, z.im / a);
+    const Rs = analizarDirecto({ ...base, N: pEscalar(base.N, a), D: pEscalar(base.D, a), cerosL: base.cerosL.map(div), polosL: base.polosL.map(div) });
+    R = volverDeEscala(Rs, a, base);
+    R.sigma = Rs;                                    // para trazar en la escala cómoda
+  }
+  R.alfa = a;
+  R.cancelados = agrupar(sep.cancelados);
+  R.Nsin = e.N; R.Dsin = e.D;                      // antes de cancelar (para mostrar)
+  if (R.cancelados.length) {
+    const tol = 1e-7 * Math.max(1, R.escala);
+    const der = expandir(R.cancelados).filter(z => z.re > tol).length, eje = expandir(R.cancelados).filter(z => Math.abs(z.re) <= tol).length;
+    R.tramos.forEach(t => { t.spd += der; t.eje += eje; t.conCancelados = der + eje > 0; });
+  }
+  return R;
+}
+/* Pasa a s un resultado calculado en σ = s/α: los puntos se multiplican por α y los K por
+   α^(n−m) (D(s) + K·N(s) = α^n·[D(σ) + K·α^(m−n)·N(σ)]). Los polinomios que se muestran
+   se vuelven a calcular en s, que es lo que escribió el estudiante. */
+function volverDeEscala(Rs, a, base) {
+  const mul = z => C(z.re * a, z.im * a), kf = Math.pow(a, Rs.n - Rs.m);
+  const grupos = new Map();
+  const g = x => { if (!grupos.has(x)) grupos.set(x, { z: mul(x.z), mult: x.mult }); return grupos.get(x); };
+  const { N, D } = base;
+  const R = { ...Rs, N, D, N0: base.N0, D0: base.D0, cerosL: base.cerosL, polosL: base.polosL };
+  R.polos = Rs.polos.map(g); R.ceros = Rs.ceros.map(g);
+  R.eje = Rs.eje.map(f => ({ ...f, a: f.a * a, b: f.b * a }));
+  R.asint = { ...Rs.asint };
+  if (Rs.asint.d !== 0) { R.asint.sumP = Rs.asint.sumP * a; R.asint.sumZ = Rs.asint.sumZ * a; R.asint.sigma = Rs.asint.sigma * a; }
+  const Dp = pDer(D), Np = pDer(N), t1 = pMul(Dp, N), t2 = pMul(D, Np);
+  R.rup = { Dp, Np, t1, t2, P: pTrim(pAdd(t1, pScale(t2, -1))), filas: Rs.rup.filas.map(f => ({ ...f, z: mul(f.z), K: f.K && C(f.K.re * kf, f.K.im * kf) })) };
+  const pz = partesEnJw(N, D);
+  R.cruce = { ...pz, identico: Rs.cruce.identico, filas: Rs.cruce.filas.map(f => ({ ...f, w: f.w * a, K: f.K * kf })) };
+  R.angulos = Rs.angulos.map(x => ({ ...x, g: g(x.g), terminos: x.terminos.map(t => ({ ...t, de: g(t.de), v: mul(t.v) })) }));
+  R.tramos = Rs.tramos.map(t => ({ ...t, a: t.a * kf, b: t.b * kf }));
+  R.crit = Rs.crit.map(k => k * kf);
+  R.clave = Rs.clave.map(mul);
+  R.escala = Rs.escala * a;
+  return R;
+}
+function analizarDirecto(e) {
   const { N, D } = e;
   const n = D.length - 1, m = N.length - 1;
   const polos = agrupar(e.polosL), ceros = agrupar(e.cerosL);
@@ -356,17 +460,7 @@ function analizar(e) {
   R.rup = rup;
 
   // 4) cruce con el eje imaginario: s = jω
-  const parte = (p, que) => {
-    const g = p.length - 1, r = new Array(g + 1).fill(0);
-    p.forEach((c, i) => {
-      const k = g - i;
-      if (que === 're' && k % 2 === 0) r[g - k] += c * (k % 4 === 0 ? 1 : -1);
-      if (que === 'im' && k % 2 === 1) r[g - k] += c * (k % 4 === 1 ? 1 : -1);
-    });
-    return pTrim(r);
-  };
-  const Dr = parte(D, 're'), Di = parte(D, 'im'), Nr = parte(N, 're'), Ni = parte(N, 'im');
-  const Q = pTrim(pAdd(pMul(Di, Nr), pScale(pMul(Dr, Ni), -1)), 1e-11);
+  const { Dr, Di, Nr, Ni, Q } = partesEnJw(N, D, 1e-11);
   const cruce = { Dr, Di, Nr, Ni, Q, filas: [], identico: false };
   if (Q.length === 1 && Math.abs(Q[0]) < 1e-9) cruce.identico = true;
   else if (Q.length > 1 || Math.abs(Q[0]) > 0) {
@@ -444,6 +538,14 @@ function analizar(e) {
 
 /* ---------- trazado numérico de las ramas ---------- */
 function trazarLGR(R) {
+  if (!R.sigma) return trazarDirecto(R);
+  /* se traza en σ = s/α, donde las tolerancias del seguimiento tienen sentido, y se vuelve a s */
+  const a = R.alfa, kf = Math.pow(a, R.n - R.m), rs = trazarDirecto(R.sigma);
+  const ramas = rs.map(b => ({ x: b.x.map(v => v * a), y: b.y.map(v => v * a), K: b.K.map(k => k * kf) }));
+  if (rs.incompleto) ramas.incompleto = true;
+  return ramas;
+}
+function trazarDirecto(R) {
   const { N, D, n, m } = R;
   const esc = R.escala, Rmax = 15 * esc, tope = 0.02 * esc;
   const sing = expandir(R.polos).concat(expandir(R.ceros));
@@ -542,7 +644,7 @@ function construirModelo(S) {
   const notas = [];
   if (S.modo === 'ec') {
     let N0, D0;
-    try { N0 = parsearPoli(S.N); } catch (err) { throw new ErrorEntrada('Numerador: ' + err.message, { campo: 'N' }); }
+    try { N0 = parsearPoli(S.N, true); } catch (err) { throw new ErrorEntrada('Numerador: ' + err.message, { campo: 'N' }); }
     try { D0 = parsearPoli(S.D); } catch (err) { throw new ErrorEntrada('Denominador: ' + err.message, { campo: 'D' }); }
     if (D0.length < 2) throw new ErrorEntrada('El denominador tiene que ser de grado 1 o más.', { campo: 'D' });
     if (N0.length - 1 > GRADO_MAX) throw new ErrorEntrada('El numerador no puede pasar de grado ' + GRADO_MAX + '.', { campo: 'N' });
@@ -559,6 +661,9 @@ function construirModelo(S) {
   let cerosL, polosL;
   try { cerosL = parsearLista(S.Z); } catch (err) { throw new ErrorEntrada('Ceros: ' + err.message, { campo: 'Z' }); }
   try { polosL = parsearLista(S.P); } catch (err) { throw new ErrorEntrada('Polos: ' + err.message, { campo: 'P' }); }
+  [['ceros', cerosL], ['polos', polosL]].forEach(([q, l]) => {
+    if (l.notaComa) notas.push('En los ' + q + ', «' + l.notaComa + '» se leyó con coma decimal. Si eran números separados, separalos con «;».');
+  });
   if (!polosL.length) throw new ErrorEntrada('Hace falta al menos un polo.', { campo: 'P' });
   if (cerosL.length > GRADO_MAX) throw new ErrorEntrada('No puede haber más de ' + GRADO_MAX + ' ceros.', { campo: 'Z' });
   if (polosL.length > GRADO_MAX) throw new ErrorEntrada('No puede haber más de ' + GRADO_MAX + ' polos.', { campo: 'P' });

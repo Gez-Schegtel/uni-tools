@@ -1,7 +1,7 @@
 # Spec 36 — LGR: Entradas Ambiguas (Coma Decimal en Listas y la Letra K)
 
 - **ID:** `SPEC-36`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03
 - **Prioridad:** Baja (36 / 46)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
@@ -39,5 +39,5 @@
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ninguna entrada ambigua se toma en silencio.
-- [ ] Los 27 ejemplos de la Guía 3 se siguen leyendo igual.
+- [x] Ninguna entrada ambigua se toma en silencio.
+- [x] Los 27 ejemplos de la Guía 3 se siguen leyendo igual.

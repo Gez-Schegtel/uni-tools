@@ -1,7 +1,7 @@
 # Spec 34 — LGR: Polos y Ceros Cancelados se Analizan sobre la Función Reducida
 
 - **ID:** `SPEC-34`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03 al integrar `simulador-lgr.html` del proyecto original
 - **Prioridad:** Media (34 / 46)
 - **Esfuerzo estimado:** Medio (~45 minutos)
@@ -38,6 +38,12 @@ El cruce del eje imaginario por un par cancelado sí quedó resuelto en el commi
 
 ---
 
+### 3.1. Lo que se hizo
+
+`separarCancelados()` (en `analizar()`) aparta los pares con la tolerancia de antes; todos los pasos y el trazado usan la función reducida y el par queda en `R.cancelados`. En los tramos de estabilidad se suman los cancelados con parte real ≥ 0 (siguen siendo raíces de D + K·N). Si al cancelar no queda ningún polo, se avisa en el campo. En el paso 1 se muestra la función como se ingresó y después la simplificación; el gráfico marca el par con una cruz dentro de un círculo gris.
+
+---
+
 ## 4. Plan de Pruebas
 
 - En `tests/unidades/lgr.test.js`: con el ejemplo de arriba, `R.angulos` no tiene entradas para `1±7,5j`, `trazarLGR()` no devuelve ramas de longitud cero y todos los puntos cumplen la condición de ángulo.
@@ -47,6 +53,6 @@ El cruce del eje imaginario por un par cancelado sí quedó resuelto en el commi
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ningún ángulo ni rama se dibuja sobre un par cancelado.
-- [ ] La conclusión de estabilidad explica los modos cancelados en el semiplano derecho o sobre el eje.
-- [ ] `node --test "tests/unidades/*.test.js"` y `tests/specs/lgr.spec.js` pasan.
+- [x] Ningún ángulo ni rama se dibuja sobre un par cancelado.
+- [x] La conclusión de estabilidad explica los modos cancelados en el semiplano derecho o sobre el eje.
+- [x] `node --test "tests/unidades/*.test.js"` y `tests/specs/lgr.spec.js` pasan.

@@ -1,7 +1,7 @@
 # Spec 46 — LGR: Tolerancias Relativas en Puntos de Ruptura, Cruces y Raíces Nulas
 
 - **ID:** `SPEC-46`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03 (después del arreglo de `pTrim`)
 - **Prioridad:** Baja (46 / 46)
 - **Esfuerzo estimado:** Medio (~40 minutos)
@@ -35,6 +35,12 @@ La tolerancia de `pTrim()` ya se corrigió (1e-12 → 1e-15). Quedan otras toler
 
 ---
 
+### 3.1. Lo que se hizo
+
+Se aplicó el punto 1 (escalado previo) en `analizar()`: si la media geométrica de los módulos de polos y ceros cae fuera de [0,1; 10], se analiza en σ = s/α y `volverDeEscala()` pasa todo a s (puntos × α, K × α^(n−m)); `trazarLGR()` traza en σ y escala las ramas. Los polinomios que se muestran en los pasos se recalculan en s. Dentro de [0,1; 10] no se escala, así que los ejercicios de la guía dan exactamente lo mismo que antes. Con eso no hizo falta tocar las tolerancias del punto 3.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/unidades/lgr.test.js`: el caso de libro `K/(s(s+1)(s+2))` escalado por 10⁴ y por 10⁻⁴ (polos en 0, −10⁴, −2·10⁴ y en 0, −10⁻⁴, −2·10⁻⁴) da el mismo σa, los mismos ángulos, ruptura y ωc escalados, y el mismo K crítico ajustado por la escala.
@@ -44,5 +50,5 @@ La tolerancia de `pTrim()` ya se corrigió (1e-12 → 1e-15). Quedan otras toler
 
 ## 5. Criterios de Aceptación
 
-- [ ] El análisis da lo mismo (salvo la escala) para un problema y su versión escalada por 10^±4.
-- [ ] Las referencias independientes de `lgr.test.js` siguen pasando.
+- [x] El análisis da lo mismo (salvo la escala) para un problema y su versión escalada por 10^±4.
+- [x] Las referencias independientes de `lgr.test.js` siguen pasando.
