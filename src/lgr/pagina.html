@@ -8,12 +8,14 @@
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
 <style>
 /* @incluir lgr/estilos.css */
+/* @incluir comun/avisos.css */
 </style>
 </head>
 <body>
 
 <header>
   <a href="index.html" title="Volver al inicio"><img class="marca-navbar" src="uni-tools-marca.png" alt="uni-tools"></a>
+<!-- @incluir comun/inicio.html -->
   <div class="brand"><b>Lugar geométrico de las raíces</b><span>LGR</span></div>
 
   <div class="group" id="g-datos">
@@ -32,6 +34,13 @@
     <button class="btn" id="b-ajustar" title="Encuadrar el gráfico">Encuadrar</button>
   </div>
 
+  <div class="group" id="g-archivo">
+    <span class="glab">Archivo</span>
+    <button class="btn" id="a-abrir" title="Abrir un JSON o un SVG exportado desde acá (Ctrl+O)">Abrir</button>
+    <button class="btn" id="a-guardar" title="Descargar el ejercicio en JSON (Ctrl+S)">Guardar</button>
+    <input type="file" id="a-archivo" accept=".json,.svg,application/json,image/svg+xml" hidden>
+  </div>
+
   <div class="group" id="g-exp">
     <span class="glab">Exportar</span>
     <button class="btn" id="e-svg">SVG</button>
@@ -39,7 +48,8 @@
   </div>
 
   <div class="group">
-    <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso">Detalles</button>
+    <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso (D)">Detalles</button>
+    <button class="btn ghost" id="b-ayuda" title="Ayuda y atajos (?)">?</button>
   </div>
 </header>
 
@@ -73,6 +83,7 @@
       <button class="btn ghost" id="z-menos" title="Alejar">&minus;</button>
     </div>
     <div id="tip"></div>
+    <div id="toast"></div>
   </div>
   <aside id="detalles">
     <div id="det-barra">
@@ -84,7 +95,24 @@
   </aside>
 </main>
 
+<div class="overlay" id="ov-help"><div class="modal" style="max-width:560px">
+  <h2>Lugar geométrico de las raíces</h2>
+  <p class="sub">Escribí N(s) y D(s), o los ceros y los polos, y se dibuja el LGR con todos los cálculos paso a paso.</p>
+  <table class="t">
+    <tr><td><kbd>F</kbd></td><td>Encuadrar el gráfico (también con doble clic)</td></tr>
+    <tr><td><kbd>+</kbd> / <kbd>−</kbd></td><td>Acercar / alejar (también con la rueda o con dos dedos)</td></tr>
+    <tr><td>Arrastrar</td><td>Mover el gráfico. Al pasar el mouse por una rama se ve el punto s y su K</td></tr>
+    <tr><td><kbd>D</kbd></td><td>Mostrar u ocultar los cálculos paso a paso</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Guardar el ejercicio en JSON / abrir un JSON o un SVG exportado desde acá</td></tr>
+    <tr><td><kbd>?</kbd> / <kbd>Esc</kbd></td><td>Abrir / cerrar esta ayuda</td></tr>
+    <tr><td>Entrada</td><td>Potencias con <kbd>^</kbd> o ², coma decimal (<kbd>4,5</kbd>), notación científica (<kbd>1e3</kbd>). En las listas, separá con <kbd>;</kbd>. La K va adelante del numerador o no va.</td></tr>
+  </table>
+  <p class="sub" style="margin-top:12px">Lo que vas haciendo queda guardado en este navegador: al volver, seguís donde lo dejaste.</p>
+  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+</div></div>
+
 <script>
+// @incluir comun/lienzo.js
 // @incluir lgr/polinomios.js
 // @incluir lgr/entrada.js
 // @incluir lgr/formato.js
@@ -95,6 +123,7 @@
 // @incluir lgr/dibujo.js
 // @incluir lgr/puntero.js
 // @incluir lgr/detalles.js
+// @incluir lgr/documento.js
 // @incluir lgr/barra.js
 // @incluir lgr/arranque.js
 </script>

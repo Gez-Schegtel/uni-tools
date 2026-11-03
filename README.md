@@ -16,7 +16,7 @@ exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servi
 | **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason: ecuaciones, trayectorias, lazos, Δ, cofactores y función de transferencia (simbólica y numérica). Genera el diagrama de bloques equivalente, que se abre en la otra herramienta. |
 | **Lugar de las raíces** (`simulador-lgr.html`) | Calculadora del lugar geométrico de las raíces desde la ecuación (N(s) y D(s)) o desde los ceros y polos: gráfico con asíntotas, puntos de ruptura, cruces con el eje imaginario y ángulos de salida y llegada, más todos los cálculos paso a paso y los comandos equivalentes de MatLab y SciLab. Simplifica los polos y ceros cancelados (y lo explica), funciona igual con constantes de tiempo de milisegundos o de miles de segundos, trae los ejercicios de la Guía 3 y exporta a SVG y PNG. Viene del proyecto original ([juli-sz/uni-tools](https://github.com/juli-sz/uni-tools)). |
 
-Lo que tienen en común las tres primeras (el LGR es una calculadora: no tiene elementos para editar):
+Lo que tienen en común las tres primeras (el LGR es una calculadora: no tiene elementos para editar, pero también tiene Inicio, la ayuda con **?**, autoguardado, Guardar y Abrir en JSON o SVG, y exportación a SVG y PNG):
 
 - Atajos de teclado y una leyenda en la barra de estado (el botón **?** los explica todos).
 - Deshacer y rehacer, copiar, cortar, pegar y duplicar, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.

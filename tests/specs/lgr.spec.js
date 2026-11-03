@@ -48,9 +48,9 @@ test("un grado desmesurado avisa enseguida en vez de trabar la página", async (
 test("la rueda en líneas (Firefox) hace el mismo zoom que en píxeles", async ({ page }) => {
   await page.goto(URL);
   const zoom = (deltaMode, deltaY) => page.evaluate(([m, d]) => {
-    ajustarVista(); const k0 = V.k, r = svg.getBoundingClientRect();
+    ajustarVista(); const k0 = vista.k, r = svg.getBoundingClientRect();
     svg.dispatchEvent(new WheelEvent("wheel", { deltaMode: m, deltaY: d, clientX: r.left + 100, clientY: r.top + 100, cancelable: true }));
-    return V.k / k0;
+    return vista.k / k0;
   }, [deltaMode, deltaY]);
   const enPixeles = await zoom(0, -48), enLineas = await zoom(1, -3);
   expect(enLineas).toBeCloseTo(enPixeles, 6);
@@ -77,9 +77,58 @@ test("trazar un grado alto no traba la página, y un cálculo nuevo abandona el 
     setTimeout(muestra, 5);
     setTimeout(() => { S.N = "s+1"; S.D = "s^20+3s+7"; calcular(); }, 30);
     // a mitad del trazado se cambia la entrada: el viejo se abandona y queda el del ejemplo chico
-    setTimeout(() => { S.D = "s(s+1)(s+2)"; calcular(); }, 300);
+    setTimeout(() => { S.N = "1"; S.D = "s(s+1)(s+2)"; calcular(); }, 300);
   }));
   expect(r.peor).toBeLessThan(400);                  // antes: 1,5 s trabada
   expect(r.enCurso).toBe(false);
   expect(await page.evaluate(() => ramas.length)).toBe(3);
+});
+
+test("Inicio, la ayuda con ? y Esc, y los atajos no actúan mientras se escribe", async ({ page }) => {
+  await page.goto(URL);
+  await expect(page.locator("#b-inicio")).toBeVisible();
+  await page.keyboard.press("?");
+  await expect(page.locator("#ov-help")).toHaveClass(/show/);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#ov-help")).not.toHaveClass(/show/);
+  await page.click("#i-N");
+  await page.keyboard.type("?");                       // en un campo, «?» es texto
+  await expect(page.locator("#ov-help")).not.toHaveClass(/show/);
+  await page.click("#b-inicio");
+  await expect(page).toHaveURL(/index\.html$/);
+});
+
+test("el SVG exportado trae la leyenda y el ejercicio, y se vuelve a abrir igual", async ({ page }) => {
+  await page.goto(URL);
+  await page.click("#m-zp");
+  await page.fill("#i-Z", "-1"); await page.fill("#i-P", "0; -3+2j; -3-2j"); await page.press("#i-P", "Enter");
+  const [descarga] = await Promise.all([page.waitForEvent("download"), page.click("#e-svg")]);
+  expect(descarga.suggestedFilename()).toBe("lugar-de-raices.svg");
+  const txt = require("fs").readFileSync(await descarga.path(), "utf8");
+  expect(txt).toContain('<metadata id="uni-tools-datos">');
+  expect(txt).toContain(">asíntotas</text>");
+  await page.evaluate(() => { S.modo = "ec"; S.N = "1"; S.D = "s+1"; pasarAInputs(); calcular(); });
+  await page.locator("#a-archivo").setInputFiles({ name: "x.svg", mimeType: "image/svg+xml", buffer: Buffer.from(txt) });
+  await expect(page.locator("#toast")).toContainText("Abierto");
+  expect(await page.evaluate(() => [S.modo, S.Z, S.P])).toEqual(["zp", "-1", "0; -3+2j; -3-2j"]);
+  // un archivo de otra herramienta no se abre
+  await page.locator("#a-archivo").setInputFiles({ name: "b.json", mimeType: "application/json", buffer: Buffer.from('{"herramienta":"bloque","nodes":[]}') });
+  await expect(page.locator("#toast")).toContainText("no es de Lugar de las raíces");
+  expect(await page.evaluate(() => S.modo)).toBe("zp");
+});
+
+test("el autoguardado usa la clave común (y migra la vieja) y la portada avisa que hay un ejercicio", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("ya")) {
+      sessionStorage.setItem("ya", "1");
+      localStorage.clear();
+      localStorage.setItem("uni-tools-lgr", JSON.stringify({ modo: "ec", N: "2", D: "s^2+3s", Z: "", P: "", ver: { grid: false } }));
+    }
+  });
+  await page.goto(URL);
+  expect(await page.evaluate(() => [S.N, S.D, S.ver.grid])).toEqual(["2", "s^2+3s", false]);
+  const claves = await page.evaluate(() => [localStorage.getItem("uni-tools-lgr"), JSON.parse(localStorage.getItem("uni-tools-autoguardado-lgr")).doc.herramienta]);
+  expect(claves).toEqual([null, "lgr"]);
+  await page.goto("/index.html");
+  await expect(page.locator('a[data-auto="lgr"] .guardado')).toContainText("ejercicio guardado");
 });

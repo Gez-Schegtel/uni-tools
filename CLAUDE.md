@@ -35,9 +35,9 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 
 | carpeta | qué tiene |
 |---|---|
-| `src/comun/` | lo compartido: `base.css`, pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y ruteo ortogonal) |
+| `src/comun/` | lo compartido: `base.css` (que incluye `avisos.css`: avisos, ventanas y teclas), pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y ruteo ortogonal) |
 | `src/bloque/`, `src/simulador/`, `src/senales/` | lo propio de cada una: `pagina.html` (la plantilla, que dice qué se incluye y en qué orden), `estilos.css`, `herramienta.js` (lo que el código común necesita saber de ella) y sus módulos |
-| `src/lgr/` | el simulador del LGR: `pagina.html`, `estilos.css`; sin DOM (lo prueba `tests/unidades/lgr.test.js`): `polinomios.js` (complejos, polinomios y raíces), `entrada.js` (lo que se escribe), `formato.js`, `analisis.js` (los pasos de la teoría), `trazado.js` (las ramas) y `modelo.js` (ejemplos y armado); con DOM: `estado.js`, `dibujo.js`, `puntero.js`, `detalles.js`, `barra.js` y `arranque.js` |
+| `src/lgr/` | el simulador del LGR: `pagina.html`, `estilos.css`; sin DOM (lo prueba `tests/unidades/lgr.test.js`): `polinomios.js` (complejos, polinomios y raíces), `entrada.js` (lo que se escribe), `formato.js`, `analisis.js` (los pasos de la teoría), `trazado.js` (las ramas) y `modelo.js` (ejemplos y armado); con DOM: `estado.js`, `dibujo.js`, `puntero.js`, `detalles.js`, `documento.js` (autoguardado, Abrir, Guardar, Inicio, ayuda y atajos), `barra.js` y `arranque.js`. De `src/comun/` usa `lienzo.js` (`$`, `svg`, `el`, `esc`, `toast`), `avisos.css` e `inicio.html`; el resto de lo común supone un diagrama con nodos e historial |
 
 - **Nunca se editan a mano los HTML de la raíz**: se edita `src/` y se corre `node src/construir.js`.
   Las páginas armadas se commitean junto con sus fuentes (Pages publica la raíz tal cual).

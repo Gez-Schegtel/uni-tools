@@ -6,7 +6,7 @@ svg.addEventListener('pointerdown', e => {
   punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
   arrastre = { cx: vista.cx, cy: vista.cy, k: vista.k, x: e.clientX, y: e.clientY, dist: distancia(), mx: media().x, my: media().y };
   svg.classList.add('arrastrando');
-  $('tip').style.display = 'none';
+  $('#tip').style.display = 'none';
 });
 const distancia = () => { const p = [...punteros.values()]; return p.length < 2 ? 0 : Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); };
 const media = () => { const p = [...punteros.values()]; return p.length ? { x: p.reduce((s, q) => s + q.x, 0) / p.length, y: p.reduce((s, q) => s + q.y, 0) / p.length } : { x: 0, y: 0 }; };
@@ -35,7 +35,7 @@ function soltar(e) {
 }
 svg.addEventListener('pointerup', soltar);
 svg.addEventListener('pointercancel', soltar);
-svg.addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
+svg.addEventListener('pointerleave', () => { $('#tip').style.display = 'none'; });
 function zoomEn(f, px, py) {
   const W = stage.clientWidth, H = stage.clientHeight;
   const mx = vista.cx + (px - W / 2) / vista.k, my = vista.cy - (py - H / 2) / vista.k;
@@ -50,8 +50,8 @@ svg.addEventListener('wheel', e => {
   zoomEn(Math.pow(1.0017, -e.deltaY * f), e.clientX - r.left, e.clientY - r.top);
 }, { passive: false });
 svg.addEventListener('dblclick', () => { ajustarVista(); dibujar(); });
-$('z-mas').onclick = () => zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
-$('z-menos').onclick = () => zoomEn(1 / 1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+$('#z-mas').onclick = () => zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+$('#z-menos').onclick = () => zoomEn(1 / 1.3, stage.clientWidth / 2, stage.clientHeight / 2);
 
 /* Al pasar el mouse por una rama: el punto s y el K que le corresponde */
 let tipPend = false;
@@ -70,7 +70,7 @@ function mostrarTip(e) {
         if (d < best) { best = d; hit = { x: b.x[i], y: b.y[i], K: b.K[i], px, py }; }
       }
     });
-    const tip = $('tip');
+    const tip = $('#tip');
     if (!hit) { tip.style.display = 'none'; return; }
     tip.textContent = 's = ' + fcomp(complejo(hit.x, hit.y), 3) + '   K = ' + fnum(hit.K, 4);
     tip.style.display = 'block';

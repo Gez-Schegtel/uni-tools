@@ -103,12 +103,13 @@ input[type=text],input[type=number],select{width:100%;border:1px solid var(--lin
 .hint{font-size:11px;color:#8a97a5;line-height:1.5}
 .empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
-kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
 #status .k{color:var(--ink-2)}
+/* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
+kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;

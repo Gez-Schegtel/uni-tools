@@ -2,7 +2,7 @@
    DETALLES PASO A PASO
    ===================================================================== */
 function dibujarDetalles() {
-  const el = $('det-cuerpo');
+  const el = $('#det-cuerpo');
   if (!resultado) { el.innerHTML = '<div class="vacio-det">Cuando ingreses una función válida, acá aparecen todos los cálculos paso a paso.</div>'; return; }
   const R = resultado;
   const abiertos = new Set([...el.querySelectorAll('details.paso[open]')].map(d => d.dataset.id));

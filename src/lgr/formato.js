@@ -14,7 +14,6 @@ function fcomp(z, d = 4) {
   if (re === 0) return (im < 0 ? '−' : '') + ims;
   return fnum(re, d) + (im < 0 ? ' − ' : ' + ') + ims;
 }
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sup = e => e === 1 ? '' : '<sup>' + e + '</sup>';
 function polyHTML(p, v = 's') {
   p = pTrim(p);

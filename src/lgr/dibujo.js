@@ -127,10 +127,10 @@ function dibujar() {
     });
   }
   svg.innerHTML = o;
-  $('vacio').style.display = resultado ? 'none' : 'flex';
-  $('leyenda').style.display = resultado ? '' : 'none';
+  $('#vacio').style.display = resultado ? 'none' : 'flex';
+  $('#leyenda').style.display = resultado ? '' : 'none';
   if (resultado) {
-    $('leyenda').innerHTML =
+    $('#leyenda').innerHTML =
       '<div><svg viewBox="0 0 16 12"><path d="M3 1 l10 10 M3 11 l10 -10" stroke="#12181f" stroke-width="2.2"/></svg>polos</div>' +
       '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="4.5" fill="#fff" stroke="#12181f" stroke-width="2"/></svg>ceros</div>' +
       '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#0d5bd6" stroke-width="2.2"/></svg>LGR (K &gt; 0)</div>' +

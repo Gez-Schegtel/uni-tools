@@ -50,6 +50,7 @@ button,select,input[type=text]{font-family:var(--ui);font-size:12px;color:var(--
 .btn svg{width:14px;height:14px;stroke:var(--ink-2);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .btn.on svg{stroke:#fff}
 .btn.ghost{border-color:transparent;background:transparent}
+a.btn{text-decoration:none;color:var(--ink)}           /* Inicio (comun/inicio.html) es un enlace */
 .btn.ghost:hover{background:var(--line-2)}
 select{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:5px 6px;max-width:230px}
 .marca-navbar{height:26px;width:auto;display:block;flex:none}
@@ -130,12 +131,36 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
   #detalles.collapsed{box-shadow:none}
   #leyenda{display:none}
 }
+/* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
+kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
+#toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
+  display:flex;align-items:center;gap:8px;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* la cruz: sólo se puede apretar mientras el aviso está a la vista */
+#toast .x{flex:none;width:18px;height:18px;padding:0;border:0;border-radius:4px;background:transparent;
+  color:rgba(255,255,255,.75);font:inherit;line-height:1;cursor:pointer;pointer-events:none}
+#toast .x::before{content:"✕";font-size:11px}
+#toast.show .x{pointer-events:auto}
+#toast .x:hover{background:rgba(255,255,255,.16);color:#fff}
+/* ---------- ventanas ---------- */
+.overlay{position:fixed;inset:0;background:rgba(18,24,31,.45);display:none;align-items:center;
+  justify-content:center;z-index:40;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--paper);border-radius:12px;width:100%;
+  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(18,24,31,.3)}
+.modal h2{margin:0 0 4px;font-size:16px}
+.modal p.sub{margin:0 0 16px;color:#8a97a5;font-size:12px}
 </style>
 </head>
 <body>
 
 <header>
   <a href="index.html" title="Volver al inicio"><img class="marca-navbar" src="uni-tools-marca.png" alt="uni-tools"></a>
+  <a class="btn ghost" id="b-inicio" href="index.html" title="Volver al inicio (el diagrama queda guardado en este navegador)">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Inicio</a>
   <div class="brand"><b>Lugar geométrico de las raíces</b><span>LGR</span></div>
 
   <div class="group" id="g-datos">
@@ -154,6 +179,13 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
     <button class="btn" id="b-ajustar" title="Encuadrar el gráfico">Encuadrar</button>
   </div>
 
+  <div class="group" id="g-archivo">
+    <span class="glab">Archivo</span>
+    <button class="btn" id="a-abrir" title="Abrir un JSON o un SVG exportado desde acá (Ctrl+O)">Abrir</button>
+    <button class="btn" id="a-guardar" title="Descargar el ejercicio en JSON (Ctrl+S)">Guardar</button>
+    <input type="file" id="a-archivo" accept=".json,.svg,application/json,image/svg+xml" hidden>
+  </div>
+
   <div class="group" id="g-exp">
     <span class="glab">Exportar</span>
     <button class="btn" id="e-svg">SVG</button>
@@ -161,7 +193,8 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
   </div>
 
   <div class="group">
-    <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso">Detalles</button>
+    <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso (D)">Detalles</button>
+    <button class="btn ghost" id="b-ayuda" title="Ayuda y atajos (?)">?</button>
   </div>
 </header>
 
@@ -195,6 +228,7 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
       <button class="btn ghost" id="z-menos" title="Alejar">&minus;</button>
     </div>
     <div id="tip"></div>
+    <div id="toast"></div>
   </div>
   <aside id="detalles">
     <div id="det-barra">
@@ -206,7 +240,105 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
   </aside>
 </main>
 
+<div class="overlay" id="ov-help"><div class="modal" style="max-width:560px">
+  <h2>Lugar geométrico de las raíces</h2>
+  <p class="sub">Escribí N(s) y D(s), o los ceros y los polos, y se dibuja el LGR con todos los cálculos paso a paso.</p>
+  <table class="t">
+    <tr><td><kbd>F</kbd></td><td>Encuadrar el gráfico (también con doble clic)</td></tr>
+    <tr><td><kbd>+</kbd> / <kbd>−</kbd></td><td>Acercar / alejar (también con la rueda o con dos dedos)</td></tr>
+    <tr><td>Arrastrar</td><td>Mover el gráfico. Al pasar el mouse por una rama se ve el punto s y su K</td></tr>
+    <tr><td><kbd>D</kbd></td><td>Mostrar u ocultar los cálculos paso a paso</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Guardar el ejercicio en JSON / abrir un JSON o un SVG exportado desde acá</td></tr>
+    <tr><td><kbd>?</kbd> / <kbd>Esc</kbd></td><td>Abrir / cerrar esta ayuda</td></tr>
+    <tr><td>Entrada</td><td>Potencias con <kbd>^</kbd> o ², coma decimal (<kbd>4,5</kbd>), notación científica (<kbd>1e3</kbd>). En las listas, separá con <kbd>;</kbd>. La K va adelante del numerador o no va.</td></tr>
+  </table>
+  <p class="sub" style="margin-top:12px">Lo que vas haciendo queda guardado en este navegador: al volver, seguís donde lo dejaste.</p>
+  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+</div></div>
+
 <script>
+"use strict";
+/* ======================= lienzo =======================
+   Lo primero de las tres herramientas: el <svg> de la hoja, la vista que se mueve
+   y se agranda adentro, y las utilidades de dibujo que usa todo lo demás. */
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s) => document.querySelector(s);
+const svg = $("#canvas"), viewport = $("#viewport");
+
+/* Firefox: arrastrar sobre el SVG le arma al navegador una selección de texto y, al volver
+   a apretar sobre ella, empieza un "arrastrar y soltar" nativo que cancela los eventos del
+   puntero: la hoja queda trabada (ni Ctrl+clic ni la banda andan) hasta hacer clic en otro
+   elemento. Se evita de raíz: el lienzo no es seleccionable ni arrastrable por el navegador,
+   y si ya quedó una selección, se limpia al apretar. (El campo del doble clic es un <input>
+   fuera del SVG y sigue siendo seleccionable.) */
+svg.addEventListener("dragstart", ev => ev.preventDefault());
+svg.addEventListener("selectstart", ev => ev.preventDefault());
+svg.addEventListener("pointerdown", () => {
+  const s = getSelection();
+  if (s && s.rangeCount && !s.isCollapsed) s.removeAllRanges();
+}, true);
+
+/* Capturar el puntero es una ayuda para no perder el gesto, no un requisito: puede
+   fallar (un dedo que ya se levantó, eventos sintéticos) y el gesto tiene que seguir
+   igual, así que el error se ignora. */
+function capturarPuntero(ev) {
+  try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+}
+
+/* Crea un elemento SVG con sus atributos y, si se le pasa, lo cuelga del padre */
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
+/* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+/* El aviso se puede cerrar con su cruz y se va solo pasado un rato: más tiempo
+   cuanto más haya que leer (y un tope), que un mensaje largo no da para dos segundos */
+function ocultarToast() {
+  clearTimeout(toast._t);
+  const t = $("#toast");
+  if (t) t.classList.remove("show");
+}
+function toast(m, ms) {
+  const t = $("#toast");
+  if (!t.firstChild) {                             // el texto y la cruz se arman una sola vez
+    const s = document.createElement("span"); s.className = "txt"; t.appendChild(s);
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "x"; x.title = "Cerrar";
+    x.setAttribute("aria-label", "Cerrar aviso");
+    x.onclick = ocultarToast;
+    t.appendChild(x);
+  }
+  t.firstChild.textContent = m;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(ocultarToast, ms || Math.min(7000, 1700 + 55 * String(m).length));
+}
 /* =====================================================================
    MATEMÁTICA
    Los polinomios son arreglos de coeficientes reales en potencias
@@ -471,7 +603,6 @@ function fcomp(z, d = 4) {
   if (re === 0) return (im < 0 ? '−' : '') + ims;
   return fnum(re, d) + (im < 0 ? ' − ' : ' + ') + ims;
 }
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sup = e => e === 1 ? '' : '<sup>' + e + '</sup>';
 function polyHTML(p, v = 's') {
   p = pTrim(p);
@@ -927,25 +1058,14 @@ function construirModelo(S) {
    ESTADO: lo que ingresó el usuario (S), el resultado del análisis, la
    vista del gráfico y el cálculo que arma todo lo demás
    ===================================================================== */
-const $ = id => document.getElementById(id);
-const svg = $('canvas'), stage = $('stage');
+// $, svg, el, esc y toast vienen de comun/lienzo.js
+const stage = $('#stage');
 let S = { modo: 'ec', N: 's+4,5', D: 's(s^2+6s+45)', Z: '', P: '', ver: { asint: true, vals: true, flechas: true, grid: true } };
 let resultado = null;           // resultado del análisis
 let ramas = [];          // ramas del LGR
 let vista = { cx: -2, cy: 0, k: 40 };
 const COLORES = ['#0d5bd6', '#e07a10', '#1a9a4b', '#8e44ad', '#c0392b', '#12a3a3', '#8d6e3f', '#d6459c', '#5c6bc0', '#7f8c8d'];
 
-function guardar() { try { localStorage.setItem('uni-tools-lgr', JSON.stringify(S)); } catch (e) {} }
-function cargar() {
-  try {
-    const g = JSON.parse(localStorage.getItem('uni-tools-lgr') || 'null');
-    if (!g || typeof g !== 'object' || Array.isArray(g)) return;
-    /* lo guardado puede venir de otra versión o tocado a mano: sólo se toma lo que tiene la forma esperada */
-    if (g.modo === 'ec' || g.modo === 'zp') S.modo = g.modo;
-    ['N', 'D', 'Z', 'P'].forEach(k => { if (typeof g[k] === 'string') S[k] = g[k]; });
-    if (g.ver && typeof g.ver === 'object') Object.keys(S.ver).forEach(k => { if (typeof g.ver[k] === 'boolean') S.ver[k] = g.ver[k]; });
-  } catch (e) {}
-}
 
 /* El trazado de las ramas corre por tandas de ~12 ms y se dibuja lo que va cada 150 ms (dibujar
    y pintar miles de puntos en cada cuadro cuesta más que seguir las ramas). Si mientras tanto
@@ -967,7 +1087,7 @@ function empezarTrazado() {
     trazadoEnCurso = null;
     dibujar();
     if (ramas.incompleto) {
-      const msj = $('msj');
+      const msj = $('#msj');
       msj.className = 'on'; msj.style.color = 'var(--warn)';
       msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
     }
@@ -975,10 +1095,10 @@ function empezarTrazado() {
   tanda();
 }
 function calcular() {
-  const msj = $('msj');
-  ['N', 'D', 'Z', 'P'].forEach(c => $('i-' + c).classList.remove('mal'));
+  const msj = $('#msj');
+  ['N', 'D', 'Z', 'P'].forEach(c => $('#i-' + c).classList.remove('mal'));
   msj.className = ''; msj.innerHTML = '';
-  guardar();
+  autoguardar();
   try {
     const modelo = construirModelo(S);
     resultado = analizar(modelo);
@@ -990,7 +1110,7 @@ function calcular() {
   } catch (err) {
     resultado = null; ramas = []; trazadoEnCurso = null;
     if (err instanceof ErrorEntrada || err.extra !== undefined) {
-      if (err.extra && err.extra.campo) $('i-' + err.extra.campo).classList.add('mal');
+      if (err.extra && err.extra.campo) $('#i-' + err.extra.campo).classList.add('mal');
       msj.className = 'on'; msj.style.color = '';
       msj.innerHTML = esc(err.message);
       if (err.extra && err.extra.faltan) {
@@ -1008,7 +1128,7 @@ function calcular() {
   dibujarResumen(); dibujarDetalles(); ajustarVista(); dibujar();
 }
 function cancelaciones(modelo) {
-  const msj = $('msj'), c = resultado.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : ''));
+  const msj = $('#msj'), c = resultado.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : ''));
   if (c.length) {
     msj.className = 'on'; msj.style.color = 'var(--warn)';
     msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'Hay un polo y un cero en el mismo punto (' + c.map(esc).join('; ') +
@@ -1017,7 +1137,7 @@ function cancelaciones(modelo) {
 }
 
 function dibujarResumen() {
-  const el = $('resumen');
+  const el = $('#resumen');
   if (!resultado) { el.innerHTML = ''; return; }
   const lista = gs => gs.length ? gs.map(g => '<b>' + fcomp(g.z) + '</b>' + (g.mult > 1 ? ' (×' + g.mult + ')' : '')).join(' ; ') : '<i>no hay</i>';
   if (resultado.modo === 'ec')
@@ -1154,10 +1274,10 @@ function dibujar() {
     });
   }
   svg.innerHTML = o;
-  $('vacio').style.display = resultado ? 'none' : 'flex';
-  $('leyenda').style.display = resultado ? '' : 'none';
+  $('#vacio').style.display = resultado ? 'none' : 'flex';
+  $('#leyenda').style.display = resultado ? '' : 'none';
   if (resultado) {
-    $('leyenda').innerHTML =
+    $('#leyenda').innerHTML =
       '<div><svg viewBox="0 0 16 12"><path d="M3 1 l10 10 M3 11 l10 -10" stroke="#12181f" stroke-width="2.2"/></svg>polos</div>' +
       '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="4.5" fill="#fff" stroke="#12181f" stroke-width="2"/></svg>ceros</div>' +
       '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#0d5bd6" stroke-width="2.2"/></svg>LGR (K &gt; 0)</div>' +
@@ -1173,7 +1293,7 @@ svg.addEventListener('pointerdown', e => {
   punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
   arrastre = { cx: vista.cx, cy: vista.cy, k: vista.k, x: e.clientX, y: e.clientY, dist: distancia(), mx: media().x, my: media().y };
   svg.classList.add('arrastrando');
-  $('tip').style.display = 'none';
+  $('#tip').style.display = 'none';
 });
 const distancia = () => { const p = [...punteros.values()]; return p.length < 2 ? 0 : Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); };
 const media = () => { const p = [...punteros.values()]; return p.length ? { x: p.reduce((s, q) => s + q.x, 0) / p.length, y: p.reduce((s, q) => s + q.y, 0) / p.length } : { x: 0, y: 0 }; };
@@ -1202,7 +1322,7 @@ function soltar(e) {
 }
 svg.addEventListener('pointerup', soltar);
 svg.addEventListener('pointercancel', soltar);
-svg.addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
+svg.addEventListener('pointerleave', () => { $('#tip').style.display = 'none'; });
 function zoomEn(f, px, py) {
   const W = stage.clientWidth, H = stage.clientHeight;
   const mx = vista.cx + (px - W / 2) / vista.k, my = vista.cy - (py - H / 2) / vista.k;
@@ -1217,8 +1337,8 @@ svg.addEventListener('wheel', e => {
   zoomEn(Math.pow(1.0017, -e.deltaY * f), e.clientX - r.left, e.clientY - r.top);
 }, { passive: false });
 svg.addEventListener('dblclick', () => { ajustarVista(); dibujar(); });
-$('z-mas').onclick = () => zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
-$('z-menos').onclick = () => zoomEn(1 / 1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+$('#z-mas').onclick = () => zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+$('#z-menos').onclick = () => zoomEn(1 / 1.3, stage.clientWidth / 2, stage.clientHeight / 2);
 
 /* Al pasar el mouse por una rama: el punto s y el K que le corresponde */
 let tipPend = false;
@@ -1237,7 +1357,7 @@ function mostrarTip(e) {
         if (d < best) { best = d; hit = { x: b.x[i], y: b.y[i], K: b.K[i], px, py }; }
       }
     });
-    const tip = $('tip');
+    const tip = $('#tip');
     if (!hit) { tip.style.display = 'none'; return; }
     tip.textContent = 's = ' + fcomp(complejo(hit.x, hit.y), 3) + '   K = ' + fnum(hit.K, 4);
     tip.style.display = 'block';
@@ -1250,7 +1370,7 @@ new ResizeObserver(() => dibujar()).observe(stage);
    DETALLES PASO A PASO
    ===================================================================== */
 function dibujarDetalles() {
-  const el = $('det-cuerpo');
+  const el = $('#det-cuerpo');
   if (!resultado) { el.innerHTML = '<div class="vacio-det">Cuando ingreses una función válida, acá aparecen todos los cálculos paso a paso.</div>'; return; }
   const R = resultado;
   const abiertos = new Set([...el.querySelectorAll('details.paso[open]')].map(d => d.dataset.id));
@@ -1435,28 +1555,133 @@ function dibujarDetalles() {
   el.innerHTML = h;
 }
 /* =====================================================================
+   DOCUMENTO: lo que se guarda (en el navegador y en archivos), Abrir,
+   Guardar, Inicio, la ayuda y los atajos de teclado
+   El formato es el de las otras herramientas: el JSON lleva version y
+   herramienta, el autoguardado va en uni-tools-autoguardado-lgr como
+   { guardado, doc } y el SVG exportado trae el documento en
+   <metadata id="uni-tools-datos">, así que se puede volver a abrir.
+   ===================================================================== */
+const VERSION_DOC_LGR = 1;
+const CLAVE_AUTO_LGR = 'uni-tools-autoguardado-lgr', CLAVE_VIEJA_LGR = 'uni-tools-lgr';
+const NOMBRE_ARCHIVO = 'lugar-de-raices';
+
+const docDatos = () => ({ version: VERSION_DOC_LGR, herramienta: 'lgr',
+  modo: S.modo, N: S.N, D: S.D, Z: S.Z, P: S.P, ver: Object.assign({}, S.ver) });
+
+/* Lo que llega (del autoguardado o de un archivo) puede venir de otra versión o tocado a mano:
+   sólo se toma lo que tiene la forma esperada. Devuelve false si no es un documento del LGR. */
+function aplicarDoc(g) {
+  if (!g || typeof g !== 'object' || Array.isArray(g)) return false;
+  if (typeof g.herramienta === 'string' && g.herramienta !== 'lgr') return false;
+  if (g.modo === 'ec' || g.modo === 'zp') S.modo = g.modo;
+  ['N', 'D', 'Z', 'P'].forEach(k => { if (typeof g[k] === 'string') S[k] = g[k]; });
+  if (g.ver && typeof g.ver === 'object') Object.keys(S.ver).forEach(k => { if (typeof g.ver[k] === 'boolean') S.ver[k] = g.ver[k]; });
+  return true;
+}
+
+/* ---------- autoguardado: sólo después de que el usuario cambia algo ---------- */
+let autoActivo = false;
+function autoguardar() {
+  if (!autoActivo) return;
+  try { localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); } catch (e) {}
+}
+function recuperarAutoguardado() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CLAVE_AUTO_LGR) || 'null');
+    if (g && aplicarDoc(g.doc)) return true;
+    // la clave de antes (el LGR guardaba S entero en uni-tools-lgr): se migra una vez
+    const viejo = JSON.parse(localStorage.getItem(CLAVE_VIEJA_LGR) || 'null');
+    if (viejo && aplicarDoc(viejo)) {
+      localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() }));
+      localStorage.removeItem(CLAVE_VIEJA_LGR);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+window.addEventListener('pagehide', autoguardar);
+
+/* ---------- guardar y abrir archivos ---------- */
+function descargar(nombre, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function guardarArchivo() {
+  descargar(NOMBRE_ARCHIVO + '.json', new Blob([JSON.stringify(docDatos(), null, 1)], { type: 'application/json' }));
+  toast('Guardado: ' + NOMBRE_ARCHIVO + '.json');
+}
+function abrirTextoLGR(txt) {
+  const t = String(txt || '').trim();
+  let d;
+  try {
+    if (t[0] === '{') d = JSON.parse(t);
+    else if (t[0] === '<') {
+      const x = new DOMParser().parseFromString(t, 'image/svg+xml');
+      const m = x.querySelector('metadata#uni-tools-datos');
+      if (!m) return toast('Ese SVG no trae los datos adentro: se exportó con una versión anterior');
+      d = JSON.parse(m.textContent);
+    } else throw new Error();
+  } catch (e) { return toast('Ese archivo no se pudo leer'); }
+  if (!d || d.herramienta !== 'lgr' && !(typeof d.modo === 'string' && ('N' in d || 'P' in d)))
+    return toast('Ese archivo no es de Lugar de las raíces');
+  aplicarDoc(d); pasarAInputs(); calcular(); autoguardar();
+  toast('Abierto');
+}
+$('#a-abrir').onclick = () => $('#a-archivo').click();
+$('#a-archivo').onchange = (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  f.text().then(abrirTextoLGR);
+  ev.target.value = '';                           // para poder abrir el mismo archivo otra vez
+};
+$('#a-guardar').onclick = guardarArchivo;
+
+/* ---------- Inicio: lo hecho queda en el autoguardado ---------- */
+$('#b-inicio').addEventListener('click', ev => { ev.preventDefault(); autoguardar(); location.href = 'index.html'; });
+
+/* ---------- ayuda y atajos ---------- */
+const ayuda = (abrir) => $('#ov-help').classList.toggle('show', abrir);
+$('#b-ayuda').onclick = () => ayuda(true);
+$('#ov-help').addEventListener('click', ev => { if (ev.target.id === 'ov-help') ayuda(false); });
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') { ayuda(false); return; }
+  const t = ev.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;   // se está escribiendo
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's') { ev.preventDefault(); guardarArchivo(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'o') { ev.preventDefault(); $('#a-archivo').click(); return; }
+  if (ev.ctrlKey || ev.metaKey || ev.altKey || $('#ov-help').classList.contains('show') && ev.key !== '?') return;
+  if (ev.key === '?') { ayuda(!$('#ov-help').classList.contains('show')); ev.preventDefault(); }
+  else if (ev.key === 'f' || ev.key === 'F') { ajustarVista(); dibujar(); }
+  else if (ev.key === '+' || ev.key === '=') zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+  else if (ev.key === '-') zoomEn(1 / 1.3, stage.clientWidth / 2, stage.clientHeight / 2);
+  else if (ev.key === 'd' || ev.key === 'D') $('#b-det').click();
+});
+/* =====================================================================
    BARRA: campos, modos, ejemplos, botones y exportación
    ===================================================================== */
 function pasarAInputs() {
-  $('i-N').value = S.N; $('i-D').value = S.D; $('i-Z').value = S.Z; $('i-P').value = S.P;
-  $('m-ec').classList.toggle('on', S.modo === 'ec');
-  $('m-zp').classList.toggle('on', S.modo === 'zp');
-  $('f-ec').hidden = S.modo !== 'ec';
-  $('f-zp').hidden = S.modo !== 'zp';
-  [['asint', 'v-asint'], ['vals', 'v-vals'], ['flechas', 'v-flechas'], ['grid', 'v-grid']].forEach(([k, id]) => $(id).classList.toggle('on', !!S.ver[k]));
+  $('#i-N').value = S.N; $('#i-D').value = S.D; $('#i-Z').value = S.Z; $('#i-P').value = S.P;
+  $('#m-ec').classList.toggle('on', S.modo === 'ec');
+  $('#m-zp').classList.toggle('on', S.modo === 'zp');
+  $('#f-ec').hidden = S.modo !== 'ec';
+  $('#f-zp').hidden = S.modo !== 'zp';
+  [['asint', 'v-asint'], ['vals', 'v-vals'], ['flechas', 'v-flechas'], ['grid', 'v-grid']].forEach(([k, id]) => $('#' + id).classList.toggle('on', !!S.ver[k]));
 }
 let temporizadorCalculo = null;
 function diferir() { clearTimeout(temporizadorCalculo); temporizadorCalculo = setTimeout(calcular, 250); }
 [['i-N', 'N'], ['i-D', 'D'], ['i-Z', 'Z'], ['i-P', 'P']].forEach(([id, k]) => {
-  $(id).addEventListener('input', e => { S[k] = e.target.value; diferir(); });
-  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(temporizadorCalculo); calcular(); } });
+  $('#' + id).addEventListener('input', e => { S[k] = e.target.value; diferir(); });
+  $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(temporizadorCalculo); calcular(); } });
 });
 function modo(m) { S.modo = m; pasarAInputs(); calcular(); }
-$('m-ec').onclick = () => modo('ec');
-$('m-zp').onclick = () => modo('zp');
+$('#m-ec').onclick = () => modo('ec');
+$('#m-zp').onclick = () => modo('zp');
 
 (function llenarEjemplos() {
-  const sel = $('ejemplos');
+  const sel = $('#ejemplos');
   sel.innerHTML = '<option value="">Ejemplos…</option>';
   let grupo = null, og = null;
   EJEMPLOS.forEach((e, i) => {
@@ -1474,41 +1699,53 @@ $('m-zp').onclick = () => modo('zp');
 })();
 
 [['asint', 'v-asint'], ['vals', 'v-vals'], ['flechas', 'v-flechas'], ['grid', 'v-grid']].forEach(([k, id]) => {
-  $(id).onclick = () => { S.ver[k] = !S.ver[k]; pasarAInputs(); guardar(); dibujar(); };
+  $('#' + id).onclick = () => { S.ver[k] = !S.ver[k]; pasarAInputs(); autoguardar(); dibujar(); };
 });
-$('b-ajustar').onclick = () => { ajustarVista(); dibujar(); };
-$('b-det').onclick = () => { const a = $('detalles'); a.classList.toggle('collapsed'); $('b-det').classList.toggle('on', !a.classList.contains('collapsed')); setTimeout(dibujar, 230); };
-$('d-abrir').onclick = () => document.querySelectorAll('details.paso').forEach(d => d.open = true);
-$('d-cerrar').onclick = () => document.querySelectorAll('details.paso').forEach(d => d.open = false);
+$('#b-ajustar').onclick = () => { ajustarVista(); dibujar(); };
+$('#b-det').onclick = () => { const a = $('#detalles'); a.classList.toggle('collapsed'); $('#b-det').classList.toggle('on', !a.classList.contains('collapsed')); setTimeout(dibujar, 230); };
+$('#d-abrir').onclick = () => document.querySelectorAll('details.paso').forEach(d => d.open = true);
+$('#d-cerrar').onclick = () => document.querySelectorAll('details.paso').forEach(d => d.open = false);
 document.querySelectorAll('.glab').forEach(g => g.addEventListener('click', () => g.parentElement.classList.toggle('collapsed')));
 
-function descargar(nombre, blob) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = nombre;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+/* La leyenda de la pantalla es HTML: para la exportación se arma la misma en SVG */
+function leyendaSVG(W) {
+  const items = [
+    ['<path d="M3 1 l10 10 M3 11 l10 -10" stroke="#12181f" stroke-width="2.2"/>', 'polos'],
+    ['<circle cx="8" cy="6" r="4.5" fill="#fff" stroke="#12181f" stroke-width="2"/>', 'ceros'],
+    ['<path d="M1 6h14" stroke="#0d5bd6" stroke-width="2.2"/>', 'LGR (K > 0)'],
+    ['<path d="M1 6h14" stroke="#7b8896" stroke-width="1.4" stroke-dasharray="4 3"/>', 'asíntotas'],
+  ];
+  if (resultado.cancelados.length) items.push(['<circle cx="8" cy="6" r="5" fill="#fff" stroke="#8a97a5" stroke-width="1.4"/><path d="M5 3 l6 6 M5 9 l6 -6" stroke="#8a97a5" stroke-width="1.4"/>', 'polo y cero cancelados']);
+  const ancho = 170, alto = 12 + items.length * 18, x0 = W - ancho - 12;
+  return '<g transform="translate(' + x0 + ',10)"><rect width="' + ancho + '" height="' + alto + '" rx="8" fill="#fff" fill-opacity=".92" stroke="#d7dee6"/>' +
+    items.map(([ico, txt], i) => '<g transform="translate(10,' + (8 + i * 18) + ')"><svg width="16" height="12" viewBox="0 0 16 12" overflow="visible">' + ico +
+      '</svg><text x="22" y="10" font-family="Arial" font-size="11" fill="#3d4b5a">' + esc(txt) + '</text></g>').join('') + '</g>';
 }
+/* El SVG exportado lleva el gráfico, la leyenda y el documento adentro (para volver a abrirlo) */
 function svgExportado() {
   const W = stage.clientWidth, H = stage.clientHeight;
   return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' +
-    '<rect width="' + W + '" height="' + H + '" fill="#ffffff"/>' + svg.innerHTML + '</svg>';
+    '<metadata id="uni-tools-datos">' + esc(JSON.stringify(docDatos())) + '</metadata>' +
+    '<rect width="' + W + '" height="' + H + '" fill="#ffffff"/>' + svg.innerHTML + leyendaSVG(W) + '</svg>';
 }
-$('e-svg').onclick = () => { if (resultado) descargar('lgr.svg', new Blob([svgExportado()], { type: 'image/svg+xml' })); };
-$('e-png').onclick = () => {
+$('#e-svg').onclick = () => { if (resultado) descargar(NOMBRE_ARCHIVO + '.svg', new Blob([svgExportado()], { type: 'image/svg+xml' })); };
+$('#e-png').onclick = () => {
   if (!resultado) return;
-  const W = stage.clientWidth, H = stage.clientHeight, img = new Image();
+  const W = stage.clientWidth, H = stage.clientHeight, img = new Image(), k = 3;   // al triple, como las otras herramientas
   img.onload = () => {
-    const c = document.createElement('canvas'); c.width = W * 2; c.height = H * 2;
-    const g = c.getContext('2d'); g.scale(2, 2); g.drawImage(img, 0, 0, W, H);
-    c.toBlob(b => descargar('lgr.png', b), 'image/png');
+    const c = document.createElement('canvas'); c.width = W * k; c.height = H * k;
+    const g = c.getContext('2d'); g.scale(k, k); g.drawImage(img, 0, 0, W, H);
+    c.toBlob(b => { descargar(NOMBRE_ARCHIVO + '.png', b); toast('PNG descargado (3×)'); }, 'image/png');
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgExportado());
 };
 /* ---------- arranque ---------- */
-cargar();
+const recuperado = recuperarAutoguardado();
 pasarAInputs();
-if (innerWidth <= 820) { $('detalles').classList.add('collapsed'); $('b-det').classList.remove('on'); }
+if (innerWidth <= 820) { $('#detalles').classList.add('collapsed'); $('#b-det').classList.remove('on'); }
 calcular();
+autoActivo = true;                                 // desde acá, cada cambio queda guardado
+if (recuperado) setTimeout(() => toast('Se recuperó tu último lugar de raíces'), 60);
 </script>
 </body>
 </html>
