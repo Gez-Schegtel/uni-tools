@@ -73,3 +73,19 @@ test("los workflows declaran permisos, tienen tope de tiempo y no dejan el token
     expect(y.split("persist-credentials: false").length - 1, f).toBe(checkouts);
   }
 });
+
+test("src/sitio.js falla si una página pide un archivo que no existe (un logo renombrado no llega roto a Pages)", () => {
+  const { archivosDelSitio } = require(path.join(RAIZ, "src", "sitio.js"));
+  const tmp = fs.mkdtempSync(path.join(require("os").tmpdir(), "sitio-"));
+  fs.writeFileSync(path.join(tmp, "index.html"), '<img src="logo.png"><a href="otra.html">x</a><img src="https://afuera/x.png">');
+  expect(() => archivosDelSitio(tmp)).toThrow(/index\.html pide logo\.png/);
+  fs.writeFileSync(path.join(tmp, "logo.png"), "");
+  expect(archivosDelSitio(tmp)).toEqual(["index.html", "logo.png"]);      // los enlaces y lo de afuera no se copian
+});
+
+test("src/sitio.js no borra la raíz del repo ni una carpeta que la contenga", () => {
+  for (const destino of [".", "..", "/", path.dirname(RAIZ)]) {
+    expect(() => execFileSync(process.execPath, [path.join(RAIZ, "src", "sitio.js"), destino], { cwd: RAIZ, stdio: "pipe" }), destino).toThrow(/el destino no puede/);
+  }
+  expect(fs.existsSync(path.join(RAIZ, "index.html"))).toBe(true);
+});
