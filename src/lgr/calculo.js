@@ -10,6 +10,10 @@ const cSub = (a, b) => C(a.re - b.re, a.im - b.im);
 const cMul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
 const cDiv = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
 
+/* Más allá de esto el trazado no termina a tiempo y la página se traba con cada tecla
+   (s^300 tardaba 7 s). Las guías no pasan de grado 5. */
+const GRADO_MAX = 20;
+
 function pTrim(p, tol = 1e-12) {
   const mx = Math.max(...p.map(Math.abs));
   if (!(mx > 0)) return [0];
@@ -188,6 +192,7 @@ function parsearPoli(txt) {
       p++;
       const e = tok[p++];
       if (!e || !/^\d+$/.test(e)) throw new Error('El exponente debe ser un entero positivo');
+      if (+e > GRADO_MAX) throw new Error('El exponente no puede pasar de ' + GRADO_MAX);
       let r = [1];
       for (let k = 0; k < +e; k++) r = pMul(r, b);
       b = r;
@@ -371,13 +376,20 @@ function analizar(e) {
       if (!ws.some(x => Math.abs(x - w) < 1e-6 * (1 + w))) ws.push(w);
     });
     ws.sort((a, b) => a - b).forEach(w => {
-      const j = C(0, w), Dv = pEval(D, j), Nv = pEval(N, j);
-      if (cAbs(Nv) < 1e-9) return;
+      const j = C(0, w);
+      let Dk = D, Nk = N, Dv = pEval(D, j), Nv = pEval(N, j), cancelado = false;
+      /* Si N y D se anulan los dos en jω, hay un polo y un cero cancelados sobre el eje:
+         ese punto es polo de lazo cerrado para todo K, y otra rama lo cruza cuando la
+         raíz se vuelve doble. Ese K sale de las derivadas (L'Hôpital: K = −D′/N′). */
+      while (cAbs(Nv) < 1e-9 && cAbs(Dv) < 1e-9 * (1 + cAbs(pEval(D, C(0, 1 + w)))) && Nk.length > 1) {
+        Dk = pDer(Dk); Nk = pDer(Nk); Dv = pEval(Dk, j); Nv = pEval(Nk, j); cancelado = true;
+      }
+      if (cAbs(Nv) < 1e-9) return;                 // un cero sobre el eje: se llega con K → ∞
       const K = Math.abs(Nv.re) >= Math.abs(Nv.im) ? -Dv.re / Nv.re : -Dv.im / Nv.im;
       const res = cAbs(C(Dv.re + K * Nv.re, Dv.im + K * Nv.im));
       if (res > 1e-6 * (1 + cAbs(Dv))) return;
       const valido = K > 1e-9;
-      cruce.filas.push({ w, K, valido, nota: valido ? '' : (Math.abs(K) <= 1e-9 ? 'K = 0: es un polo sobre el eje imaginario' : 'K < 0: no pertenece al LGR') });
+      cruce.filas.push({ w, K, valido, cancelado, nota: valido ? (cancelado ? 'pasa por un polo y un cero cancelados' : '') : (Math.abs(K) <= 1e-9 ? 'K = 0: es un polo sobre el eje imaginario' : 'K < 0: no pertenece al LGR') });
     });
   }
   R.cruce = cruce;
@@ -444,7 +456,7 @@ function trazarLGR(R) {
   let dK = n >= m ? 1e-9 : 1e-9;
   const t0 = performance.now();
   for (let it = 0; it < 30000; it++) {
-    if (performance.now() - t0 > 1500) break;
+    if (performance.now() - t0 > 1500) { ramas.incompleto = true; break; }
     // separar guesses repetidos para que Aberth no se trabe
     const ini = prev.map((z, i) => {
       for (let j = 0; j < i; j++) if (cAbs(cSub(z, prev[j])) < 1e-7 * (1 + cAbs(z))) {
@@ -485,6 +497,7 @@ function trazarLGR(R) {
     if (hecha.every(Boolean) || K > 1e15) break;
     if (ratio < 0.3) dK *= 2;
   }
+  if (!hecha.every(Boolean) && K <= 1e15) ramas.incompleto = true;   // se cortó por tiempo o por iteraciones
   return ramas;
 }
 
@@ -530,6 +543,8 @@ function construirModelo(S) {
     try { N0 = parsearPoli(S.N); } catch (err) { throw new ErrorEntrada('Numerador: ' + err.message, { campo: 'N' }); }
     try { D0 = parsearPoli(S.D); } catch (err) { throw new ErrorEntrada('Denominador: ' + err.message, { campo: 'D' }); }
     if (D0.length < 2) throw new ErrorEntrada('El denominador tiene que ser de grado 1 o más.', { campo: 'D' });
+    if (N0.length - 1 > GRADO_MAX) throw new ErrorEntrada('El numerador no puede pasar de grado ' + GRADO_MAX + '.', { campo: 'N' });
+    if (D0.length - 1 > GRADO_MAX) throw new ErrorEntrada('El denominador no puede pasar de grado ' + GRADO_MAX + '.', { campo: 'D' });
     if (N0.length === 1 && Math.abs(N0[0]) < 1e-14) throw new ErrorEntrada('El numerador no puede ser 0.', { campo: 'N' });
     const c = N0[0], d = D0[0];
     const N = pScale(N0, 1 / c), D = pScale(D0, 1 / d);
@@ -543,6 +558,8 @@ function construirModelo(S) {
   try { cerosL = parsearLista(S.Z); } catch (err) { throw new ErrorEntrada('Ceros: ' + err.message, { campo: 'Z' }); }
   try { polosL = parsearLista(S.P); } catch (err) { throw new ErrorEntrada('Polos: ' + err.message, { campo: 'P' }); }
   if (!polosL.length) throw new ErrorEntrada('Hace falta al menos un polo.', { campo: 'P' });
+  if (cerosL.length > GRADO_MAX) throw new ErrorEntrada('No puede haber más de ' + GRADO_MAX + ' ceros.', { campo: 'Z' });
+  if (polosL.length > GRADO_MAX) throw new ErrorEntrada('No puede haber más de ' + GRADO_MAX + ' polos.', { campo: 'P' });
   // los complejos tienen que venir con su conjugado, si no los coeficientes no son reales
   const faltan = { Z: [], P: [] };
   [['Z', cerosL], ['P', polosL]].forEach(([k, lista]) => {

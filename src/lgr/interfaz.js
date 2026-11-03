@@ -14,7 +14,11 @@ function guardar() { try { localStorage.setItem('uni-tools-lgr', JSON.stringify(
 function cargar() {
   try {
     const g = JSON.parse(localStorage.getItem('uni-tools-lgr') || 'null');
-    if (g && typeof g === 'object') S = { ...S, ...g, ver: { ...S.ver, ...(g.ver || {}) } };
+    if (!g || typeof g !== 'object' || Array.isArray(g)) return;
+    /* lo guardado puede venir de otra versión o tocado a mano: sólo se toma lo que tiene la forma esperada */
+    if (g.modo === 'ec' || g.modo === 'zp') S.modo = g.modo;
+    ['N', 'D', 'Z', 'P'].forEach(k => { if (typeof g[k] === 'string') S[k] = g[k]; });
+    if (g.ver && typeof g.ver === 'object') Object.keys(S.ver).forEach(k => { if (typeof g.ver[k] === 'boolean') S.ver[k] = g.ver[k]; });
   } catch (e) {}
 }
 
@@ -31,6 +35,10 @@ function calcular() {
     const info = Rg.notas.length ? '<span class="nota-info">' + Rg.notas.map(esc).join(' ') + '</span>' : '';
     if (info) { msj.className = 'on'; msj.style.color = 'var(--ink-2)'; msj.innerHTML = info; }
     cancelaciones(modelo);
+    if (ramas.incompleto) {
+      msj.className = 'on'; msj.style.color = 'var(--warn)';
+      msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
+    }
   } catch (err) {
     Rg = null; ramas = [];
     if (err instanceof ErrorEntrada || err.extra !== undefined) {
@@ -252,7 +260,8 @@ function zoomEn(f, px, py) {
 svg.addEventListener('wheel', e => {
   e.preventDefault();
   const r = svg.getBoundingClientRect();
-  zoomEn(Math.pow(1.0017, -e.deltaY), e.clientX - r.left, e.clientY - r.top);
+  const f = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? r.height : 1;   // Firefox cuenta en líneas
+  zoomEn(Math.pow(1.0017, -e.deltaY * f), e.clientX - r.left, e.clientY - r.top);
 }, { passive: false });
 svg.addEventListener('dblclick', () => { ajustarVista(); dibujar(); });
 $('z-mas').onclick = () => zoomEn(1.3, stage.clientWidth / 2, stage.clientHeight / 2);
@@ -398,7 +407,7 @@ function dibujarDetalles() {
     else {
       b += '<p>Raíces reales (se listan ω ≥ 0; −ω es simétrica) y el K que cada una exige, reemplazando en la ecuación:</p>';
       b += '<table class="t"><tr><th>ω (rad/s)</th><th>K</th><th>¿Sirve?</th></tr>' + Cz.filas.map(f =>
-        '<tr><td>±' + fnum(f.w) + '</td><td>' + fnum(f.K) + '</td><td class="' + (f.valido ? 'si' : 'no') + '">' + (f.valido ? 'Sí · K &gt; 0' : 'No · ' + f.nota) + '</td></tr>').join('') + '</table>';
+        '<tr><td>±' + fnum(f.w) + '</td><td>' + fnum(f.K) + '</td><td class="' + (f.valido ? 'si' : 'no') + '">' + (f.valido ? 'Sí · K &gt; 0' + (f.nota ? ' · ' + f.nota : '') : 'No · ' + f.nota) + '</td></tr>').join('') + '</table>';
       const ok = Cz.filas.filter(f => f.valido);
       b += ok.length ? '<div class="res">' + ok.map(f => 'ω<sub>c</sub> = ±' + fnum(f.w) + ' rad/s &nbsp;·&nbsp; K<sub>c</sub> = ' + fnum(f.K)).join('<br>') + '</div>'
         : '<div class="res no-res">Los valores de ω obtenidos exigen K ≤ 0, que no pertenece al LGR (K &gt; 0): <b>no existe ω crítico ni K crítico válidos</b>. El LGR no atraviesa el eje imaginario.</div>';
