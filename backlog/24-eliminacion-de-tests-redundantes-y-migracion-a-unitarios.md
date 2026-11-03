@@ -3,7 +3,7 @@
 - **ID:** `SPEC-24`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `5.3`
-- **Prioridad:** Baja / Media (24 / 27)
+- **Prioridad:** Baja / Media (24)
 - **Esfuerzo estimado:** Medio (~35 minutos)
 - **Archivos afectados:** `tests/unidades/logica.test.js`, `tests/specs/simulador.spec.js`, `tests/specs/correccion.spec.js`, `tests/specs/comun.spec.js`, `tests/specs/bloque.spec.js`, `tests/specs/senales.spec.js`, `tests/specs/humo.spec.js`
 

@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-20`
 - **Referencia en el informe:** `BUG-06` y Sección `2.2.B`
-- **Prioridad:** Media (20 / 27)
+- **Prioridad:** Media (20)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/historial.js`, `src/bloque/modelo.js`, `src/bloque/dibujo.js`, `src/simulador/dibujo.js`, `src/senales/modelo.js`, `src/senales/dibujo.js`)
 
@@ -32,7 +32,7 @@ render();   // <-- recién acá se actualizan n.w, n.h, e.pts
 el `snapshot()` guardado en `lastSnap` / `undoStack` ([`src/comun/historial.js:8-14`](../src/comun/historial.js)) tiene los tamaños `n.w, n.h` y los puntos `e.pts` **viejos** (del estado anterior).
 Además:
 - En [`src/simulador/modelo.js:46`](../src/simulador/modelo.js), `docDatos()` limpia `pts` al serializar cables (`S.wires.map(w => ({ id: w.id, from: w.from, to: w.to, variant: w.variant, color: w.color }))`).
-- En cambio, [`src/bloque/modelo.js:31`](../src/bloque/modelo.js) serializa `edges: S.edges` crudo en `docDatos()`, guardando el arreglo `pts` en el JSON (mientras que la ruta manual real se guarda en `e.manual = { c: [...] }`, como se ve en [`src/bloque/modelo.js:72`](../src/bloque/modelo.js) y [`src/bloque/ruteo.js:80`](../src/bloque/ruteo.js)).
+- En cambio, [`src/bloque/modelo.js:31`](../src/bloque/modelo.js) serializa `edges: S.edges` crudo en `docDatos()`, guardando el arreglo `pts` en el JSON (mientras que la ruta manual real se guarda en `e.manual = { c: [...] }`, como se ve en [`src/bloque/modelo.js:72`](../src/bloque/modelo.js) y [`src/bloque/ruteo.js:80`](../src/comun/ruteo-bloques.js)).
 
 ---
 
@@ -54,7 +54,7 @@ Además:
      }
      ```
 2. **Garantías de No Regresión:**
-   - En `diagrama-bloque`, las rutas manuales viven en `e.manual = { c: [...] }` (no en `e.pts`), y `routeEdge(e)` ([`src/bloque/ruteo.js:80-108`](../src/bloque/ruteo.js)) reconstruye `e.pts` a partir de `e.manual.c` en cada `routeAll()`.
+   - En `diagrama-bloque`, las rutas manuales viven en `e.manual = { c: [...] }` (no en `e.pts`), y `routeEdge(e)` ([`src/bloque/ruteo.js:80-108`](../src/comun/ruteo-bloques.js)) reconstruye `e.pts` a partir de `e.manual.c` en cada `routeAll()`.
    - Por lo tanto, al omitir `e.pts` en `docDatos()`, los tests [`tests/specs/bloque.spec.js:299-319`](../tests/specs/bloque.spec.js) (`"la flecha con ruta a mano copiada conserva su forma"`) y el deshacer/rehacer de tramos manuales siguen funcionando exactamente igual, pero el JSON exportado queda limpio y `snapshot()` captura siempre los `n.w` y `n.h` ya actualizados.
 
 ---

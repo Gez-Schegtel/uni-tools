@@ -3,7 +3,7 @@
 - **ID:** `SPEC-25`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** Secciones `5.4.B.4`, `5.4.C.3` y `5.4.C.6`
-- **Prioridad:** Media (25 / 27)
+- **Prioridad:** Media (25)
 - **Esfuerzo estimado:** Medio (~40 minutos)
 - **Archivos afectados:** `tests/specs/simulador.spec.js`, `tests/specs/bloque.spec.js`
 

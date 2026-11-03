@@ -47,3 +47,17 @@ test("el armado detecta dos módulos que declaran el mismo nombre global", () =>
   // pisar a propósito se declara con @pisa
   expect(colisiones([{ nombre: "a.js", texto: "function fit() {}" }, { nombre: "b.js", texto: "/* @pisa fit */\nfunction fit() {}" }])).toEqual([]);
 });
+
+test("los enlaces del backlog y de la documentación apuntan a archivos que existen", () => {
+  const rotos = [];
+  const md = ["README.md", "CLAUDE.md", "tests/README.md", ".claude/skills/uni-tools/SKILL.md"]
+    .concat(fs.readdirSync(path.join(RAIZ, "backlog")).filter((f) => f.endsWith(".md")).map((f) => "backlog/" + f));
+  for (const f of md) {
+    const texto = fs.readFileSync(path.join(RAIZ, f), "utf8");
+    for (const [, url] of texto.matchAll(/\]\(([^)#\s]+)(?:#[^)]*)?\)/g)) {
+      if (/^[a-z]+:/i.test(url)) continue;                       // enlaces de afuera
+      if (!fs.existsSync(path.resolve(path.dirname(path.join(RAIZ, f)), decodeURI(url)))) rotos.push(f + " → " + url);
+    }
+  }
+  expect(rotos).toEqual([]);
+});

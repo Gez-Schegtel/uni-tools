@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-18`
 - **Referencia en el informe:** `BUG-11` y Sección `5.4.C.5`
-- **Prioridad:** Media (18 / 27)
+- **Prioridad:** Media (18)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Herramientas afectadas:** Simulador lógico y módulo común de recuadros (`src/comun/recuadros.js`, `src/bloque/dibujo.js`, `src/bloque/interaccion.js`, `src/simulador/dibujo.js`, `src/simulador/interaccion.js`)
 

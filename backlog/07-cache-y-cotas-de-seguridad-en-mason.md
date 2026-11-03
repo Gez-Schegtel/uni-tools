@@ -3,7 +3,7 @@
 - **ID:** `SPEC-07`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-03` y Sección `5.4.D.4`
-- **Prioridad:** Alta (7 / 27)
+- **Prioridad:** Alta (7)
 - **Esfuerzo estimado:** Medio (~40 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/mason.js`, `src/senales/panel.js`, `diagrama-señales.html`)
 

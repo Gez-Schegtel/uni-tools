@@ -1,5 +1,7 @@
 # Informe de Análisis Técnico Exhaustivo — `uni-tools`
 
+> **Foto del 28 de octubre de 2026** (commit `22051e0`). Lo que dice este informe describe el código de ese día: varias cosas ya cambiaron (por ejemplo, `CLAUDE.md` existe y los BUG-01 a BUG-22 están resueltos). El estado de cada hallazgo y lo que vino después está en [`backlog/00-INDICE-BACKLOG.md`](./backlog/00-INDICE-BACKLOG.md).
+
 **Fecha del análisis:** 28 de octubre de 2026  
 **Rama analizada:** `features/análisis` (commit base `22051e0`)  
 **Alcance:** Revisión íntegra del 100 % de los archivos del repositorio (56 módulos fuente en `src/`, 4 páginas HTML en la raíz, 20 archivos de pruebas en `tests/`, 2 flujos de CI en `.github/workflows/` y toda la documentación y configuración del proyecto).

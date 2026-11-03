@@ -3,7 +3,7 @@
 - **ID:** `SPEC-17`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-07` y Sección `5.4.B.2`
-- **Prioridad:** Media (17 / 27)
+- **Prioridad:** Media (17)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Herramientas afectadas:** Diagramas de bloques (`src/bloque/modelo.js`, `src/bloque/interaccion.js`, `src/bloque/panel.js`, `diagrama-bloque.html`)
 
@@ -31,7 +31,7 @@ function admiteEntrada(id, ignorandoFlecha) {
 Al comparar con las reglas estrictas que se habían ensayado en el commit `520e9a1` (de otra rama: no está en este repositorio), es **fundamental separar qué es un bug real en `22051e0` de qué es una decisión de diseño que, si se aplica sin cuidado, rompe funcionalidad existente**:
 
 ### ⚠️ Alerta de No Regresión: Por qué NO se debe prohibir sacar varias flechas de un mismo nodo ni filtrar flechas en `depurarFlechas()` sin antes decidir el modelo
-En `22051e0`, **compartir tronco con puntos de unión automáticos (`junctionDots()` en [`src/bloque/ruteo.js:138-159`](../src/bloque/ruteo.js)) es una funcionalidad activa y testeada**:
+En `22051e0`, **compartir tronco con puntos de unión automáticos (`junctionDots()` en [`src/bloque/ruteo.js:138-159`](../src/comun/ruteo-bloques.js)) es una funcionalidad activa y testeada**:
 1. Cuando dos flechas salen del mismo nodo (`a.from.id === b.from.id`), `junctionDots()` dibuja automáticamente el punto de bifurcación (`<circle class="jdot">`) donde ambas rutas se separan.
 2. El test existente [`tests/specs/bloque.spec.js:132-155`](../tests/specs/bloque.spec.js) (`"permite varias salidas desde una entrada y entradas a un sumador"`) saca **tres flechas distintas desde el mismo nodo `r` (`type: "io"`)** (`r → g1`, `r → g2` y `r → b`) y exige que las 3 se creen (`expect(n).toBe(3)`).
 3. Además, [`src/senales/equivalente.js:90`](../src/senales/equivalente.js) genera para el nodo de entrada un único `io()` del cual salen directamente todas las ramas de `sal` (`sal.length >= 2`).

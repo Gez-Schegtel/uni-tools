@@ -3,7 +3,7 @@
 - **ID:** `SPEC-01`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-01` y Sección `5.2.1` (Falso positivo en `archivos-danados.spec.js`)
-- **Prioridad:** Crítica (1 / 27)
+- **Prioridad:** Crítica (1)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/documento.js`, `diagrama-bloque.html`, `simulador-logico.html`, `diagrama-señales.html`)
 

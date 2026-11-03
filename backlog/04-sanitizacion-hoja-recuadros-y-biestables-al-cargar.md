@@ -3,7 +3,7 @@
 - **ID:** `SPEC-04`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-20` y Sección `5.4.A.5`
-- **Prioridad:** Media / Alta (4 / 27)
+- **Prioridad:** Media / Alta (4)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/hoja.js`, `src/comun/recuadros.js`, `src/bloque/modelo.js`, `src/simulador/modelo.js`)
 

@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-21`
 - **Referencia en el informe:** Secciones `4.1`, `4.2` y `4.3`
-- **Prioridad:** Media / Baja (21 / 27)
+- **Prioridad:** Media / Baja (21)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Herramientas afectadas:** Las tres (`src/bloque/interaccion.js`, `src/bloque/dibujo.js`, `src/bloque/ecuaciones.js`, `src/simulador/interaccion.js`, `src/comun/documento.js`)
 

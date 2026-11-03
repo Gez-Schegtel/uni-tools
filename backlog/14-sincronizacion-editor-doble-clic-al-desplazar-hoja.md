@@ -3,7 +3,7 @@
 - **ID:** `SPEC-14`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-18`
-- **Prioridad:** Baja (14 / 27)
+- **Prioridad:** Baja (14)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/doble-clic.js`, `src/comun/vista.js`)
 

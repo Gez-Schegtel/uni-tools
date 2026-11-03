@@ -3,7 +3,7 @@
 - **ID:** `SPEC-12`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-22`
-- **Prioridad:** Media / Baja (12 / 27)
+- **Prioridad:** Media / Baja (12)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
 - **Herramientas afectadas:** Simulador de circuitos lógicos (`src/simulador/interaccion.js`, `simulador-logico.html`)
 

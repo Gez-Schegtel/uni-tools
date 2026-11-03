@@ -99,7 +99,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **36** | ✅ Hecho | [`36-lgr-entrada-ambigua-coma-y-k.md`](./36-lgr-entrada-ambigua-coma-y-k.md) | Auditoría LGR | UX / Entrada | Bajo (20 min) | Avisar cuando `1,2` en una lista se lee como decimal y no aceptar `K` dentro de un polinomio. |
 | **37** | ✅ Hecho | [`37-publicacion-en-pages-solo-con-pruebas-verdes.md`](./37-publicacion-en-pages-solo-con-pruebas-verdes.md) | Auditoría CI | CI / Publicación | Bajo (25 min) | Que Pages publique sólo páginas e imágenes, y sólo si las páginas coinciden con `src/` (o con las pruebas en verde). |
 | **38** | ✅ Hecho | [`38-ventana-de-mason-con-delta-compacto.md`](./38-ventana-de-mason-con-delta-compacto.md) | Revisión SPEC-07 | Rendimiento / UX | Medio (40 min) | Mostrar Δ resumido cuando tiene muchos términos, para poder subir el tope de combinaciones disjuntas. |
-| **39** | ⏳ Pendiente | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
+| **39** | ✅ Hecho | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
 
 ---
 

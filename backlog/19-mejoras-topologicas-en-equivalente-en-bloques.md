@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-19`
 - **Referencia en el informe:** `BUG-13`
-- **Prioridad:** Media (19 / 27)
+- **Prioridad:** Media (19)
 - **Esfuerzo estimado:** Medio (~35 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/equivalente.js`, `diagrama-señales.html`)
 

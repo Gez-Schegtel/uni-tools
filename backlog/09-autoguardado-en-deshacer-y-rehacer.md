@@ -3,7 +3,7 @@
 - **ID:** `SPEC-09`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-19` y Sección `5.4.A.4`
-- **Prioridad:** Media / Quick Win (9 / 27)
+- **Prioridad:** Media / Quick Win (9)
 - **Esfuerzo estimado:** Muy bajo (~10 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/historial.js`, `diagrama-bloque.html`, `simulador-logico.html`, `diagrama-señales.html`)
 

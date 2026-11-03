@@ -3,7 +3,7 @@
 - **ID:** `SPEC-06`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-04` y Sección `5.4.C.1`
-- **Prioridad:** Alta (6 / 27)
+- **Prioridad:** Alta (6)
 - **Esfuerzo estimado:** Medio (~30 minutos)
 - **Herramientas afectadas:** Simulador de circuitos lógicos (`src/simulador/interaccion.js`, `src/simulador/panel.js`, `src/simulador/dibujo.js`, `simulador-logico.html`)
 
