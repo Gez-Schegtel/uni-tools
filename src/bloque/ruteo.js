@@ -1,5 +1,5 @@
-/* ======================= geometría ======================= */
-const DIRS = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
+/* ======================= geometría =======================
+   DIRS y portPoint() están en comun/puertos.js (los comparte el equivalente de señales) */
 function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
@@ -7,14 +7,6 @@ function rectOf(n) {
 function puntoEnMarco(p, n) {
   const R = rectOf(n);
   return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
-}
-function portPoint(n, port) {
-  if (n.type === "node") return { x: n.x, y: n.y };
-  const R = rectOf(n);
-  if (port === "l") return { x: R.l, y: n.y };
-  if (port === "r") return { x: R.r, y: n.y };
-  if (port === "t") return { x: n.x, y: R.t };
-  return { x: n.x, y: R.b };
 }
 const dirOf = (p) => DIRS[p];
 

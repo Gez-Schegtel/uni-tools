@@ -30,7 +30,8 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 | `barra.js` | deshacer/rehacer/borrar/duplicar, grupos plegables, panel lateral, cerrar ventanas con clic afuera |
 | `autoguardado.js` | autoguardado, «Inicio» y `arrancar()` |
 | `colores.js`, `hoja.js`, `recuadros.js`, `ortogonal.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, cajas/alineación y ruteo ortogonal (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`) |
-| `base.css`, `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos |
+| `puertos.js` | sólo bloques y señales: `DIRS` y `portPoint()` (el editor de bloques y el equivalente de señales usan los mismos) |
+| `base.css` (incluye `avisos.css`), `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos; el LGR usa `avisos.css`, `inicio.html` y `lienzo.js` |
 
 Cada herramienta (`src/bloque/`, `src/simulador/`, `src/senales/`) tiene su `pagina.html` (marcado y
 **el orden** en que se pegan CSS y JS), `estilos.css` (después de `base.css`, así que manda),

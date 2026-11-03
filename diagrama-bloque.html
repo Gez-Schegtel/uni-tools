@@ -1699,8 +1699,19 @@ function insertar(cop, desp) {
   S.nodes.push(...nodes); S.edges.push(...edges);
   S.sel = nodes.map(c => c.id); S.selEdges = [];
 }
-/* ======================= geometría ======================= */
+/* ======================= puertos de los bloques =======================
+   Hacia dónde sale cada lado de un elemento y en qué punto está su puerto. Lo usan el
+   editor de bloques (ruteo y dibujo) y el equivalente en bloques del diagrama de señales,
+   que antes tenía su propia copia (DIRP y puntoPuerto). */
 const DIRS = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
+/* El punto del puerto: el medio de ese lado (una bifurcación es un punto, así que su centro) */
+function portPoint(n, port) {
+  if (n.type === "node") return { x: n.x, y: n.y };
+  const d = DIRS[port] || DIRS.b;
+  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
+}
+/* ======================= geometría =======================
+   DIRS y portPoint() están en comun/puertos.js (los comparte el equivalente de señales) */
 function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
@@ -1708,14 +1719,6 @@ function rectOf(n) {
 function puntoEnMarco(p, n) {
   const R = rectOf(n);
   return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
-}
-function portPoint(n, port) {
-  if (n.type === "node") return { x: n.x, y: n.y };
-  const R = rectOf(n);
-  if (port === "l") return { x: R.l, y: n.y };
-  if (port === "r") return { x: R.r, y: n.y };
-  if (port === "t") return { x: n.x, y: R.t };
-  return { x: n.x, y: R.b };
 }
 const dirOf = (p) => DIRS[p];
 

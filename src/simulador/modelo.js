@@ -21,23 +21,20 @@ function makeNode(type, x, y, extra) {
     n.kind = n.kind || kind || "d";
     if (n.conClk === undefined) n.conClk = conClk;
     n.pins = n.pins || pinsDe(n.kind, n.conClk);
-    n.label = n.label || proximoNombreFF();
+    n.label = n.label || proximaLetraLibre("ff");
     n.q = n.q || 0; n.clkPrev = 0; n.clkArranque = false;
     n.salida = n.salida || "Q"; n.salidaNeg = n.salidaNeg || "Q";
     tablaDe(n);
   }
   return n;
 }
-function proximoNombreFF() {
-  const usadas = new Set(S.nodes.filter(n => n.type === "ff").map(n => n.label));
+/* La primera letra libre entre los elementos de ese tipo (entradas A, B, C…; biestables también) */
+function proximaLetraLibre(tipo) {
+  const usadas = new Set(S.nodes.filter(n => n.type === tipo).map(n => n.label));
   for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; }
   return "X";
 }
-function proximaLetra() {
-  const usadas = new Set(S.nodes.filter(n => n.type === "in").map(n => n.label));
-  for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; }
-  return "X";
-}
+const proximaLetra = () => proximaLetraLibre("in");
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */

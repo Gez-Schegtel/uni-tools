@@ -145,7 +145,7 @@ test("en la vista previa del equivalente, cada flecha llega desde afuera del pue
       const nums = caminos[k].getAttribute("d").match(/-?[\d.]+/g).map(Number);
       const [x1, y1, x2, y2] = nums.slice(-4), B = porId.get(e.to.id);
       if (B.type === "node") { if (caminos[k].getAttribute("marker-end")) malas.push("punta en una bifurcación"); return; }
-      const dir = DIRP[e.to.port];                       // la normal hacia afuera del puerto
+      const dir = DIRS[e.to.port];                       // la normal hacia afuera del puerto
       if ((x2 - x1) * dir.x + (y2 - y1) * dir.y >= 0) malas.push(`${B.type} ${B.label || ""} ${e.to.port}: llega desde adentro`);
     });
     return malas;

@@ -65,6 +65,15 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
 
 ---
 
+### 3.2. Lo que se hizo (2026-11-03)
+
+- `DIRS` y `portPoint()` pasaron a `src/comun/puertos.js`, incluido por bloques y señales; `equivalente.js` dejó de tener `DIRP` y `puntoPuerto()`.
+- `proximoNombreFF()` y `proximaLetra()` del simulador se unificaron en `proximaLetraLibre(tipo)` (`proximaLetra()` queda como atajo para las entradas).
+- **Los tres `fit()` no se unificaron, a propósito:** cambian el margen (60 o 70), el zoom máximo (2 o 1,8), la posición con la hoja vacía, si consideran el área de impresión y qué recalculan antes de encuadrar (tamaños y rutas, rutas, o curvas). Pasar todo eso por `HERRAMIENTA` dejaba una función común más difícil de leer que las tres de 4 líneas; lo común (`encuadrar()`, `instalarRueda()`, `moverVista()`) ya está en `comun/vista.js`.
+- El ruteo propio del equivalente (`caminoOrto`) es `SPEC-42`.
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 - Ejecutar [`tests/specs/comun.spec.js`](../tests/specs/comun.spec.js) (que prueba `fit()` evitando que la paleta tape elementos y prueba `Shift + rueda` y `Ctrl + rueda` en las 3 herramientas) y [`tests/specs/lienzo.spec.js`](../tests/specs/lienzo.spec.js).
@@ -73,6 +82,6 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
 
 ## 5. Criterios de Aceptación
 
-- [ ] `fit()` e `instalarRueda()` están definidos una sola vez en `src/comun/vista.js` y funcionan en las tres herramientas.
-- [ ] `src/senales/interaccion.js` tiene ~42 líneas menos de código duplicado.
-- [ ] `node src/construir.js` actualiza las tres páginas y todos los tests de `comun.spec.js`, `lienzo.spec.js` y `senales.spec.js` pasan.
+- [x] `instalarRueda()` (y `encuadrar()`, `moverVista()`) están una sola vez en `src/comun/vista.js`; `fit()` queda en cada herramienta (ver 3.2).
+- [x] No queda geometría de puertos duplicada entre bloques y señales, ni las dos funciones de letra libre del simulador.
+- [x] `node src/construir.js` actualiza las tres páginas y todos los tests de `comun.spec.js`, `lienzo.spec.js` y `senales.spec.js` pasan.

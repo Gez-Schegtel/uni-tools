@@ -222,12 +222,7 @@ function equivalenteEnBloques() {
 }
 
 /* ---- dibujo del equivalente: un SVG suelto, para la vista previa y el PNG ---- */
-const DIRP = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
-function puntoPuerto(n, p) {
-  if (n.type === "node") return { x: n.x, y: n.y };     // la bifurcación es un punto
-  const d = DIRP[p] || DIRP.l;
-  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
-}
+/* DIRS y portPoint() vienen de comun/puertos.js, los mismos del editor de bloques */
 function caminoOrto(p1, d1, p2, d2) {          // ruteo en ángulo recto, como en el editor
   const s = 20;
   const a = { x: p1.x + d1.x * s, y: p1.y + d1.y * s };
@@ -263,8 +258,8 @@ function svgDeBloques(d) {
   for (const e of d.edges) {
     const A = porId.get(e.from.id), B = porId.get(e.to.id);
     if (!A || !B) continue;
-    const pts = caminoOrto(puntoPuerto(A, e.from.port), DIRP[e.from.port] || DIRP.r,
-                           puntoPuerto(B, e.to.port), DIRP[e.to.port] || DIRP.l);
+    const pts = caminoOrto(portPoint(A, e.from.port), DIRS[e.from.port] || DIRS.r,
+                           portPoint(B, e.to.port), DIRS[e.to.port] || DIRS.l);
     el("path", { d: "M " + pts.map(p => p.x + " " + p.y).join(" L "), fill: "none",
       stroke: "#101418", "stroke-width": 1.6, "stroke-linejoin": "round",
       "marker-end": B.type === "node" ? "" : "url(#pta)" }, s);   // a una bifurcación no se le pone punta
@@ -287,7 +282,7 @@ function svgDeBloques(d) {
         stroke: "#101418", "stroke-width": 1.4, fill: "none" }, s);
       for (const p in n.signs) {
         if (!n.signs[p]) continue;
-        const dd = DIRP[p];
+        const dd = DIRS[p];
         texto(n.x + dd.x * rad * 0.58, n.y + dd.y * rad * 0.58, n.signs[p], 13);
       }
     } else if (n.type === "node") {
