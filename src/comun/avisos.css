@@ -2,7 +2,7 @@
 kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
+  background:var(--aviso-fondo);color:var(--aviso-texto);font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -11,12 +11,12 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   color:rgba(255,255,255,.75);font:inherit;line-height:1;cursor:pointer;pointer-events:none}
 #toast .x::before{content:"✕";font-size:11px}
 #toast.show .x{pointer-events:auto}
-#toast .x:hover{background:rgba(255,255,255,.16);color:#fff}
+#toast .x:hover{background:rgba(255,255,255,.16);color:var(--aviso-texto)}
 /* ---------- ventanas ---------- */
-.overlay{position:fixed;inset:0;background:rgba(18,24,31,.45);display:none;align-items:center;
+.overlay{position:fixed;inset:0;background:rgba(var(--sombra),.45);display:none;align-items:center;
   justify-content:center;z-index:40;padding:20px}
 .overlay.show{display:flex}
 .modal{background:var(--paper);border-radius:12px;width:100%;
-  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(18,24,31,.3)}
+  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(var(--sombra),.3)}
 .modal h2{margin:0 0 4px;font-size:16px}
-.modal p.sub{margin:0 0 16px;color:#8a97a5;font-size:12px}
+.modal p.sub{margin:0 0 16px;color:var(--muted);font-size:12px}

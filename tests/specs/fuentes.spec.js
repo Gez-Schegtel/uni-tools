@@ -89,3 +89,14 @@ test("src/sitio.js no borra la raíz del repo ni una carpeta que la contenga", (
   }
   expect(fs.existsSync(path.join(RAIZ, "index.html"))).toBe(true);
 });
+
+test("la portada copia el modo oscuro de comun/tema.*: la misma clave, la misma lógica y los mismos íconos", () => {
+  const index = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+  const js = fs.readFileSync(path.join(RAIZ, "src", "comun", "tema.js"), "utf8");
+  const boton = fs.readFileSync(path.join(RAIZ, "src", "comun", "tema.html"), "utf8");
+  const sinEspacios = (s) => s.replace(/\s+/g, " ").trim();
+  // de tema.js, desde la clave hasta el final (sin el comentario de arriba)
+  const logica = js.slice(js.indexOf("const CLAVE_TEMA")).replace("  if (!b) return;\n", "");
+  expect(sinEspacios(index)).toContain(sinEspacios(logica));
+  for (const svg of boton.match(/<svg[^]*?<\/svg>/g)) expect(index).toContain(svg);
+});

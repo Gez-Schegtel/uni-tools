@@ -105,10 +105,39 @@ a.boton .flecha{
   color: var(--acento);
 }
 .guardado{display:block;margin-top:4px;font-size:12px;color:var(--acento)}
+
+/* Modo oscuro: lo pone el botón de la luna (y lo recuerda para todas las páginas, con la
+   misma clave que src/comun/tema.js). Los botones de las herramientas son los de comun/tema.html. */
+:root[data-tema="oscuro"]{
+  color-scheme: dark;
+  --texto:       #e6ebf1;
+  --texto-suave: #a9b5c2;
+  --fondo:       #12161b;
+  --tarjeta:     #1b2027;
+  --borde:       #3a4450;
+  --acento:      #5b9bff;
+}
+/* el logo es oscuro: en oscuro va sobre una placa clara */
+:root[data-tema="oscuro"] h1.marca img{background:#f2f5f8;border-radius:16px;padding:10px 14px;box-sizing:border-box}
+#b-tema{position:fixed;top:14px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--borde);border-radius:50%;background:var(--tarjeta);color:var(--texto);cursor:pointer;padding:0}
+#b-tema:hover{border-color:var(--acento)}
+#b-tema svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  animation:tema-giro .35s ease}
+#b-tema .ico-sol{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-luna{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-sol{display:block}
+@keyframes tema-giro{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#b-tema svg{animation:none}}
 </style>
 </head>
 
 <body>
+
+  <button id="b-tema" type="button" title="Pasar a modo oscuro" aria-label="Pasar a modo oscuro" aria-pressed="false">
+    <svg class="ico-luna" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+  </button>
 
   <h1 class="marca">
     <img src="uni-tools-logo.png"
@@ -184,6 +213,26 @@ a.boton .flecha{
   </a>
 
   <script>
+  /* Modo oscuro: la misma clave y el mismo comportamiento que src/comun/tema.js */
+  const CLAVE_TEMA = "uni-tools-tema";
+  function temaGuardado() {
+    try { return localStorage.getItem(CLAVE_TEMA) === "oscuro" ? "oscuro" : "claro"; } catch (e) { return "claro"; }
+  }
+  function ponerTema(t) {
+    document.documentElement.dataset.tema = t;
+    const b = document.getElementById("b-tema");
+    b.title = t === "oscuro" ? "Pasar a modo claro" : "Pasar a modo oscuro";
+    b.setAttribute("aria-label", b.title);
+    b.setAttribute("aria-pressed", String(t === "oscuro"));
+  }
+  ponerTema(temaGuardado());
+  document.getElementById("b-tema").addEventListener("click", () => {
+    const t = document.documentElement.dataset.tema === "oscuro" ? "claro" : "oscuro";
+    try { localStorage.setItem(CLAVE_TEMA, t); } catch (e) {}
+    ponerTema(t);
+  });
+  window.addEventListener("storage", ev => { if (ev.key === CLAVE_TEMA) ponerTema(temaGuardado()); });
+
   /* Si una herramienta tiene un diagrama autoguardado en este navegador, se avisa en su botón.
      La clave es la misma que arma src/comun/autoguardado.js ("uni-tools-autoguardado-" + la clave
      de la herramienta): los data-auto de los botones de arriba tienen que coincidir. */

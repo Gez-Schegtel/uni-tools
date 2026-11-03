@@ -11,7 +11,8 @@
 <meta name="description" content="Calculadora del LGR: ingresá la ecuación o los ceros y polos y obtené el gráfico con todos los cálculos paso a paso">
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
 <style>
-:root{
+/* Como en comun/base.css: los tokens también en el lienzo, que en oscuro conserva los claros */
+:root,svg#canvas{
   --ink:#12181f;
   --ink-2:#3d4b5a;
   --line:#d7dee6;
@@ -22,6 +23,18 @@
   --accent-soft:#e3edff;
   --warn:#c2410c;
   --ok:#166534;
+  --muted:#8a97a5;
+  --muted-2:#93a0ae;
+  --accent-line:#b9d2ff;
+  --on-accent:#ffffff;
+  --sombra:18,24,31;
+  --aviso-fondo:#12181f;
+  --aviso-texto:#ffffff;
+  --borde-color:rgba(18,24,31,.22);
+  --muted-3:#7b8896;
+  --suave:#f7f9fb;
+  --warn-soft:#fff1ea;
+  --leyenda-fondo:rgba(255,255,255,.92);
   --ui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
   --draw:Arial,Helvetica,sans-serif;
@@ -35,10 +48,10 @@ header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;
   background:var(--paper);border-bottom:1px solid var(--line);z-index:5}
 .brand{display:flex;align-items:baseline;gap:8px;margin-right:4px}
 .brand b{font-size:14px;letter-spacing:-.01em}
-.brand span{font-family:var(--mono);font-size:10px;color:#8a97a5;letter-spacing:.08em;text-transform:uppercase}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .group{display:flex;align-items:center;gap:4px;padding-right:12px;border-right:1px solid var(--line-2)}
 .group:last-child{border-right:0}
-.glab{font-family:var(--mono);font-size:9px;color:#93a0ae;letter-spacing:.1em;text-transform:uppercase;
+.glab{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase;
   margin-right:2px;cursor:pointer;user-select:none;transition:color .15s}
 .glab:hover{color:var(--ink)}
 .glab::after{content:" \25BC";font-size:8px;opacity:.6;display:inline-block;
@@ -50,9 +63,9 @@ button,select,input[type=text]{font-family:var(--ui);font-size:12px;color:var(--
   display:inline-flex;align-items:center;gap:5px;line-height:1;white-space:nowrap;
   transition:background .12s,border-color .12s}
 .btn:hover{background:var(--line-2)}
-.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn svg{width:14px;height:14px;stroke:var(--ink-2);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.btn.on svg{stroke:#fff}
+.btn.on svg{stroke:var(--on-accent)}
 .btn.ghost{border-color:transparent;background:transparent}
 a.btn{text-decoration:none;color:var(--ink)}           /* Inicio (comun/inicio.html) es un enlace */
 .btn.ghost:hover{background:var(--line-2)}
@@ -70,7 +83,7 @@ select{border:1px solid var(--line);background:var(--paper);border-radius:6px;pa
   padding:6px 8px;width:min(330px,70vw);background:var(--paper);outline:none;text-align:center}
 .entrada-txt:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .entrada-txt.mal{border-color:var(--warn)}
-.etq{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7b8896}
+.etq{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-3)}
 #resumen{font-size:12.5px;color:var(--ink-2);flex:1;min-width:260px;line-height:1.6}
 #resumen b{color:var(--ink);font-weight:600}
 #msj{flex-basis:100%;font-size:12.5px;color:var(--warn);display:none}
@@ -83,13 +96,13 @@ main{flex:1;display:flex;min-height:0;position:relative}
 svg#canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;user-select:none}
 svg#canvas.arrastrando{cursor:grabbing}
 #zoom{position:absolute;left:12px;bottom:12px;display:flex;gap:4px;background:var(--paper);
-  border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 6px 24px rgba(18,24,31,.08)}
-#tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-family:var(--mono);
+  border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 6px 24px rgba(var(--sombra),.08)}
+#tip{position:absolute;pointer-events:none;background:var(--aviso-fondo);color:var(--aviso-texto);font-family:var(--mono);
   font-size:11px;padding:4px 7px;border-radius:5px;white-space:nowrap;display:none;z-index:3}
-#leyenda{position:absolute;right:12px;top:10px;background:rgba(255,255,255,.92);border:1px solid var(--line);
+#leyenda{position:absolute;right:12px;top:10px;background:var(--leyenda-fondo);border:1px solid var(--line);
   border-radius:8px;padding:6px 9px;font-size:11px;color:var(--ink-2);line-height:1.7;pointer-events:none}
 #leyenda svg{width:16px;height:12px;vertical-align:-2px;margin-right:5px;overflow:visible}
-#vacio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a97a5;
+#vacio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);
   font-size:14px;pointer-events:none;text-align:center;padding:20px}
 /* ---------- panel de detalles ---------- */
 #detalles{width:460px;flex:none;background:var(--paper);border-left:1px solid var(--line);
@@ -97,41 +110,41 @@ svg#canvas.arrastrando{cursor:grabbing}
   transition:width .2s ease,min-width .2s ease,border-color .2s ease}
 #detalles.collapsed{width:0;min-width:0;border-left-color:transparent;overflow:hidden}
 #det-barra{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line-2);flex:none}
-#det-barra .t{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7b8896;margin-right:auto}
+#det-barra .t{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-3);margin-right:auto}
 #det-cuerpo{overflow-y:auto;overflow-x:hidden;flex:1;padding:6px 0 30px}
 details.paso{border-bottom:1px solid var(--line-2)}
 details.paso>summary{list-style:none;cursor:pointer;padding:11px 14px;font-weight:600;font-size:13px;
   display:flex;align-items:center;gap:9px;user-select:none}
 details.paso>summary::-webkit-details-marker{display:none}
-details.paso>summary:hover{background:#f7f9fb}
-details.paso>summary::after{content:"\25BE";margin-left:auto;color:#93a0ae;transition:transform .2s}
+details.paso>summary:hover{background:var(--suave)}
+details.paso>summary::after{content:"\25BE";margin-left:auto;color:var(--muted-2);transition:transform .2s}
 details.paso:not([open])>summary::after{transform:rotate(-90deg)}
 .num{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
   font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:none}
 .cuerpo{padding:2px 14px 14px;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
 .cuerpo p{margin:6px 0}
 .cuerpo b{color:var(--ink)}
-.ec{font-family:var(--draw);font-size:15px;color:var(--ink);background:#f7f9fb;border:1px solid var(--line-2);
+.ec{font-family:var(--draw);font-size:15px;color:var(--ink);background:var(--suave);border:1px solid var(--line-2);
   border-radius:6px;padding:7px 10px;margin:6px 0;overflow-x:auto;white-space:nowrap}
 .ec.sm{font-size:13.5px}
 .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px}
 .fr>span:first-child{border-bottom:1px solid currentColor;padding:0 4px 1px}
 .fr>span:last-child{padding:1px 4px 0}
 table.t{border-collapse:collapse;width:100%;font-size:12px;margin:6px 0}
-table.t th{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#7b8896;
+table.t th{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-3);
   text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
 table.t td{padding:4px 6px;border-bottom:1px solid var(--line-2);font-family:var(--draw);color:var(--ink)}
 .si{color:var(--ok);font-weight:600}
 .no{color:var(--warn);font-weight:600}
 .res{border-left:3px solid var(--accent);background:var(--accent-soft);padding:6px 10px;margin:8px 0;
   border-radius:0 6px 6px 0;color:var(--ink)}
-.res.no-res{border-left-color:var(--warn);background:#fff1ea}
+.res.no-res{border-left-color:var(--warn);background:var(--warn-soft)}
 pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font-family:var(--mono);
   font-size:11.5px;overflow-x:auto;margin:6px 0;line-height:1.55}
-.vacio-det{padding:30px 20px;color:#8a97a5;font-size:13px;text-align:center}
+.vacio-det{padding:30px 20px;color:var(--muted);font-size:13px;text-align:center}
 @media (max-width:820px){
   #detalles{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(430px,92vw);
-    box-shadow:-8px 0 24px rgba(18,24,31,.14)}
+    box-shadow:-8px 0 24px rgba(var(--sombra),.14)}
   #detalles.collapsed{box-shadow:none}
   #leyenda{display:none}
 }
@@ -139,7 +152,7 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
 kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
+  background:var(--aviso-fondo);color:var(--aviso-texto);font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -148,15 +161,79 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   color:rgba(255,255,255,.75);font:inherit;line-height:1;cursor:pointer;pointer-events:none}
 #toast .x::before{content:"✕";font-size:11px}
 #toast.show .x{pointer-events:auto}
-#toast .x:hover{background:rgba(255,255,255,.16);color:#fff}
+#toast .x:hover{background:rgba(255,255,255,.16);color:var(--aviso-texto)}
 /* ---------- ventanas ---------- */
-.overlay{position:fixed;inset:0;background:rgba(18,24,31,.45);display:none;align-items:center;
+.overlay{position:fixed;inset:0;background:rgba(var(--sombra),.45);display:none;align-items:center;
   justify-content:center;z-index:40;padding:20px}
 .overlay.show{display:flex}
 .modal{background:var(--paper);border-radius:12px;width:100%;
-  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(18,24,31,.3)}
+  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(var(--sombra),.3)}
 .modal h2{margin:0 0 4px;font-size:16px}
-.modal p.sub{margin:0 0 16px;color:#8a97a5;font-size:12px}
+.modal p.sub{margin:0 0 16px;color:var(--muted);font-size:12px}
+/* ======================= modo oscuro =======================
+   comun/tema.js pone data-tema="oscuro" o "claro" en <html> (botón de la luna y el sol).
+   En oscuro cambian los tokens de la interfaz; el dibujo NO cambia: svg#canvas vuelve a
+   declarar los tokens claros (en base.css y lgr/estilos.css) y se muestra invertido con un
+   filtro. Así el documento, los colores elegidos y lo que se exporta son los mismos en los
+   dos temas. Va después de los estilos de cada herramienta. */
+
+/* ---------- el botón: una luna en claro, un sol en oscuro ---------- */
+#b-tema{padding:4px 6px}                             /* 24 px de alto, como un botón de texto */
+#b-tema svg{animation:tema-giro .35s ease}           /* 14 px, como los demás íconos: la barra no crece */
+#b-tema .ico-sol{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-luna{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-sol{display:block}
+@keyframes tema-giro{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#b-tema svg{animation:none}}
+
+/* ---------- los tokens oscuros ---------- */
+:root[data-tema="oscuro"]{
+  color-scheme:dark;
+  --ink:#e6ebf1;
+  --ink-2:#b6c2ce;
+  --line:#3a4450;
+  --line-2:#29313b;
+  --paper:#1b2027;
+  --shell:#12161b;
+  --accent:#5b9bff;
+  --accent-soft:#1e3354;
+  --accent-line:#34609f;
+  --on-accent:#0b1424;
+  --warn:#ff9a5c;
+  --muted:#97a3b1;
+  --muted-2:#97a3b1;
+  --muted-3:#97a3b1;
+  --sombra:0,0,0;
+  --aviso-fondo:#2e3846;
+  --aviso-texto:#f1f5f9;
+  --borde-color:rgba(255,255,255,.3);
+  --ok:#5ad08a;
+  --on:#3ccf7e;
+  --on-soft:#173a26;
+  --off:#8b97a3;
+  --warn-soft:#3b2417;
+  --warn-line:#7c3c1d;
+  --suave:#232a33;
+  --leyenda-fondo:rgba(27,32,39,.94);
+}
+:root[data-tema="oscuro"] textarea{background:var(--paper);color:var(--ink)}
+:root[data-tema="oscuro"] .overlay{background:rgba(0,0,0,.6)}
+:root[data-tema="oscuro"] #toast{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.5)}
+:root[data-tema="oscuro"] .modal{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.6)}
+/* la marca de la barra tiene partes oscuras: un halo apenas claro la despega del fondo */
+:root[data-tema="oscuro"] .marca-navbar{filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
+
+/* ---------- el dibujo: los colores de siempre, invertidos sólo en pantalla ---------- */
+:root[data-tema="oscuro"] svg#canvas{background:#fff;filter:invert(.9) hue-rotate(180deg)}
+/* la leyenda del LGR y la vista previa del equivalente en bloques son dibujos como el lienzo */
+:root[data-tema="oscuro"] #leyenda svg,
+:root[data-tema="oscuro"] .previo svg{filter:invert(.9) hue-rotate(180deg)}
+:root[data-tema="oscuro"] .previo{background:#1a1a1a}
+
+/* ---------- detalles de cada herramienta ---------- */
+/* simulador: la perilla de los interruptores y las lámparas apagadas tienen que verse */
+:root[data-tema="oscuro"] .sw::after{background:#d3dbe4}
+:root[data-tema="oscuro"] .lamp{border-color:var(--muted)}
 </style>
 </head>
 <body>
@@ -199,6 +276,10 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   <div class="group">
     <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso (D)">Detalles</button>
     <button class="btn ghost" id="b-ayuda" title="Ayuda y atajos (?)">?</button>
+<button class="btn ghost" id="b-tema" type="button" title="Pasar a modo oscuro" aria-label="Pasar a modo oscuro" aria-pressed="false">
+  <svg class="ico-luna" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+  <svg class="ico-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+</button>
   </div>
 </header>
 
@@ -261,6 +342,32 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
 </div></div>
 
 <script>
+/* ======================= modo oscuro =======================
+   El botón de la luna (en claro) o el sol (en oscuro) cambia el tema; la elección se
+   recuerda en este navegador (uni-tools-tema, la misma para todas las páginas, también la
+   portada) y se pasa a las otras pestañas abiertas. Sin elección guardada, claro.
+   Sólo cambia la interfaz: el dibujo se ve invertido por CSS (comun/tema.css), así que el
+   documento y lo que se exporta son iguales en los dos temas. Es el primer módulo del script
+   para que el tema se ponga antes de que se dibuje nada. */
+const CLAVE_TEMA = "uni-tools-tema";
+function temaGuardado() {
+  try { return localStorage.getItem(CLAVE_TEMA) === "oscuro" ? "oscuro" : "claro"; } catch (e) { return "claro"; }
+}
+function ponerTema(t) {
+  document.documentElement.dataset.tema = t;
+  const b = document.getElementById("b-tema");
+  if (!b) return;
+  b.title = t === "oscuro" ? "Pasar a modo claro" : "Pasar a modo oscuro";
+  b.setAttribute("aria-label", b.title);
+  b.setAttribute("aria-pressed", String(t === "oscuro"));
+}
+ponerTema(temaGuardado());
+document.getElementById("b-tema").addEventListener("click", () => {
+  const t = document.documentElement.dataset.tema === "oscuro" ? "claro" : "oscuro";
+  try { localStorage.setItem(CLAVE_TEMA, t); } catch (e) {}
+  ponerTema(t);
+});
+window.addEventListener("storage", ev => { if (ev.key === CLAVE_TEMA) ponerTema(temaGuardado()); });
 "use strict";
 /* ======================= lienzo =======================
    Lo primero de las tres herramientas: el <svg> de la hoja, la vista que se mueve
