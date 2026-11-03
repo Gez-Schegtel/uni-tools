@@ -561,6 +561,9 @@ const HERRAMIENTA = {
   extremos: (e) => [e.from.id, e.to.id],           // los dos elementos que une una flecha
   fondoPNG: () => temaDe("fondo"),
   cancelarArrastre: (d) => cancelarArrastrePropio(d),
+  // lo que el documento guarda y depende de otra cosa: el tamaño de un bloque sale de su
+  // ecuación. commit() lo pone al día antes de sacar la foto (si no, quedaba el del cuadro anterior)
+  actualizarDerivados: () => actualizarTamaños(),
   textos: {
     elementos: "elementos",                        // "Copiados 3 elementos"
     vacio: "La hoja está vacía",
@@ -820,7 +823,11 @@ $("#b-nombre").addEventListener("keydown", ev => ev.stopPropagation());
    Cómo se vuelve a una foto lo decide restore() de cada herramienta. */
 let undoStack = [], redoStack = [], lastSnap = null;
 const snapshot = () => JSON.stringify(Object.assign(docDatos(), { uidc }));
+/* La regla es «cambiar el estado, commit() y render()». Lo que render() recalcula (rutas de
+   flechas y cables, curvas de las ramas) no entra al documento, así que no importa que todavía
+   no esté al día; lo que sí entra y depende de otra cosa lo actualiza la herramienta acá. */
 function commit() {
+  if (HERRAMIENTA.actualizarDerivados) HERRAMIENTA.actualizarDerivados();
   const s = snapshot();
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }
@@ -1581,8 +1588,11 @@ const admitePuertoDestino = (id, port) => {
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
 /* El documento entero, tal como se guarda en el JSON y como viaja adentro del SVG */
+/* Las rutas automáticas (e.pts) no se guardan: routeAll() las rehace al dibujar, y la forma de
+   una ruta corrida a mano está en e.manual. */
 const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodes: S.nodes,
-                          edges: S.edges, tema: S.tema, hoja: S.hoja });
+                          edges: S.edges.map(e => { const c = Object.assign({}, e); delete c.pts; return c; }),
+                          tema: S.tema, hoja: S.hoja });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodes = d.nodes; S.edges = d.edges; uidc = d.uidc || uidc;

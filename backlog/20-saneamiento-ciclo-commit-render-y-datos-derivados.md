@@ -59,6 +59,15 @@ Además:
 
 ---
 
+### 2.1. Lo que se hizo (2026-11-03)
+
+- `docDatos()` de bloques no guarda `e.pts` (la ruta a mano sigue en `e.manual`); el de señales no guarda `r.curva` salvo con `curvaFija` (y `restore()` deja `curva = 0` hasta el próximo `render()`). El simulador ya no guardaba `w.pts`.
+- En vez de llamar a `actualizarTamaños()` dentro de `docDatos()`, `commit()` llama a `HERRAMIENTA.actualizarDerivados()` (en bloques, `actualizarTamaños()`) antes de `snapshot()`.
+
+Pruebas: «commit() guarda el tamaño nuevo del bloque y el documento no lleva las rutas automáticas» (`bloque.spec.js`) y «el documento guarda la curva de una rama sólo si se fijó a mano» (`senales.spec.js`).
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 1. **En [`tests/specs/bloque.spec.js`](../tests/specs/bloque.spec.js):**
@@ -71,7 +80,7 @@ Además:
 
 ## 5. Criterios de Aceptación
 
-- [ ] `commit()` captura los tamaños `n.w` y `n.h` ya actualizados cuando cambia la ecuación o fuente de un bloque.
-- [ ] `docDatos()` en `diagrama-bloque` sólo serializa `pts` en las flechas cuya ruta fue fijada a mano (`e.manual === true`).
-- [ ] Las flechas con ruta manual siguen conservando su forma al deshacer/rehacer, copiar/pegar y guardar/abrir.
-- [ ] `node src/construir.js` actualiza las páginas y todos los tests pasan.
+- [x] `commit()` captura los tamaños `n.w` y `n.h` ya actualizados cuando cambia la ecuación o fuente de un bloque.
+- [x] `docDatos()` en `diagrama-bloque` sólo serializa `pts` en las flechas cuya ruta fue fijada a mano (`e.manual === true`).
+- [x] Las flechas con ruta manual siguen conservando su forma al deshacer/rehacer, copiar/pegar y guardar/abrir.
+- [x] `node src/construir.js` actualiza las páginas y todos los tests pasan.

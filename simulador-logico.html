@@ -752,7 +752,11 @@ $("#b-nombre").addEventListener("keydown", ev => ev.stopPropagation());
    Cómo se vuelve a una foto lo decide restore() de cada herramienta. */
 let undoStack = [], redoStack = [], lastSnap = null;
 const snapshot = () => JSON.stringify(Object.assign(docDatos(), { uidc }));
+/* La regla es «cambiar el estado, commit() y render()». Lo que render() recalcula (rutas de
+   flechas y cables, curvas de las ramas) no entra al documento, así que no importa que todavía
+   no esté al día; lo que sí entra y depende de otra cosa lo actualiza la herramienta acá. */
 function commit() {
+  if (HERRAMIENTA.actualizarDerivados) HERRAMIENTA.actualizarDerivados();
   const s = snapshot();
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }

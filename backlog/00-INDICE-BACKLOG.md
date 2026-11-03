@@ -65,7 +65,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
-| **20** | ⏳ Pendiente | [`20-saneamiento-ciclo-commit-render-y-datos-derivados.md`](./20-saneamiento-ciclo-commit-render-y-datos-derivados.md) | `BUG-06` + Sec. `2.2.B` | Arquitectura | Medio (45 min) | Actualizar geometrías antes de `snapshot()` en `commit()` y no serializar `e.pts` automáticos en `docDatos()`. |
+| **20** | ✅ Hecho | [`20-saneamiento-ciclo-commit-render-y-datos-derivados.md`](./20-saneamiento-ciclo-commit-render-y-datos-derivados.md) | `BUG-06` + Sec. `2.2.B` | Arquitectura | Medio (45 min) | Actualizar geometrías antes de `snapshot()` en `commit()` y no serializar `e.pts` automáticos en `docDatos()`. |
 | **21** | ⏳ Pendiente | [`21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md`](./21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md) | Sec. `4.1`, `4.2`, `4.3` | Rendimiento | Medio (45 min) | Evitar redibujar todo el SVG y `#insp` en `pointermove` sin arrastre, acotar `_mcache`/`_bcache` y quitar `unescape()`. |
 | **22** | ⏳ Pendiente | [`22-deduplicacion-vista-y-geometria-entre-herramientas.md`](./22-deduplicacion-vista-y-geometria-entre-herramientas.md) | Sec. `4.4` | Mantenibilidad | Medio (40 min) | Unificar `fit()` e `instalarRueda()` de `senales` con `src/comun/vista.js` y centralizar helpers repetidos. |
 

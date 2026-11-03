@@ -415,3 +415,15 @@ test("en el equivalente, lo que vuelve desde la salida sale de un punto antes de
   expect(b.problemas).toEqual([]);
   expect(b.T).toBeCloseTo(await transferenciaDeMason(page), 10);
 });
+
+test("el documento guarda la curva de una rama sólo si se fijó a mano", async ({ page }) => {
+  await grafo(page, 3, [[0, 1, "1"], [1, 2, "2"], [2, 1, "-1"]]);
+  const r = await page.evaluate(() => {
+    S.ramas[2].curva = 80; S.ramas[2].curvaFija = true; commit(); render();
+    const d = docDatos();
+    undo(); redo();                                   // ida y vuelta por el historial
+    return { conCurva: d.ramas.filter((x) => "curva" in x).map((x) => x.curva), curvas: S.ramas.map((x) => typeof x.curva) };
+  });
+  expect(r.conCurva).toEqual([80]);
+  expect(r.curvas).toEqual(["number", "number", "number"]);
+});

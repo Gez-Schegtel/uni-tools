@@ -54,10 +54,13 @@ function nodoDeSalida() {
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
-const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
+/* La curva de una rama sólo se guarda si se fijó a mano: la automática la rehace acomodarRamas() */
+const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodos: S.nodos,
+  ramas: S.ramas.map(r => { if (r.curvaFija) return r; const c = Object.assign({}, r); delete c.curva; return c; }) });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodos = d.nodos; S.ramas = d.ramas; uidc = d.uidc || uidc;
+  S.ramas.forEach(r => { if (typeof r.curva !== "number") r.curva = 0; });   // la automática la rehace render()
   S.nombre = d.nombre || S.nombre;
   S.sel = S.sel.filter(getNodo); S.selR = S.selR.filter(getRama);
 }

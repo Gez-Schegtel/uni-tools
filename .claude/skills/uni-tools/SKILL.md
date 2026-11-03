@@ -102,6 +102,12 @@ Lo que no esté en `snapshot()` **no sobrevive un deshacer**. Al agregar un camp
 revisar los tres lugares: `snapshot()`, `docDatos()` (lo que se guarda) y `cargarDoc()` (lo que se
 abre).
 
+Lo que `render()` recalcula **no entra al documento**: las rutas automáticas de flechas y cables
+(`e.pts`, `w.pts`) y la curva automática de una rama (`r.curva` sin `curvaFija`). Así no importa
+que `commit()` vaya antes de `render()`. Si un dato guardado depende de otro (en bloques, el tamaño
+del bloque sale de su ecuación), la herramienta lo actualiza en `HERRAMIENTA.actualizarDerivados()`,
+que `commit()` llama antes de sacar la foto.
+
 ### Identificadores
 
 `uid(prefijo)` genera los ids y **saltea los que ya estén en uso**; al abrir un archivo, el contador
