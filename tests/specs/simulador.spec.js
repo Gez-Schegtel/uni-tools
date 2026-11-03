@@ -397,10 +397,12 @@ test.describe("la vista previa del cable que se está tirando", () => {
     await page.mouse.move(atras.x, atras.y, { steps: 8 });
     const r = await page.evaluate(() => {
       const pts = ptsDeLaPrevia(drag), R = rectOf(getNode("g"));
-      return { pts, cruza: segsOf(pts).some((s) => entraEn(s, R)) };
+      return { pts, cursor: { x: drag.cur.x, y: drag.cur.y }, cruza: segsOf(pts).some((s) => entraEn(s, R)) };
     });
     await page.mouse.up();
     expect(r.cruza).toBe(false);
-    expect(r.pts.at(-1)).toEqual({ x: 220, y: 62 });
+    expect(r.cursor.x).toBeCloseTo(220, 0);                       // (Firefox redondea el mouse a píxeles de pantalla)
+    expect(Math.abs(r.pts.at(-1).x - r.cursor.x)).toBeLessThan(0.11);   // y termina en el cursor
+    expect(Math.abs(r.pts.at(-1).y - r.cursor.y)).toBeLessThan(0.11);   // (los puntos van redondeados a 0,1)
   });
 });
