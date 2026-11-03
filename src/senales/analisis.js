@@ -19,7 +19,7 @@ function mostrarMason() {
 
   let h = htmlEcuaciones();
   if (A.truncado)
-    h = `<div class="aviso">El grafo supera el tope simbólico: se muestra sólo una parte de las trayectorias, lazos o combinaciones disjuntas.</div>` + h;
+    h = `<div class="aviso">El grafo supera el tope simbólico: se muestra sólo una parte de las trayectorias, lazos o combinaciones disjuntas, y por eso no se da la función de transferencia.</div>` + h;
   /* Mason toma la entrada como fuente. Si le llegan ramas, lo que calcula es la transferencia
      desde una señal que se suma en ese nodo, no salida/entrada: se avisa, con la salida de libro. */
   if (S.ramas.some(r => r.a === A.entrada.id))
@@ -75,7 +75,11 @@ function mostrarMason() {
   }
 
   h += `<h4>5 · Función de transferencia</h4>`;
-  if (!A.P.length) {
+  if (A.truncado) {
+    /* con una parte de los términos, Δ y los cofactores salen mal: mejor no dar un resultado */
+    h += `<div class="nada">El grafo es demasiado grande para la regla de Mason simbólica: con los términos
+      que entraron en el tope, la transferencia saldría mal, así que no se muestra.</div>`;
+  } else if (!A.P.length) {
     h += `<div class="nada">Sin trayectorias directas no hay función de transferencia.</div>`;
   } else {
     const num = A.P.map((p, i) => {

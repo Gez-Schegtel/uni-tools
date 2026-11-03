@@ -376,3 +376,19 @@ test("mover nodos o curvar ramas reutiliza la caché topológica de Mason sin re
   });
   expect(llamadas).toEqual([1, 1]);
 });
+
+test("si el grafo supera el tope de Mason, la ventana avisa y no da una transferencia hecha con una parte de los términos", async ({ page }) => {
+  await page.evaluate(() => {
+    S.nodos = []; S.ramas = []; S.sel = []; S.selR = [];
+    const N = 9;
+    for (let i = 0; i < N; i++) S.nodos.push({ id: "n" + i, x: i * 80, y: (i % 2) * 80, nombre: "x" + i, tipo: i === 0 ? "entrada" : i === N - 1 ? "salida" : "normal" });
+    let k = 0;
+    for (let i = 0; i < N; i++) for (let j = 1; j < N; j++) if (i !== j) S.ramas.push({ id: "r" + k, de: "n" + i, a: "n" + j, g: "g" + (k++) });
+    commit(); render();
+    mostrarMason();
+  });
+  await expect(page.locator("#ov-mason")).toBeVisible();
+  await expect(page.locator("#ov-mason")).toContainText("no se da la función de transferencia");
+  await expect(page.locator("#ov-mason .resultado")).toHaveCount(0);
+  await expect(page.locator("#insp")).toContainText("≥");
+});
