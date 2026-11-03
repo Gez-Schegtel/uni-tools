@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Editor de diagramas de bloques</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -466,7 +470,7 @@ svg#canvas{
     <tr><td>Arrastrar un tramo de flecha</td><td>Con la flecha seleccionada, tirá de los cuadraditos del medio de cada tramo (o de la línea) para correrlo</td></tr>
     <tr><td>Tiradores de las esquinas</td><td>Con un bloque, sumador o recuadro seleccionado, estiran su tamaño (el recuadro también por los lados)</td></tr>
   </table>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <div class="overlay" id="ov-io"><div class="modal">
@@ -1312,7 +1316,7 @@ function renderHoja() {
   el("rect", { class: "hoja-borde", x: H.x, y: H.y, width: H.w, height: H.h }, g);
   const t = el("text", { class: "hoja-nombre", x: H.x, y: H.y - 9,
     "font-size": Math.max(11, Math.round(11 / S.zoom)) }, g);
-  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${H.w} × ${H.h}`;
+  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${esc(H.w)} × ${esc(H.h)}`;
 }
 function seccionHoja() {
   const H = hojaActiva();
@@ -1325,8 +1329,8 @@ function seccionHoja() {
     haya dibujado. Elegí un tamaño para acomodar ${HERRAMIENTA.textos.losElementos} dentro del recuadro y que el SVG y el
     PNG salgan con esas proporciones.</div></div>`;
   h += `<div class="grid4">
-      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${H.w}"></div></div>
-      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${H.h}"></div></div>
+      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${esc(H.w)}"></div></div>
+      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${esc(H.h)}"></div></div>
       <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="h-x" step="${S.grid}" value="${Math.round(H.x)}"></div></div>
       <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="h-y" step="${S.grid}" value="${Math.round(H.y)}"></div></div>
     </div>
@@ -2354,7 +2358,7 @@ function renderInspector() {
         <option value="solid">Continuo</option><option value="dashed">Punteado</option></select></div></div>
       <div class="row"><label>Punta</label><div class="fill"><select id="e-arrow">
         <option value="1">Con flecha</option><option value="0">Sin flecha</option></select></div></div>
-      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${e.width || 1.6}"></div></div>
+      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${esc(e.width || 1.6)}"></div></div>
       <div class="iconbar" style="margin-top:10px">
         <button class="btn" id="e-flip">Invertir sentido</button>
       </div>
@@ -2375,10 +2379,10 @@ function renderInspector() {
       h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
       if (n.type === "marco") {
         h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else if (n.type !== "node") {
         h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else {
         h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
       }
@@ -2397,8 +2401,8 @@ function renderInspector() {
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${esc(n.h)}"></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
@@ -2416,7 +2420,7 @@ function renderInspector() {
         </div>
         <div class="row" style="margin-top:10px"><label>Cruz interna</label><div class="fill"><select id="s-cross">
           <option value="1">Mostrar</option><option value="0">Ocultar</option></select></div></div>
-        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${n.w}"></div></div>
+        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${esc(n.w)}"></div></div>
         <div class="hint">Vacío = ese lado queda sin signo.</div>
       </div>`;
     } else if (n.type === "block" || n.type === "io" || n.type === "text") {   // el marco tiene su propia sección
@@ -2426,8 +2430,8 @@ function renderInspector() {
           <option value="1"${auto ? " selected" : ""}>Ajustar al contenido</option>
           <option value="0"${auto ? "" : " selected"}>Manual</option></select></div></div>
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${n.w}"${dis}></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${n.h}"${dis}></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${esc(n.w)}"${dis}></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${esc(n.h)}"${dis}></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
@@ -3236,6 +3240,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

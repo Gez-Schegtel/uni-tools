@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **47 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **48 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -122,6 +122,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **47** | ✅ Hecho | [`47-etiquetas-absurdas-no-rompen-la-herramienta.md`](./47-etiquetas-absurdas-no-rompen-la-herramienta.md) | Auditoría de seguridad | Bug / Robustez | Bajo (30 min) | Una etiqueta con miles de paréntesis o de un megabyte (de un archivo armado a propósito) desbordaba la pila en cada dibujo y, por el autoguardado, la herramienta quedaba en blanco también al recargar. |
+| **48** | ✅ Hecho | [`48-defensa-en-profundidad-contra-html-inyectado.md`](./48-defensa-en-profundidad-contra-html-inyectado.md) | Auditoría de seguridad | Seguridad | Medio (45 min) | La auditoría no encontró agujeros, pero la seguridad dependía de que cada número llegara saneado. Ahora todo lo interpolado pasa por esc(), no hay onclick en el HTML y cada página tiene una CSP que no deja cargar ni mandar nada afuera. |
 
 ---
 

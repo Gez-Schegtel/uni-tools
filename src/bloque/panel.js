@@ -26,7 +26,7 @@ function renderInspector() {
         <option value="solid">Continuo</option><option value="dashed">Punteado</option></select></div></div>
       <div class="row"><label>Punta</label><div class="fill"><select id="e-arrow">
         <option value="1">Con flecha</option><option value="0">Sin flecha</option></select></div></div>
-      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${e.width || 1.6}"></div></div>
+      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${esc(e.width || 1.6)}"></div></div>
       <div class="iconbar" style="margin-top:10px">
         <button class="btn" id="e-flip">Invertir sentido</button>
       </div>
@@ -47,10 +47,10 @@ function renderInspector() {
       h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
       if (n.type === "marco") {
         h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else if (n.type !== "node") {
         h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else {
         h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
       }
@@ -69,8 +69,8 @@ function renderInspector() {
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${esc(n.h)}"></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
@@ -88,7 +88,7 @@ function renderInspector() {
         </div>
         <div class="row" style="margin-top:10px"><label>Cruz interna</label><div class="fill"><select id="s-cross">
           <option value="1">Mostrar</option><option value="0">Ocultar</option></select></div></div>
-        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${n.w}"></div></div>
+        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${esc(n.w)}"></div></div>
         <div class="hint">Vacío = ese lado queda sin signo.</div>
       </div>`;
     } else if (n.type === "block" || n.type === "io" || n.type === "text") {   // el marco tiene su propia sección
@@ -98,8 +98,8 @@ function renderInspector() {
           <option value="1"${auto ? " selected" : ""}>Ajustar al contenido</option>
           <option value="0"${auto ? "" : " selected"}>Manual</option></select></div></div>
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${n.w}"${dis}></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${n.h}"${dis}></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${esc(n.w)}"${dis}></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${esc(n.h)}"${dis}></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>

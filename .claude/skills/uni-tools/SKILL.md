@@ -205,6 +205,12 @@ elemento suelto va por `style`, que sí le gana a la clase.
 
 ## Trampas conocidas
 
+- **Seguridad:** lo que se interpola en un `innerHTML` va con `esc()`, aunque sea un número (que hoy
+  llegue saneado no quiere decir que mañana también). Nada de `onclick="…"` en las plantillas: la CSP
+  de `comun/seguridad.html` es la red si algo se cuela, y para cerrar una ventana está `data-cerrar`.
+  Una etiqueta de bloque absurda (miles de paréntesis, un megabyte) se muestra como texto plano:
+  `itemsDeEtiqueta()` pone los topes; no llamar a `analizar()` directo para dibujar.
+
 - **Las imágenes no cargan con `file://`.** El previsualizador sirve las páginas locales como
   snapshot `data:` y las rutas relativas mueren. Hay que levantar un servidor HTTP.
 - **El navegador cachea el HTML.** Sumar `?v=N` a la URL al recargar; si no, se depura una versión

@@ -90,6 +90,7 @@ $('#b-inicio').addEventListener('click', ev => { ev.preventDefault(); autoguarda
 const ayuda = (abrir) => $('#ov-help').classList.toggle('show', abrir);
 $('#b-ayuda').onclick = () => ayuda(true);
 $('#ov-help').addEventListener('click', ev => { if (ev.target.id === 'ov-help') ayuda(false); });
+document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => $('#' + b.dataset.cerrar).classList.remove('show')));
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape') { ayuda(false); return; }
   const t = ev.target;

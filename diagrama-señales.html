@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diagramas de flujo de señales</title>
 <meta name="description" content="Nodos, transmitancias y la regla de Mason: trayectorias, lazos, cofactores y función de transferencia">
@@ -330,7 +334,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
   <p class="sub" id="mason-sub"></p>
   <div id="mason-body"></div>
   <div style="margin-top:18px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-mason').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-mason">Cerrar</button>
   </div>
 </div></div>
 
@@ -354,7 +358,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
       rama lo selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
   </table>
   <div style="margin-top:16px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-help">Cerrar</button>
   </div>
 </div></div>
 
@@ -2689,6 +2693,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

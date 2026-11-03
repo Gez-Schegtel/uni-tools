@@ -25,7 +25,14 @@ abrir en la compu de la facultad o guardar en un pendrive. Cualquier propuesta q
 —un `<script src>` externo, una librería, un bundler con dependencias— hay que conversarla antes, no
 darla por supuesta.
 
-Las únicas dependencias externas son las tres imágenes del logo, y sólo para mostrarse.
+Las únicas dependencias externas son las dos imágenes del logo (`uni-tools-logo.png` y
+`uni-tools-marca.png`), y sólo para mostrarse.
+
+Cada página trae una **política de seguridad del contenido** (`src/comun/seguridad.html`, y la misma
+copiada en `index.html`): no se puede cargar ni mandar nada afuera, ni ejecutar manejadores escritos en
+el HTML que no sean el único `<script>`. Por eso no se usan `onclick="…"` en las plantillas (los botones
+«Cerrar» llevan `data-cerrar="id"`), y lo que se interpola en un `innerHTML` pasa siempre por `esc()`,
+también los números.
 
 ## Las fuentes viven en `src/` y las páginas se arman
 

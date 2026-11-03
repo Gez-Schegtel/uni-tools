@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>uni-tools · Simuladores</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">

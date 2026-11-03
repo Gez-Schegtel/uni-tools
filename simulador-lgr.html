@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lugar geométrico de las raíces</title>
 <meta name="description" content="Calculadora del LGR: ingresá la ecuación o los ceros y polos y obtené el gráfico con todos los cálculos paso a paso">
@@ -253,7 +257,7 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
     <tr><td>Entrada</td><td>Potencias con <kbd>^</kbd> o ², coma decimal (<kbd>4,5</kbd>), notación científica (<kbd>1e3</kbd>). En las listas, separá con <kbd>;</kbd>. La K va adelante del numerador o no va.</td></tr>
   </table>
   <p class="sub" style="margin-top:12px">Lo que vas haciendo queda guardado en este navegador: al volver, seguís donde lo dejaste.</p>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <script>
@@ -1651,6 +1655,7 @@ $('#b-inicio').addEventListener('click', ev => { ev.preventDefault(); autoguarda
 const ayuda = (abrir) => $('#ov-help').classList.toggle('show', abrir);
 $('#b-ayuda').onclick = () => ayuda(true);
 $('#ov-help').addEventListener('click', ev => { if (ev.target.id === 'ov-help') ayuda(false); });
+document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => $('#' + b.dataset.cerrar).classList.remove('show')));
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Escape') { ayuda(false); return; }
   const t = ev.target;

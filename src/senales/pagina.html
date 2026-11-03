@@ -3,6 +3,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- @incluir comun/seguridad.html -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diagramas de flujo de señales</title>
 <meta name="description" content="Nodos, transmitancias y la regla de Mason: trayectorias, lazos, cofactores y función de transferencia">
@@ -119,7 +120,7 @@
   <p class="sub" id="mason-sub"></p>
   <div id="mason-body"></div>
   <div style="margin-top:18px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-mason').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-mason">Cerrar</button>
   </div>
 </div></div>
 
@@ -143,7 +144,7 @@
       rama lo selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
   </table>
   <div style="margin-top:16px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-help">Cerrar</button>
   </div>
 </div></div>
 

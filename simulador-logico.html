@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulador de circuitos lógicos</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -429,7 +433,7 @@ svg#canvas{
       selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
     <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve el lienzo (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
   </table>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <div class="overlay" id="ov-io"><div class="modal">
@@ -1380,7 +1384,7 @@ function renderHoja() {
   el("rect", { class: "hoja-borde", x: H.x, y: H.y, width: H.w, height: H.h }, g);
   const t = el("text", { class: "hoja-nombre", x: H.x, y: H.y - 9,
     "font-size": Math.max(11, Math.round(11 / S.zoom)) }, g);
-  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${H.w} × ${H.h}`;
+  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${esc(H.w)} × ${esc(H.h)}`;
 }
 function seccionHoja() {
   const H = hojaActiva();
@@ -1393,8 +1397,8 @@ function seccionHoja() {
     haya dibujado. Elegí un tamaño para acomodar ${HERRAMIENTA.textos.losElementos} dentro del recuadro y que el SVG y el
     PNG salgan con esas proporciones.</div></div>`;
   h += `<div class="grid4">
-      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${H.w}"></div></div>
-      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${H.h}"></div></div>
+      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${esc(H.w)}"></div></div>
+      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${esc(H.h)}"></div></div>
       <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="h-x" step="${S.grid}" value="${Math.round(H.x)}"></div></div>
       <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="h-y" step="${S.grid}" value="${Math.round(H.y)}"></div></div>
     </div>
@@ -2329,7 +2333,7 @@ function renderInspector() {
           <option value="fijo"${n.modo === "fijo" ? " selected" : ""}>Mantenido (toggle)</option>
           <option value="auto"${n.modo === "auto" ? " selected" : ""}>Automático</option></select></div></div>`;
       if (n.modo === "fijo") h += `<div class="io-row"><span class="io-name">Nivel</span>
-        <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+        <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
         <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`;
       if (n.modo === "auto") h += `<div class="row"><div class="fill"><button class="btn" id="clk-run" style="width:100%">
         ${n.corriendo ? "Frenar el reloj" : "Arrancar el reloj"}</button></div></div>`;
@@ -2347,10 +2351,10 @@ function renderInspector() {
     if (esMarco(n)) {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "las compuertas")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${esc(n.h)}"></div></div>
         </div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${n.font}"></div></div>
+        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${esc(n.font)}"></div></div>
         <div class="hint" style="margin-top:8px">Sirve para encuadrar un grupo de compuertas y ponerle
           nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde o por el asa y
           los clics de adentro pasan a lo que haya debajo. Los cuadritos lo estiran; con la herramienta
@@ -2365,12 +2369,12 @@ function renderInspector() {
   h += `<div class="sec"><h3>Entradas</h3>`;
   h += ins.length ? ins.map(n => `<div class="io-row">
       <span class="io-name">${esc(n.label)}</span>
-      <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+      <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
       <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`).join("")
     : `<div class="hint">Todavía no hay interruptores. Insertá uno con <kbd>I</kbd>.</div>`;
   h += `</div><div class="sec"><h3>Salidas</h3>`;
   h += outs.length ? outs.map(n => { const v = valorDe(n.id, 0);
-      return `<div class="io-row" data-out="${n.id}"><span class="io-name">${esc(n.label)}</span>
+      return `<div class="io-row" data-out="${esc(n.id)}"><span class="io-name">${esc(n.label)}</span>
         <span class="lamp${v ? " on" : ""}"></span><span class="bit${v ? " on" : ""}">${v ? 1 : 0}</span></div>`; }).join("")
     : `<div class="hint">Agregá una salida con <kbd>O</kbd> para ver el resultado.</div>`;
   h += `</div>`;
@@ -3168,6 +3172,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- @incluir comun/seguridad.html -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lugar geométrico de las raíces</title>
 <meta name="description" content="Calculadora del LGR: ingresá la ecuación o los ceros y polos y obtené el gráfico con todos los cálculos paso a paso">
@@ -108,7 +109,7 @@
     <tr><td>Entrada</td><td>Potencias con <kbd>^</kbd> o ², coma decimal (<kbd>4,5</kbd>), notación científica (<kbd>1e3</kbd>). En las listas, separá con <kbd>;</kbd>. La K va adelante del numerador o no va.</td></tr>
   </table>
   <p class="sub" style="margin-top:12px">Lo que vas haciendo queda guardado en este navegador: al volver, seguís donde lo dejaste.</p>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <script>
