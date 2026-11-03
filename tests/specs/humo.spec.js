@@ -1,7 +1,7 @@
 /* Pruebas de humo: cada página abre sin errores y no pide nada fuera del repo. */
 const { test, expect } = require("@playwright/test");
 
-const PAGINAS = ["index.html", "diagrama-bloque.html", "simulador-logico.html", "diagrama-señales.html"];
+const PAGINAS = ["index.html", "diagrama-bloque.html", "simulador-logico.html", "diagrama-señales.html", "simulador-lgr.html"];
 
 for (const archivo of PAGINAS) {
   test(`${archivo} abre sin errores ni pedidos externos`, async ({ page }) => {
@@ -18,10 +18,10 @@ for (const archivo of PAGINAS) {
   });
 }
 
-test("la portada enlaza a las tres herramientas y los enlaces andan", async ({ page, request }) => {
+test("la portada enlaza a las cuatro herramientas y los enlaces andan", async ({ page, request }) => {
   await page.goto("/index.html");
   const hrefs = await page.$$eval("a.boton", (as) => as.map((a) => a.getAttribute("href")));
-  expect(hrefs.sort()).toEqual(["diagrama-bloque.html", "diagrama-señales.html", "simulador-logico.html"].sort());
+  expect(hrefs.sort()).toEqual(["diagrama-bloque.html", "diagrama-señales.html", "simulador-logico.html", "simulador-lgr.html"].sort());
   for (const h of hrefs) {
     const r = await request.get("/" + encodeURI(h));
     expect(r.ok(), h).toBeTruthy();

@@ -5,7 +5,7 @@ const { execFileSync } = require("child_process");
 const fs = require("fs"), path = require("path");
 
 const RAIZ = path.resolve(__dirname, "..", "..");
-const PAGINAS = ["diagrama-bloque.html", "simulador-logico.html", "diagrama-señales.html"];
+const PAGINAS = ["diagrama-bloque.html", "simulador-logico.html", "diagrama-señales.html", "simulador-lgr.html"];
 
 test("las páginas de la raíz coinciden con lo que arma src/construir.js", () => {
   // si falla: correr «node src/construir.js» y commitear las páginas que cambien

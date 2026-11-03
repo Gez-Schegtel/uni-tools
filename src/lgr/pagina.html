@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lugar geométrico de las raíces</title>
+<meta name="description" content="Calculadora del LGR: ingresá la ecuación o los ceros y polos y obtené el gráfico con todos los cálculos paso a paso">
+<link rel="icon" type="image/png" href="uni-tools-marca.png">
+<style>
+/* @incluir lgr/estilos.css */
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" title="Volver al inicio"><img class="marca-navbar" src="uni-tools-marca.png" alt="uni-tools"></a>
+  <div class="brand"><b>Lugar geométrico de las raíces</b><span>LGR</span></div>
+
+  <div class="group" id="g-datos">
+    <span class="glab">Datos</span>
+    <button class="btn on" id="m-ec" title="Se ingresa N(s) y D(s): se calculan ceros y polos">Desde la ecuación</button>
+    <button class="btn" id="m-zp" title="Se ingresan los ceros y los polos de lazo abierto">Desde ceros y polos</button>
+    <select id="ejemplos" title="Cargar un ejercicio de las guías"></select>
+  </div>
+
+  <div class="group" id="g-graf">
+    <span class="glab">Gráfico</span>
+    <button class="btn on" id="v-asint" title="Asíntotas y su punto de origen">Asíntotas</button>
+    <button class="btn on" id="v-vals" title="Valores calculados sobre el gráfico">Valores</button>
+    <button class="btn on" id="v-flechas" title="Sentido en que crece K">Flechas</button>
+    <button class="btn on" id="v-grid" title="Cuadrícula">Cuadrícula</button>
+    <button class="btn" id="b-ajustar" title="Encuadrar el gráfico">Encuadrar</button>
+  </div>
+
+  <div class="group" id="g-exp">
+    <span class="glab">Exportar</span>
+    <button class="btn" id="e-svg">SVG</button>
+    <button class="btn" id="e-png">PNG</button>
+  </div>
+
+  <div class="group">
+    <button class="btn on" id="b-det" title="Mostrar u ocultar los cálculos paso a paso">Detalles</button>
+  </div>
+</header>
+
+<section id="entrada">
+  <div class="fila" id="f-ec">
+    <span class="eq">1 + K&nbsp;·</span>
+    <span class="frac-in">
+      <input class="entrada-txt" id="i-N" type="text" spellcheck="false" autocomplete="off" placeholder="N(s)   ej.: s + 4,5">
+      <hr>
+      <input class="entrada-txt" id="i-D" type="text" spellcheck="false" autocomplete="off" placeholder="D(s)   ej.: s^2 + 6s + 45">
+    </span>
+    <span class="eq">= 0</span>
+  </div>
+  <div class="fila" id="f-zp" hidden>
+    <span class="etq">Ceros</span>
+    <input class="entrada-txt" id="i-Z" type="text" spellcheck="false" autocomplete="off" placeholder="ej.: 1+2j; 1-2j; -3">
+    <span class="etq">Polos</span>
+    <input class="entrada-txt" id="i-P" type="text" spellcheck="false" autocomplete="off" placeholder="ej.: 4; -2+3j; -2-3j; -2">
+  </div>
+  <div id="resumen"></div>
+  <div id="msj"></div>
+</section>
+
+<main>
+  <div id="stage">
+    <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="vacio">Ingresá la función para ver el lugar geométrico</div>
+    <div id="leyenda"></div>
+    <div id="zoom">
+      <button class="btn ghost" id="z-mas" title="Acercar">+</button>
+      <button class="btn ghost" id="z-menos" title="Alejar">&minus;</button>
+    </div>
+    <div id="tip"></div>
+  </div>
+  <aside id="detalles">
+    <div id="det-barra">
+      <span class="t">Cálculos paso a paso</span>
+      <button class="btn ghost" id="d-abrir" title="Expandir todos los pasos">Abrir todo</button>
+      <button class="btn ghost" id="d-cerrar" title="Contraer todos los pasos">Cerrar todo</button>
+    </div>
+    <div id="det-cuerpo"></div>
+  </aside>
+</main>
+
+<script>
+// @incluir lgr/calculo.js
+
+// @incluir lgr/interfaz.js
+</script>
+</body>
+</html>

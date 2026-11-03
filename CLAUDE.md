@@ -4,14 +4,15 @@ Herramientas de escritorio-en-el-navegador para la cursada: se dibujan diagramas
 circuitos lógicos, se simulan y se exportan. Publicado con GitHub Pages desde `main`
 (https://gez-schegtel.github.io/uni-tools/).
 
-## Las cuatro páginas
+## Las cinco páginas
 
 | archivo | qué es |
 |---|---|
-| `index.html` | portada con el logo y los tres accesos |
+| `index.html` | portada con el logo y los cuatro accesos |
 | `diagrama-bloque.html` | diagramas de bloques: bloques con ecuaciones, sumadores, flechas ruteadas solas |
 | `simulador-logico.html` | circuitos lógicos: compuertas, biestables, sumadores, simulación en vivo y tabla de verdad |
 | `diagrama-señales.html` | flujo de señales: nodos, transmitancias y análisis por la regla de Mason |
+| `simulador-lgr.html` | lugar geométrico de las raíces: desde la ecuación o desde ceros y polos, gráfico y cálculos paso a paso (viene del proyecto original, `juli-sz/uni-tools`) |
 
 ## La regla que manda sobre todo lo demás
 
@@ -36,6 +37,7 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 |---|---|
 | `src/comun/` | lo compartido: `base.css`, pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y ruteo ortogonal) |
 | `src/bloque/`, `src/simulador/`, `src/senales/` | lo propio de cada una: `pagina.html` (la plantilla, que dice qué se incluye y en qué orden), `estilos.css`, `herramienta.js` (lo que el código común necesita saber de ella) y sus módulos |
+| `src/lgr/` | el simulador del LGR: `pagina.html`, `estilos.css`, `calculo.js` (polinomios, raíces y los pasos de la teoría, sin DOM: lo prueban `tests/unidades/`) e `interfaz.js` (gráfico, panel y barra). Todavía no usa `src/comun/` |
 
 - **Nunca se editan a mano los HTML de la raíz**: se edita `src/` y se corre `node src/construir.js`.
   Las páginas armadas se commitean junto con sus fuentes (Pages publica la raíz tal cual).
