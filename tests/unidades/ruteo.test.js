@@ -52,3 +52,22 @@ test("rutear sólo algunas flechas deja las demás como estaban y las usa como y
   assert.equal(JSON.stringify(edges[0].pts), antes);
   assert.equal(edges[1].pts.at(-1).y, 260);
 });
+
+test("cuando todos los candidatos fijos chocan, el rodeo esquiva: sale por la izquierda sin volver por encima del bloque", () => {
+  // el destino queda arriba a la derecha y hay otro bloque arriba a la izquierda: el menú fijo
+  // sólo ofrecía volver por encima del bloque de origen; el rodeo (A*) da la vuelta por afuera
+  const m = ruteo();
+  const nodes = [bloque("a", 240, 320), bloque("b", 400, 240), bloque("c", 160, 240)];
+  const edges = [{ id: "e", from: { id: "a", port: "l" }, to: { id: "b", port: "t" } }];
+  m.rutearFlechas(nodes, edges);
+  const pts = edges[0].pts, segs = m.segsOf(pts);
+  for (const n of nodes) {
+    const R = m.rectOf(n);
+    assert.ok(!segs.some(s => m.entraEn(s, n.id === "c" ? { l: R.l + 1, r: R.r - 1, t: R.t + 1, b: R.b - 1 } : R)), "la flecha pasa por encima de " + n.id);
+  }
+  assert.ok(ortogonal(pts));
+  assert.deepEqual([pts[0].x, pts[0].y], [210, 320]);                    // sale por el puerto izquierdo
+  assert.ok(pts[1].x < 210);                                             // hacia la izquierda, no hacia atrás
+  assert.deepEqual([pts.at(-1).x, pts.at(-1).y], [400, 220]);            // llega al puerto de arriba
+  assert.ok(pts.at(-2).x === 400 && pts.at(-2).y < 220);                 // y desde arriba
+});

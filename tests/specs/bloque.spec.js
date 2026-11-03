@@ -753,3 +753,26 @@ test("con 160 bloques: seleccionar no rerutea, arrastrar es rápido y al soltar 
   expect(r.porPaso).toBeLessThan(40);                      // antes ~80 ms por paso
   expect(r.iguales).toBe(true);
 });
+
+test("en 25 diagramas armados en grilla, ninguna flecha atraviesa un bloque ni pasa por encima del suyo", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    let semilla = 11; const azar = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647;
+    let flechas = 0; const malas = [];
+    for (let caso = 0; caso < 25; caso++) {
+      const N = 6 + Math.floor(azar() * 20); S.nodes = []; S.edges = []; const usados = new Set();
+      for (let i = 0; i < N; i++) { let cx, cy; do { cx = Math.floor(azar() * 8); cy = Math.floor(azar() * 5); } while (usados.has(cx + "," + cy)); usados.add(cx + "," + cy);
+        S.nodes.push(makeNode(azar() < .25 ? "sum" : "block", 100 + cx * 160, 80 + cy * 130, { id: "n" + i, label: "G" + i })); }
+      S.nodes.forEach((n) => { if (n.type === "sum") n.signs = { l: "+", t: "+", b: "−", r: "" }; });
+      const P = ["l", "r", "t", "b"];
+      for (let i = 0; i < N * 1.2; i++) { const a = S.nodes[Math.floor(azar() * N)], c = S.nodes[Math.floor(azar() * N)]; if (a === c) continue;
+        S.edges.push({ id: "e" + i, from: { id: a.id, port: a.type === "sum" ? "r" : P[Math.floor(azar() * 4)] }, to: { id: c.id, port: c.type === "sum" ? ["l", "t", "b"][Math.floor(azar() * 3)] : P[Math.floor(azar() * 4)] }, variant: 0 }); }
+      render();
+      for (const e of S.edges) { flechas++; const segs = segsOf(e.pts);
+        for (const n of S.nodes) { const R = rectOf(n), propio = n.id === e.from.id || n.id === e.to.id;
+          if (propio ? segs.some((s) => entraEn(s, R)) : segs.some((s) => segRect(s, { l: R.l + 1, r: R.r - 1, t: R.t + 1, b: R.b - 1 }))) { malas.push(caso + ":" + e.id + "→" + n.id); break; } } }
+    }
+    return { flechas, malas };
+  });
+  expect(r.flechas).toBeGreaterThan(300);
+  expect(r.malas).toEqual([]);                             // antes, 2,9 % de las flechas
+});

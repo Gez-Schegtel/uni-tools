@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **53 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, las `40` a `46` de la revisión de estructura y estilo del mismo día, y las `47` en adelante de la auditoría de seguridad y de la suite de pruebas) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **54 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, las `40` a `46` de la revisión de estructura y estilo del mismo día, las `47` a `52` de la auditoría de seguridad y de la suite de pruebas, y las `53` en adelante del pedido del dueño sobre rendimiento, flechas, vista previa de conexión y modo oscuro) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -127,7 +127,13 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **50** | ✅ Hecho | [`50-sitio-js-no-borra-lo-que-no-debe.md`](./50-sitio-js-no-borra-lo-que-no-debe.md) | Auditoría de seguridad | Bug / Seguridad | Muy bajo (15 min) | src/sitio.js borra la carpeta destino antes de copiar y sólo se negaba con la raíz del repo: «node src/sitio.js ..» o «/» borraba todo. Ahora rechaza cualquier carpeta que contenga el repo, y el caso del archivo faltante tiene su prueba. |
 | **51** | ✅ Hecho | [`51-lgr-entrar-y-salir-no-deja-autoguardado.md`](./51-lgr-entrar-y-salir-no-deja-autoguardado.md) | Auditoría de seguridad | Bug | Muy bajo (10 min) | Al salir de la página, el LGR guardaba aunque no se hubiera tocado nada, y la portada mostraba «Tenés un ejercicio guardado» a quien sólo entró a mirar. Lo encontró una prueba nueva de la auditoría de pruebas. |
 | **52** | ✅ Hecho | [`52-auditoria-de-la-suite-de-pruebas.md`](./52-auditoria-de-la-suite-de-pruebas.md) | Auditoría de seguridad | Pruebas | Medio (1 h) | Pruebas significativas (10 mutaciones del código, todas detectadas), dos redundancias quitadas y las que faltaban agregadas (ruteo de bloques, atajos del LGR, recorte de tablas de Mason, sitio.js). Encontró el bug de SPEC-51. |
-| **53** | ✅ Hecho | [`53-rendimiento-con-muchos-bloques.md`](./53-rendimiento-con-muchos-bloques.md) | Auditoría de seguridad | Rendimiento | Medio (1 h) | Con 160 bloques cada paso de arrastre tardaba 80 ms y seleccionar algo, 101 ms (el ruteo de todas las flechas). Ahora 5 ms y 4 ms, con las rutas finales idénticas a las de antes. |
+
+### Bloque 10 — Rendimiento, flechas, vista previa de conexión y modo oscuro (pedido del dueño, 2026-11-03)
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **53** | ✅ Hecho | [`53-rendimiento-con-muchos-bloques.md`](./53-rendimiento-con-muchos-bloques.md) | Pedido del dueño | Rendimiento | Medio (1 h) | Con 160 bloques cada paso de arrastre tardaba 80 ms y seleccionar algo, 101 ms (el ruteo de todas las flechas). Ahora 5 ms y 4 ms, con las rutas finales idénticas a las de antes. |
+| **54** | ✅ Hecho | [`54-flechas-que-esquivan-cuando-el-menu-fijo-choca.md`](./54-flechas-que-esquivan-cuando-el-menu-fijo-choca.md) | Pedido del dueño | Bug / Ruteo | Medio (1,5 h) | Las flechas se elegían de un menú fijo de rutas; si todas atravesaban algún bloque, quedaba la menos mala y la flecha pasaba por encima. Ahora, en ese caso, un A* sobre los bordes de los obstáculos busca un rodeo: en 25 diagramas en grilla, 0 flechas atraviesan un bloque (antes, el 2,9 %). |
 
 ---
 

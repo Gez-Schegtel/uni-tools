@@ -114,6 +114,11 @@ Dos consecuencias que importan:
   las flechas de lo que se mueve y las que pasan cerca); al soltar, el `render()` completo deja las
   rutas exactamente como antes. Además, cada flecha descarta los obstáculos fuera de la caja de sus
   candidatos (no cambia el resultado: `segRect` es una prueba de cajas).
+- **Rodeo cuando el menú fijo choca** (`rodeo()` en `comun/ruteo-bloques.js`): si el mejor de los
+  candidatos de `candidates()` atraviesa un obstáculo o entra en el origen/destino, un A* sobre los
+  bordes de los obstáculos cercanos (costo en las unidades de `scorePath`, tope de 30 000 pasos)
+  busca otra ruta; se usa sólo si no choca. Las flechas que no chocan no lo corren, así que no
+  cambian. Si se toca `scorePath`, mantener los mismos pesos en `rodeo` (largo, quiebre, superposición).
 
 ### Historial
 
