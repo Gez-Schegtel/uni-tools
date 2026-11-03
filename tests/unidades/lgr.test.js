@@ -200,3 +200,16 @@ test("el mismo problema escalado por 10^±4 y 10^±6 da los mismos resultados, e
     assert.ok(!ramas.incompleto);
   }
 });
+
+test("el trazado por tandas da las mismas ramas que de un tirón", () => {
+  const m = lgr();
+  for (const e of [{ modo: "ec", N: "s+4,5", D: "s(s^2+6s+45)" }, { modo: "zp", Z: "", P: "0; -1e-4; -2e-4" }]) {
+    const R = m.analizar(m.construirModelo(e));
+    const entero = clonar(m.trazarLGR(R));
+    const t = m.crearTrazado(R);
+    let tandas = 0;
+    while (!t.avanzar(1)) tandas++;
+    assert.ok(tandas > 0, "tendría que haber hecho falta más de una tanda");
+    assert.deepEqual(clonar(t.ramas), entero);
+  }
+});

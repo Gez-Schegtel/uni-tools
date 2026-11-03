@@ -1,16 +1,17 @@
 /* ---------- lectura de lo que escribe el usuario ---------- */
 function parsearComplejo(t) {
   t = t.replace(/[−–]/g, '-').replace(/\s+/g, '');
-  const m = t.match(/[+-]?[^+-]+/g);
+  // se parte en los + y − que no son el signo de un exponente (1e-4 es un solo número)
+  const m = t.match(/[+-]?(?:[^+-]|(?<=\de)[+-]|(?<=\dE)[+-])+/g);
   if (!m || m.join('') !== t) return null;
   let re = 0, im = 0;
   for (const x of m) {
     if (/[ji]$/i.test(x)) {
       const c = x.slice(0, -1);
-      if (!/^[+-]?(\d+\.?\d*|\.\d+)?$/.test(c)) return null;
+      if (!/^[+-]?((\d+\.?\d*|\.\d+)([eE][+-]?\d+)?)?$/.test(c)) return null;
       im += c === '' || c === '+' ? 1 : c === '-' ? -1 : parseFloat(c);
     } else {
-      if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(x)) return null;
+      if (!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x)) return null;
       re += parseFloat(x);
     }
   }

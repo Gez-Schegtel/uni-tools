@@ -341,16 +341,17 @@ const expandir = gs => gs.flatMap(g => Array.from({ length: g.mult }, () => g.z)
 /* ---------- lectura de lo que escribe el usuario ---------- */
 function parsearComplejo(t) {
   t = t.replace(/[−–]/g, '-').replace(/\s+/g, '');
-  const m = t.match(/[+-]?[^+-]+/g);
+  // se parte en los + y − que no son el signo de un exponente (1e-4 es un solo número)
+  const m = t.match(/[+-]?(?:[^+-]|(?<=\de)[+-]|(?<=\dE)[+-])+/g);
   if (!m || m.join('') !== t) return null;
   let re = 0, im = 0;
   for (const x of m) {
     if (/[ji]$/i.test(x)) {
       const c = x.slice(0, -1);
-      if (!/^[+-]?(\d+\.?\d*|\.\d+)?$/.test(c)) return null;
+      if (!/^[+-]?((\d+\.?\d*|\.\d+)([eE][+-]?\d+)?)?$/.test(c)) return null;
       im += c === '' || c === '+' ? 1 : c === '-' ? -1 : parseFloat(c);
     } else {
-      if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(x)) return null;
+      if (!/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(x)) return null;
       re += parseFloat(x);
     }
   }
@@ -742,15 +743,33 @@ function analizarDirecto(e) {
   return R;
 }
 /* ---------- trazado numérico de las ramas ---------- */
-function trazarLGR(R) {
-  if (!R.sigma) return trazarDirecto(R);
+/* El trazado avanza por tandas: crearTrazado() devuelve { avanzar(ms), ramas, terminado }.
+   avanzar(ms) sigue las ramas durante unos ms y devuelve true al terminar; así la página
+   puede dibujar lo que va y seguir respondiendo (antes, un grado 20 la trababa 1,5 s con
+   cada tecla). El seguimiento no depende del tiempo: por tandas da lo mismo que de un tirón.
+   Hay un presupuesto total de cómputo; si se agota, las ramas quedan con incompleto = true. */
+const PRESUPUESTO_TRAZADO = 1500;                 // ms de cálculo en total
+function crearTrazado(R) {
+  if (!R.sigma) return crearTrazadoDirecto(R);
   /* se traza en σ = s/α, donde las tolerancias del seguimiento tienen sentido, y se vuelve a s */
-  const a = R.alfa, kf = Math.pow(a, R.n - R.m), rs = trazarDirecto(R.sigma);
-  const ramas = rs.map(b => ({ x: b.x.map(v => v * a), y: b.y.map(v => v * a), K: b.K.map(k => k * kf) }));
-  if (rs.incompleto) ramas.incompleto = true;
-  return ramas;
+  const a = R.alfa, kf = Math.pow(a, R.n - R.m), t = crearTrazadoDirecto(R.sigma);
+  return {
+    avanzar: (ms) => t.avanzar(ms),
+    get terminado() { return t.terminado; },
+    get ramas() {
+      const r = t.ramas.map(b => ({ x: b.x.map(v => v * a), y: b.y.map(v => v * a), K: b.K.map(k => k * kf) }));
+      if (t.ramas.incompleto) r.incompleto = true;
+      return r;
+    },
+  };
 }
-function trazarDirecto(R) {
+/* De un tirón (lo usan las pruebas y lo que necesita el resultado ya) */
+function trazarLGR(R) {
+  const t = crearTrazado(R);
+  while (!t.avanzar(Infinity));
+  return t.ramas;
+}
+function crearTrazadoDirecto(R) {
   const { N, D, n, m } = R;
   const esc = R.escala, Rmax = 15 * esc, tope = 0.02 * esc;
   const sing = expandir(R.polos).concat(expandir(R.ceros));
@@ -762,10 +781,10 @@ function trazarDirecto(R) {
   else { K = 1e-9; prev = limpiar(raicesPoli(P(K))); }
   const ramas = prev.map(z => ({ x: [z.re], y: [z.im], K: [K] }));
   const hecha = prev.map(() => false);
-  let dK = n >= m ? 1e-9 : 1e-9;
-  const t0 = performance.now();
-  for (let it = 0; it < 30000; it++) {
-    if (performance.now() - t0 > 1500) { ramas.incompleto = true; break; }
+  let dK = 1e-9, it = 0, usado = 0, terminado = false;
+  /* un paso del seguimiento: sube K un poco y empareja las raíces nuevas con las de antes.
+     Devuelve true cuando ya no hay nada que seguir. */
+  function paso() {
     // separar guesses repetidos para que Aberth no se trabe
     const ini = prev.map((z, i) => {
       for (let j = 0; j < i; j++) if (cAbs(cSub(z, prev[j])) < 1e-7 * (1 + cAbs(z))) {
@@ -803,11 +822,24 @@ function trazarDirecto(R) {
       if (cAbs(z) > Rmax || zerosL.some(c => cAbs(cSub(z, c)) < 1e-3 * esc)) hecha[i] = true;
     }
     prev = nueva;
-    if (hecha.every(Boolean) || K > 1e15) break;
+    if (hecha.every(Boolean) || K > 1e15) return true;
     if (ratio < 0.3) dK *= 2;
+    return false;
   }
-  if (!hecha.every(Boolean) && K <= 1e15) ramas.incompleto = true;   // se cortó por tiempo o por iteraciones
-  return ramas;
+  function avanzar(ms) {
+    if (terminado) return true;
+    const t0 = performance.now();
+    while (!terminado) {
+      if (it++ >= 30000) { ramas.incompleto = true; terminado = true; break; }      // demasiados pasos
+      if (paso()) { terminado = true; break; }
+      const ahora = performance.now() - t0;
+      if (usado + ahora > PRESUPUESTO_TRAZADO) { ramas.incompleto = true; terminado = true; break; }
+      if (ahora >= ms) break;
+    }
+    usado += performance.now() - t0;
+    return terminado;
+  }
+  return { avanzar, ramas, get terminado() { return terminado; } };
 }
 /* =====================================================================
    ENTRADA → MODELO
@@ -892,7 +924,8 @@ function construirModelo(S) {
   return { modo: 'zp', N, D, cerosL: limpiar(cerosL), polosL: limpiar(polosL), notas };
 }
 /* =====================================================================
-   ESTADO Y DIBUJO
+   ESTADO: lo que ingresó el usuario (S), el resultado del análisis, la
+   vista del gráfico y el cálculo que arma todo lo demás
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const svg = $('canvas'), stage = $('stage');
@@ -914,6 +947,33 @@ function cargar() {
   } catch (e) {}
 }
 
+/* El trazado de las ramas corre por tandas de ~12 ms y se dibuja lo que va cada 150 ms (dibujar
+   y pintar miles de puntos en cada cuadro cuesta más que seguir las ramas). Si mientras tanto
+   cambia la entrada, el trazado viejo se abandona. */
+let trazadoEnCurso = null;
+function empezarTrazado() {
+  const t = crearTrazado(resultado), propio = trazadoEnCurso = { t };
+  let ultimoDibujo = performance.now();
+  const dibujarLuego = () => {
+    if (performance.now() - ultimoDibujo < 150) return;
+    ultimoDibujo = performance.now();
+    requestAnimationFrame(() => { if (trazadoEnCurso === propio) dibujar(); });
+  };
+  const tanda = () => {
+    if (trazadoEnCurso !== propio) return;         // lo reemplazó un cálculo nuevo
+    const listo = t.avanzar(12);
+    ramas = t.ramas;
+    if (!listo) { dibujarLuego(); setTimeout(tanda, 0); return; }
+    trazadoEnCurso = null;
+    dibujar();
+    if (ramas.incompleto) {
+      const msj = $('msj');
+      msj.className = 'on'; msj.style.color = 'var(--warn)';
+      msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
+    }
+  };
+  tanda();
+}
 function calcular() {
   const msj = $('msj');
   ['N', 'D', 'Z', 'P'].forEach(c => $('i-' + c).classList.remove('mal'));
@@ -922,16 +982,13 @@ function calcular() {
   try {
     const modelo = construirModelo(S);
     resultado = analizar(modelo);
-    ramas = trazarLGR(resultado);
+    ramas = [];
+    empezarTrazado();                              // las ramas se dibujan de a poco, sin trabar la página
     const info = resultado.notas.length ? '<span class="nota-info">' + resultado.notas.map(esc).join(' ') + '</span>' : '';
     if (info) { msj.className = 'on'; msj.style.color = 'var(--ink-2)'; msj.innerHTML = info; }
     cancelaciones(modelo);
-    if (ramas.incompleto) {
-      msj.className = 'on'; msj.style.color = 'var(--warn)';
-      msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
-    }
   } catch (err) {
-    resultado = null; ramas = [];
+    resultado = null; ramas = []; trazadoEnCurso = null;
     if (err instanceof ErrorEntrada || err.extra !== undefined) {
       if (err.extra && err.extra.campo) $('i-' + err.extra.campo).classList.add('mal');
       msj.className = 'on'; msj.style.color = '';
@@ -968,7 +1025,7 @@ function dibujarResumen() {
   else
     el.innerHTML = 'Ecuación característica: <b>1 + K · ' + fraccion(polyHTML(resultado.Nsin), polyHTML(resultado.Dsin)) + ' = 0</b>';
 }
-/* ---------- vista ---------- */
+/* ---------- vista: el encuadre y el dibujo del gráfico ---------- */
 function ajustarVista() {
   const W = stage.clientWidth || 800, H = stage.clientHeight || 500;
   const pts = resultado ? resultado.clave : [complejo(-1, 0), complejo(1, 0)];
@@ -1378,7 +1435,7 @@ function dibujarDetalles() {
   el.innerHTML = h;
 }
 /* =====================================================================
-   BARRA, MODOS, EJEMPLOS, EXPORTACIÓN
+   BARRA: campos, modos, ejemplos, botones y exportación
    ===================================================================== */
 function pasarAInputs() {
   $('i-N').value = S.N; $('i-D').value = S.D; $('i-Z').value = S.Z; $('i-P').value = S.P;

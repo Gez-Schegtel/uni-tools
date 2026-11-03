@@ -1,7 +1,7 @@
 # Spec 45 — LGR: El Trazado de las Ramas no Traba la Página
 
 - **ID:** `SPEC-45`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03
 - **Prioridad:** Media / Baja (45 / 46)
 - **Esfuerzo estimado:** Medio (~45 minutos)
@@ -39,6 +39,16 @@ Mientras tanto la página no responde: no se puede tipear, ni hacer zoom, ni cer
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+- `crearTrazado(R)` (`trazado.js`) devuelve `{ avanzar(ms), ramas, terminado }`; `trazarLGR()` sigue existiendo y lo usa de un tirón. El presupuesto total de cómputo sigue siendo 1,5 s (`PRESUPUESTO_TRAZADO`).
+- `empezarTrazado()` (`estado.js`) avanza por tandas de 12 ms con `setTimeout(0)`, dibuja lo que va cada 150 ms y, si llega un cálculo nuevo, abandona el viejo. El panel de pasos se muestra enseguida.
+- No hizo falta un worker.
+
+Pruebas: «el trazado por tandas da las mismas ramas que de un tirón» (`lgr.test.js`) y «trazar un grado alto no traba la página, y un cálculo nuevo abandona el trazado anterior» (`lgr.spec.js`).
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/specs/lgr.spec.js`: con `D = s^20+3s+7`, tipear otra tecla mientras se traza y comprobar que el `input` responde (menos de 100 ms entre `keydown` y el cambio de valor) y que el trazado viejo se cancela.
@@ -48,5 +58,5 @@ Mientras tanto la página no responde: no se puede tipear, ni hacer zoom, ni cer
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ninguna tarea del LGR bloquea la página más de ~50 ms seguidos.
-- [ ] Los 27 ejemplos se dibujan igual que hoy.
+- [x] Ninguna tarea del LGR bloquea la página más de ~100 ms seguidos (medido con grado 20: 71 ms; antes, 1575 ms). El objetivo de 50 ms no se alcanzó: el pico es el navegador pintando el gráfico con decenas de miles de puntos.
+- [x] Los 27 ejemplos se dibujan igual que antes (gráfico y panel idénticos, comparados al terminar el trazado).

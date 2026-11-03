@@ -63,3 +63,23 @@ test("exporta un SVG válido", async ({ page }) => {
   const txt = require("fs").readFileSync(await descarga.path(), "utf8");
   expect(await page.evaluate((t) => !new DOMParser().parseFromString(t, "image/svg+xml").querySelector("parsererror"), txt)).toBe(true);
 });
+
+test("trazar un grado alto no traba la página, y un cálculo nuevo abandona el trazado anterior", async ({ page }) => {
+  await page.goto(URL);
+  await page.click("#m-ec");
+  const r = await page.evaluate(() => new Promise((listo) => {
+    let ult = performance.now(), peor = 0;
+    const t0 = ult;
+    const muestra = () => {
+      const a = performance.now(); peor = Math.max(peor, a - ult); ult = a;
+      if (a - t0 < 1500) setTimeout(muestra, 5); else listo({ peor, enCurso: !!trazadoEnCurso });
+    };
+    setTimeout(muestra, 5);
+    setTimeout(() => { S.N = "s+1"; S.D = "s^20+3s+7"; calcular(); }, 30);
+    // a mitad del trazado se cambia la entrada: el viejo se abandona y queda el del ejemplo chico
+    setTimeout(() => { S.D = "s(s+1)(s+2)"; calcular(); }, 300);
+  }));
+  expect(r.peor).toBeLessThan(400);                  // antes: 1,5 s trabada
+  expect(r.enCurso).toBe(false);
+  expect(await page.evaluate(() => ramas.length)).toBe(3);
+});

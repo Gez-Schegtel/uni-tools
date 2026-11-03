@@ -22,6 +22,33 @@ function cargar() {
   } catch (e) {}
 }
 
+/* El trazado de las ramas corre por tandas de ~12 ms y se dibuja lo que va cada 150 ms (dibujar
+   y pintar miles de puntos en cada cuadro cuesta más que seguir las ramas). Si mientras tanto
+   cambia la entrada, el trazado viejo se abandona. */
+let trazadoEnCurso = null;
+function empezarTrazado() {
+  const t = crearTrazado(resultado), propio = trazadoEnCurso = { t };
+  let ultimoDibujo = performance.now();
+  const dibujarLuego = () => {
+    if (performance.now() - ultimoDibujo < 150) return;
+    ultimoDibujo = performance.now();
+    requestAnimationFrame(() => { if (trazadoEnCurso === propio) dibujar(); });
+  };
+  const tanda = () => {
+    if (trazadoEnCurso !== propio) return;         // lo reemplazó un cálculo nuevo
+    const listo = t.avanzar(12);
+    ramas = t.ramas;
+    if (!listo) { dibujarLuego(); setTimeout(tanda, 0); return; }
+    trazadoEnCurso = null;
+    dibujar();
+    if (ramas.incompleto) {
+      const msj = $('msj');
+      msj.className = 'on'; msj.style.color = 'var(--warn)';
+      msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
+    }
+  };
+  tanda();
+}
 function calcular() {
   const msj = $('msj');
   ['N', 'D', 'Z', 'P'].forEach(c => $('i-' + c).classList.remove('mal'));
@@ -30,16 +57,13 @@ function calcular() {
   try {
     const modelo = construirModelo(S);
     resultado = analizar(modelo);
-    ramas = trazarLGR(resultado);
+    ramas = [];
+    empezarTrazado();                              // las ramas se dibujan de a poco, sin trabar la página
     const info = resultado.notas.length ? '<span class="nota-info">' + resultado.notas.map(esc).join(' ') + '</span>' : '';
     if (info) { msj.className = 'on'; msj.style.color = 'var(--ink-2)'; msj.innerHTML = info; }
     cancelaciones(modelo);
-    if (ramas.incompleto) {
-      msj.className = 'on'; msj.style.color = 'var(--warn)';
-      msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
-    }
   } catch (err) {
-    resultado = null; ramas = [];
+    resultado = null; ramas = []; trazadoEnCurso = null;
     if (err instanceof ErrorEntrada || err.extra !== undefined) {
       if (err.extra && err.extra.campo) $('i-' + err.extra.campo).classList.add('mal');
       msj.className = 'on'; msj.style.color = '';

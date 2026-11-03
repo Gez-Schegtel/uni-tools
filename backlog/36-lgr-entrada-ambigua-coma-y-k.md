@@ -31,6 +31,12 @@
 
 ---
 
+### 3.1. Agregado (2026-11-03)
+
+Las listas de ceros y polos también aceptan notación científica (`-1e-4`, `2e-1j`), como ya la aceptaban los polinomios.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/unidades/lgr.test.js`: `parsearLista("1,2")` devuelve un número y deja una nota; `parsearPoli("s^2+Ks+1")` tira error; `parsearPoli("K(s+1)")` sigue dando `[1, 1]`.
