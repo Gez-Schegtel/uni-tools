@@ -46,6 +46,7 @@ function parsearPoli(txt, conK) {
   }
   if (/[kK]/.test(t)) throw new Error(conK ? 'La K va adelante, como factor de todo el numerador: K(s + 1)' : 'La K no va en el denominador: escribí D(s) sin K');
   if (!t) throw new Error('Falta completar el polinomio');
+  if (t.length > 1000) throw new Error('La expresión es demasiado larga (más de 1000 caracteres)');
   if (t[0] === '[') {
     const v = t.replace(/[\[\]]/g, ' ').split(/[\s;,]+/).filter(Boolean).map(Number);
     if (!v.length || v.some(isNaN)) throw new Error('El vector de coeficientes no es válido');
@@ -60,12 +61,16 @@ function parsearPoli(txt, conK) {
     if (!m) throw new Error('Carácter no válido: «' + t[i] + '»');
     tok.push(m[1]); i = re.lastIndex;
   }
-  let p = 0;
+  let p = 0, hondo = 0;
   const peek = () => tok[p];
   function atomo() {
     const x = tok[p++];
     if (x === undefined) throw new Error('La expresión está incompleta');
-    if (x === '(') { const r = expr(); if (tok[p++] !== ')') throw new Error('Falta cerrar un paréntesis'); return r; }
+    if (x === '(') {
+      if (++hondo > 50) throw new Error('Hay demasiados paréntesis anidados');   // si no, desborda la pila
+      const r = expr(); hondo--;
+      if (tok[p++] !== ')') throw new Error('Falta cerrar un paréntesis'); return r;
+    }
     if (/^[sS]$/.test(x)) return [1, 0];
     if (/^[\d.]/.test(x)) return [parseFloat(x)];
     throw new Error('No se esperaba «' + x + '»');

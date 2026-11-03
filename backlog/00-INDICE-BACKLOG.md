@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **46 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **47 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -116,6 +116,12 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **46** | ✅ Hecho | [`46-lgr-tolerancias-de-ruptura-y-cruce.md`](./46-lgr-tolerancias-de-ruptura-y-cruce.md) | Auditoría LGR | Exactitud numérica | Medio (40 min) | Escalar el problema antes de analizarlo para que las tolerancias fijas de ruptura, cruce y raíces nulas no fallen con escalas extremas. |
 
 **Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `40` (barato y previene) → `34` → `19` → `18` → `20` → `36` → `45` → `35` + `44` (juntas) → `21` → `41` → `22` + `42` → `43` → `46` → `38` → `39`.
+
+### Bloque 9 — Auditoría de seguridad, robustez y de la suite de pruebas (2026-11-03, segunda parte)
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **47** | ✅ Hecho | [`47-etiquetas-absurdas-no-rompen-la-herramienta.md`](./47-etiquetas-absurdas-no-rompen-la-herramienta.md) | Auditoría de seguridad | Bug / Robustez | Bajo (30 min) | Una etiqueta con miles de paréntesis o de un megabyte (de un archivo armado a propósito) desbordaba la pila en cada dibujo y, por el autoguardado, la herramienta quedaba en blanco también al recargar. |
 
 ---
 

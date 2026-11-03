@@ -250,10 +250,29 @@ function cajaDe(it, fs) {
   return { w: 0, up: fs * .55, down: fs * .45, draw() {} };
 }
 const _bcache = new Map();
+/* Una etiqueta absurda (miles de paréntesis anidados, un texto de un megabyte) desbordaba la
+   pila o tardaba minutos, y como el dibujo se rehace siempre, la herramienta quedaba rota; con
+   el autoguardado, también al recargar. Más allá de estos topes, o si el análisis falla por
+   cualquier motivo, la etiqueta se muestra como texto plano (recortado) en vez de ecuación. */
+const TOPE_LARGO_ECUACION = 2000, TOPE_ANIDADO_ECUACION = 60;
+function anidamiento(s) {
+  let d = 0, max = 0;
+  for (const c of s) { if (c === "(" || c === "{") max = Math.max(max, ++d); else if (c === ")" || c === "}") d = Math.max(0, d - 1); }
+  return max;
+}
+function itemsDeEtiqueta(label) {
+  const s = String(label == null ? "" : label);
+  const plano = () => [{ t: "run", s: s.length > 80 ? s.slice(0, 80) + "…" : s }];
+  if (s.length > TOPE_LARGO_ECUACION || anidamiento(s) > TOPE_ANIDADO_ECUACION) return plano();
+  try { return analizar(s); } catch (e) { return plano(); }
+}
 function cajaEtiqueta(label, fs) {
   const k = fs + "|" + label;
   if (_bcache.has(k)) return _bcache.get(k);
-  return guardarEnCache(_bcache, k, cajaFila(analizar(label), fs));
+  let caja;
+  try { caja = cajaFila(itemsDeEtiqueta(label), fs); }
+  catch (e) { caja = cajaFila([{ t: "run", s: "…" }], fs); }   // ni el texto plano se pudo medir
+  return guardarEnCache(_bcache, k, caja);
 }
 function dibujarMath(g, label, fs, cx, cy) {
   if (!label) return;

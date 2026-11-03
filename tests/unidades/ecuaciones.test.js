@@ -60,3 +60,16 @@ test("las cachés de las ecuaciones no crecen sin tope", () => {
   assert.equal(c.has("k0"), false);                    // se fue lo más viejo
   assert.equal(c.get("k599"), 599);
 });
+
+test("una etiqueta absurda (miles de paréntesis, un megabyte) se muestra como texto plano en vez de romper", () => {
+  const m = require("./cargar").cargar("src/bloque/ecuaciones.js");
+  const t0 = Date.now();
+  const hondo = m.itemsDeEtiqueta("(".repeat(5000) + "x" + ")".repeat(5000));   // antes: RangeError
+  const largo = m.itemsDeEtiqueta("x+".repeat(500000));                         // antes: minutos
+  assert.ok(Date.now() - t0 < 1000);
+  assert.equal(hondo[0].t, "run");
+  assert.equal(largo[0].t, "run");
+  assert.ok(largo[0].s.length <= 81);
+  // una ecuación normal se sigue analizando igual
+  assert.equal(m.itemsDeEtiqueta("K/(s+1)")[0].t, "frac");
+});

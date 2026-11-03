@@ -213,3 +213,10 @@ test("el trazado por tandas da las mismas ramas que de un tirón", () => {
     assert.deepEqual(clonar(t.ramas), entero);
   }
 });
+
+test("paréntesis anidados de más o una expresión enorme dan un aviso, no un desborde de pila", () => {
+  const m = lgr();
+  assert.throws(() => m.parsearPoli("(".repeat(400) + "s" + ")".repeat(400)), /demasiados paréntesis/);
+  assert.throws(() => m.parsearPoli("s+".repeat(600) + "1"), /demasiado larga/);
+  assert.equal(m.parsearPoli("(".repeat(50) + "s+1" + ")".repeat(50)).length, 2);
+});
