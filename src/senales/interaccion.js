@@ -150,7 +150,12 @@ svg.addEventListener("pointermove", ev => {
     r.curvaFija = true;
     render(); return;
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
+  if (drag.kind === "connect") {
+    drag.cur = w;
+    const t = document.elementFromPoint(ev.clientX, ev.clientY);
+    drag.dstId = t ? idDeNodo(t) : null;         // el mismo destino que toma soltar
+    render(); return;
+  }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
 });
 svg.addEventListener("pointerup", ev => {

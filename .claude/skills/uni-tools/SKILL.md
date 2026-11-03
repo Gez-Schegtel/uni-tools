@@ -114,6 +114,13 @@ Dos consecuencias que importan:
   las flechas de lo que se mueve y las que pasan cerca); al soltar, el `render()` completo deja las
   rutas exactamente como antes. Además, cada flecha descarta los obstáculos fuera de la caja de sus
   candidatos (no cambia el resultado: `segRect` es una prueba de cajas).
+- **Vista previa de la conexión** (`ptsDeLaPrevia` en `bloque/dibujo.js` y `simulador/dibujo.js`):
+  sobre un destino que vale, es la ruta real (`rutearFlechas` con la flecha nueva sola, o
+  `rutaDeCable` del simulador, con las demás como ya puestas), calculada una vez por destino y
+  guardada en `drag.previa`; el destino sale de lo mismo que usa soltar (`destinoBajoPuntero`,
+  `destinoDelCable`). Si no hay destino, `ptsPrevia(A, dA, cursor, cajaDelOrigen)` de
+  `comun/ortogonal.js`: sale de frente y, con el cursor detrás del puerto, rodea el origen. En
+  señales la línea va del borde del nodo al cursor o al borde del nodo destino.
 - **Rodeo cuando el menú fijo choca** (`rodeo()` en `comun/ruteo-bloques.js`): si el mejor de los
   candidatos de `candidates()` atraviesa un obstáculo o entra en el origen/destino, un A* sobre los
   bordes de los obstáculos cercanos (costo en las unidades de `scorePath`, tope de 30 000 pasos)

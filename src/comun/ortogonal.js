@@ -111,9 +111,12 @@ function pathD(pts, r) {
   d += ` L ${e.x} ${e.y}`;
   return d;
 }
-/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión */
-function ptsPrevia(A, dA, B) {
-  const stub = 20;
+/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión:
+   sale de frente por el puerto A (dirección dA) y termina en el cursor B. R, si viene, es la
+   caja del elemento de origen: con el cursor detrás del puerto y a la altura del elemento, la
+   línea lo rodea por el lado más cercano en vez de volver por encima (parecía salir de atrás). */
+function ptsPrevia(A, dA, B, R) {
+  const stub = 20, m = 12;
   const h = dA.x !== 0;
   const avanza = h ? (B.x - A.x) * dA.x >= stub : (B.y - A.y) * dA.y >= stub;
   if (avanza) {
@@ -125,6 +128,15 @@ function ptsPrevia(A, dA, B) {
     return cleanPts([A, { x: A.x, y: my }, { x: B.x, y: my }, B]);
   }
   const a1 = { x: A.x + dA.x * stub, y: A.y + dA.y * stub };
+  const detras = h ? (B.x - A.x) * dA.x < 0 : (B.y - A.y) * dA.y < 0;
+  if (R && detras && h && B.y > R.t - m && B.y < R.b + m) {
+    const y = B.y < (R.t + R.b) / 2 ? R.t - m : R.b + m;
+    return cleanPts([A, a1, { x: a1.x, y }, { x: B.x, y }, B]);
+  }
+  if (R && detras && !h && B.x > R.l - m && B.x < R.r + m) {
+    const x = B.x < (R.l + R.r) / 2 ? R.l - m : R.r + m;
+    return cleanPts([A, a1, { x, y: a1.y }, { x, y: B.y }, B]);
+  }
   return h
     ? cleanPts([A, a1, { x: a1.x, y: B.y }, B])
     : cleanPts([A, a1, { x: B.x, y: a1.y }, B]);

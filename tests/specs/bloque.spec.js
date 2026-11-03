@@ -776,3 +776,52 @@ test("en 25 diagramas armados en grilla, ninguna flecha atraviesa un bloque ni p
   expect(r.flechas).toBeGreaterThan(300);
   expect(r.malas).toEqual([]);                             // antes, 2,9 % de las flechas
 });
+
+test.describe("la vista previa de la flecha que se está tirando", () => {
+  const doc = () => ({
+    nodes: [{ id: "g1", type: "block", x: 300, y: 200, w: 72, h: 42, label: "G1", font: 15 },
+            { id: "x", type: "block", x: 480, y: 200, w: 72, h: 42, label: "X", font: 15 },
+            { id: "g2", type: "block", x: 660, y: 200, w: 72, h: 42, label: "G2", font: 15 }],
+    edges: [],
+  });
+  const centro = async (page, sel) => {
+    const r = await page.locator(sel).boundingBox();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  };
+  test("con el cursor detrás del puerto, rodea el bloque de origen en vez de volver por encima", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await page.keyboard.press("c");
+    const desde = await centro(page, '.port[data-pid="g1"][data-port="r"]');
+    const atras = await aPantalla(page, 200, 205);                 // a la izquierda de G1, a su altura
+    await page.mouse.move(desde.x, desde.y);
+    await page.mouse.down();
+    await page.mouse.move(atras.x, atras.y, { steps: 8 });
+    const r = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag), R = rectOf(getNode("g1"));
+      return { pts, cruza: segsOf(pts).some((s) => entraEn(s, R)) };
+    });
+    await page.mouse.up();
+    expect(r.cruza).toBe(false);
+    expect(r.pts[1].x).toBeGreaterThan(336);                      // sale de frente, hacia la derecha
+    expect(r.pts.at(-1)).toEqual({ x: 200, y: 205 });             // y termina en el cursor
+  });
+  test("sobre un destino, la vista previa es la ruta que va a tener la flecha (esquiva lo del medio)", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await page.keyboard.press("c");
+    const desde = await centro(page, '.port[data-pid="g1"][data-port="r"]');
+    const hasta = await centro(page, '.node[data-id="g2"]');
+    await page.mouse.move(desde.x, desde.y);
+    await page.mouse.down();
+    await page.mouse.move(hasta.x - 20, hasta.y, { steps: 8 });
+    const previa = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag);
+      return { pts, cruzaX: segsOf(pts).some((s) => segRect(s, rectOf(getNode("x")))) };
+    });
+    await page.mouse.up();
+    const final = await page.evaluate(() => S.edges.map((e) => [e.to.id, e.to.port, e.pts]));
+    expect(final.length).toBe(1);
+    expect(final[0].slice(0, 2)).toEqual(["g2", "l"]);
+    expect(previa.pts).toEqual(final[0][2]);
+    expect(previa.cruzaX).toBe(false);
+  });
+});

@@ -339,6 +339,7 @@ svg.addEventListener("pointermove", ev => {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
     drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
+    drag.dst = dst;
     render("superpuesto"); return;
   }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }

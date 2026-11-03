@@ -473,3 +473,22 @@ test("la vista previa del equivalente usa el ruteo del editor de bloques: ningun
     expect(malas, ej).toEqual([]);
   }
 });
+
+test("la vista previa de la rama sale del borde del nodo y, sobre otro nodo, termina en su borde", async ({ page }) => {
+  await grafo(page, 2, []);
+  await page.keyboard.press("c");                                  // modo Conectar
+  const [a, b] = await page.evaluate(() => S.nodos.map((n) => n.id));
+  const pos = (id) => page.locator(`[data-id="${id}"] .n-hit`).boundingBox().then((r) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 }));
+  const pa = await pos(a), pb = await pos(b);
+  await page.mouse.move(pa.x, pa.y);
+  await page.mouse.down();
+  await page.mouse.move((pa.x + pb.x) / 2, pa.y + 40, { steps: 6 });
+  const libre = await page.evaluate(() => document.querySelector(".ghostline").getAttribute("d"));
+  await page.mouse.move(pb.x + 3, pb.y + 2, { steps: 6 });
+  const sobre = await page.evaluate(() => document.querySelector(".ghostline").getAttribute("d"));
+  await page.mouse.up();
+  const nums = (d) => d.match(/-?[\d.]+(e-?\d+)?/g).map(Number);
+  const [x0, y0] = nums(libre), [, , x1, y1] = nums(sobre);
+  expect(Math.hypot(x0 - 0, y0 - 0)).toBeCloseTo(6, 3);           // del borde de la entrada (radio 6), no del centro
+  expect(Math.hypot(x1 - 160, y1 - 0)).toBeCloseTo(6, 3);         // y se engancha al borde del otro nodo
+});

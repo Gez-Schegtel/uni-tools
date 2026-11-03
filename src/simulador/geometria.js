@@ -99,17 +99,23 @@ function routeAll() {
   for (const w of S.wires) {
     const from = getNode(w.from.id), to = getNode(w.to.id);
     if (!from || !to) { w.pts = null; continue; }
-    const A = pinPoint(from, w.from.pin || "o"), B = pinPoint(to, w.to.pin);
-    const Rf = rectOf(from), Rt = rectOf(to);
-    const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obst = S.nodes.filter(n => n.id !== from.id && n.id !== to.id &&
-                                n.type !== "label" && !esMarco(n))
-      .map(n => agrandar(rectOf(n), 7));
+    w.pts = rutaDeCable(w, from, to, placed, all);
     const keys = { from: w.from.id + ":" + (w.from.pin || "o"), to: w.to.id + ":" + w.to.pin };
-    const cands = candidatos(A, pinDir(from, w.from.pin || "o0"), B, pinDir(to, w.to.pin), near, all);
-    w.pts = variante(rutasPorPuntaje(cands, obst, placed, keys, 10, [Rf, Rt]), w.variant);
     for (const sg of segsOf(w.pts)) placed.push({ seg: sg, keys });
   }
+}
+/* La ruta de un cable, con los tramos ya puestos (placed) de los anteriores. La usa también la
+   vista previa, con todos los cables como ya puestos. */
+function rutaDeCable(w, from, to, placed, all) {
+  const A = pinPoint(from, w.from.pin || "o"), B = pinPoint(to, w.to.pin);
+  const Rf = rectOf(from), Rt = rectOf(to);
+  const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
+  const obst = S.nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+                              n.type !== "label" && !esMarco(n))
+    .map(n => agrandar(rectOf(n), 7));
+  const keys = { from: w.from.id + ":" + (w.from.pin || "o"), to: w.to.id + ":" + w.to.pin };
+  const cands = candidatos(A, pinDir(from, w.from.pin || "o0"), B, pinDir(to, w.to.pin), near, all);
+  return variante(rutasPorPuntaje(cands, obst, placed, keys, 10, [Rf, Rt]), w.variant);
 }
 /* Vuelve a la ruta automática (la alternativa 0) */
 function rutaAuto(w) { w.variant = 0; }

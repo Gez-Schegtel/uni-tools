@@ -3,7 +3,7 @@
    Uso desde la raíz del repo: node --test "tests/unidades/*.test.js" */
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { cargar } = require("./cargar");
+const { cargar, clonar } = require("./cargar");
 
 const ruteo = () => cargar("src/comun/puertos.js", "src/comun/ortogonal.js", "src/comun/ruteo-bloques.js");
 const bloque = (id, x, y) => ({ id, type: "block", x, y, w: 60, h: 40 });
@@ -70,4 +70,30 @@ test("cuando todos los candidatos fijos chocan, el rodeo esquiva: sale por la iz
   assert.ok(pts[1].x < 210);                                             // hacia la izquierda, no hacia atrás
   assert.deepEqual([pts.at(-1).x, pts.at(-1).y], [400, 220]);            // llega al puerto de arriba
   assert.ok(pts.at(-2).x === 400 && pts.at(-2).y < 220);                 // y desde arriba
+});
+
+test("vista previa: con el cursor detrás del puerto rodea el elemento de origen por el lado más cercano", () => {
+  const m = ruteo();
+  const R = { l: 270, r: 330, t: 180, b: 220 };                         // bloque en (300, 200), puerto derecho en (330, 200)
+  const A = { x: 330, y: 200 }, d = { x: 1, y: 0 };
+  for (const [B, ladoY] of [[{ x: 200, y: 195 }, 168], [{ x: 200, y: 215 }, 232]]) {
+    const pts = m.ptsPrevia(A, d, B, R);
+    assert.ok(!m.segsOf(pts).some(s => m.entraEn(s, R)), "vuelve por encima del bloque");
+    assert.ok(ortogonal(pts));
+    assert.deepEqual([pts[1].x, pts[1].y], [350, 200]);                 // sale de frente
+    assert.ok(pts.some(p => p.y === ladoY));                            // por arriba o por abajo, según el cursor
+    assert.deepEqual([pts.at(-1).x, pts.at(-1).y], [B.x, B.y]);         // y termina en el cursor
+  }
+  // vertical: puerto de abajo, cursor arriba del bloque y a su ancho
+  const pv = m.ptsPrevia({ x: 300, y: 220 }, { x: 0, y: 1 }, { x: 310, y: 120 }, R);
+  assert.ok(!m.segsOf(pv).some(s => m.entraEn(s, R)));
+});
+
+test("vista previa: hacia adelante, o detrás pero fuera de la altura del elemento, el recorrido es el de siempre", () => {
+  const m = ruteo();
+  const R = { l: 270, r: 330, t: 180, b: 220 }, A = { x: 330, y: 200 }, d = { x: 1, y: 0 };
+  const plano = (pts) => clonar(pts.map(p => [p.x, p.y]));
+  assert.deepEqual(plano(m.ptsPrevia(A, d, { x: 500, y: 260 }, R)), [[330, 200], [415, 200], [415, 260], [500, 260]]);
+  assert.deepEqual(plano(m.ptsPrevia(A, d, { x: 200, y: 300 }, R)), [[330, 200], [350, 200], [350, 300], [200, 300]]);
+  assert.deepEqual(plano(m.ptsPrevia(A, d, { x: 200, y: 195 })), [[330, 200], [350, 200], [350, 195], [200, 195]]);   // sin caja, como antes
 });

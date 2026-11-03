@@ -113,6 +113,23 @@ function renderTiradoresTramo() {
   }
 }
 let hoverNode = null;
+/* La vista previa de la flecha que se está tirando. Sobre un destino válido es la ruta que va a
+   tener (el mismo ruteo, con las demás flechas como ya puestas; se calcula una vez por destino);
+   si no, sale de frente por el puerto, sigue al cursor y rodea el elemento de origen si el cursor
+   quedó detrás. */
+function ptsDeLaPrevia(d) {
+  const o = getNode(d.fromId), dst = d.dst;
+  if (dst && dst.id !== d.fromId && !d.invalido && getNode(dst.id)) {
+    const clave = dst.id + ":" + dst.port;
+    if (!d.previa || d.previa.clave !== clave) {
+      const e = { id: "previa", from: { id: d.fromId, port: d.fromPort }, to: { id: dst.id, port: dst.port }, variant: 0 };
+      rutearFlechas(S.nodes, S.edges.concat([e]), new Set([e.id]));
+      d.previa = { clave, pts: e.pts };
+    }
+    if (d.previa.pts) return d.previa.pts;
+  }
+  return ptsPrevia(d.start, dirOf(d.fromPort), d.cur, o ? rectOf(o) : null);
+}
 /* Lo que se dibuja encima de todo y no se exporta: área de impresión, puertos, tiradores,
    vista previa de la flecha, banda y recuadro en dibujo. Es lo único que cambia al pasar el
    mouse, así que render("superpuesto") redibuja sólo esto. */
@@ -122,8 +139,7 @@ function dibujarSuperpuesto() {
   renderPorts();
   renderHandles();
   if (drag && drag.kind === "connect" && drag.cur) {
-    const pts = ptsPrevia(drag.start, dirOf(drag.fromPort), drag.cur);
-    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: pathD(pts, 6) }, gOv);
+    el("path", { class: "ghostline" + (drag.invalido ? " invalido" : ""), d: pathD(ptsDeLaPrevia(drag), 6) }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;
