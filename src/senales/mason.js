@@ -10,10 +10,10 @@ const salientesDe = (id) => S.ramas.filter(r => r.de === id);
 /* Topes para que un grafo muy denso no congele la página. Con 200 lazos ya se cortaba un
    grafo de 7 nodos todos contra todos (409 lazos), que se calcula en 20 ms; con estos, ése da
    exacto y uno de 9 se corta en menos de un segundo, una sola vez (después queda en la caché).
-   Las combinaciones disjuntas se cortan antes porque la ventana de análisis escribe Δ término
-   a término: con 65 000 eran 31 MB de HTML y 3 s trabado. Si se corta, no se da la función
-   de transferencia. */
-const MAX_CAMINOS = 5000, MAX_LAZOS = 5000, MAX_COMB = 20000;
+   Las combinaciones disjuntas se calculan rápido (17 autolazos, 131 071 combinaciones, en
+   unos 70 ms); la ventana de análisis las muestra resumidas (deltaParaMostrar en analisis.js).
+   Si se corta, no se da la función de transferencia. */
+const MAX_CAMINOS = 5000, MAX_LAZOS = 5000, MAX_COMB = 200000;
 let _truncadoMason = false;
 let _cacheMason = { clave: "", valor: null };
 

@@ -427,3 +427,26 @@ test("el documento guarda la curva de una rama sólo si se fijó a mano", async 
   expect(r.conCurva).toEqual([80]);
   expect(r.curvas).toEqual(["number", "number", "number"]);
 });
+
+test("con 16 lazos que no se tocan, la ventana resume Δ, no se traba y da la transferencia", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    S.nodos = []; S.ramas = []; S.sel = []; S.selR = [];
+    const n = 16;
+    for (let i = 0; i < n; i++) {
+      S.nodos.push({ id: "n" + i, x: i * 60, y: 0, nombre: "x" + i, tipo: i === 0 ? "entrada" : i === n - 1 ? "salida" : "normal" });
+      S.ramas.push({ id: "a" + i, de: "n" + i, a: "n" + i, g: String(0.1 * (1 + i % 3)), curva: 0 });
+      if (i > 0) S.ramas.push({ id: "c" + i, de: "n" + (i - 1), a: "n" + i, g: "1", curva: 0 });
+    }
+    commit(); render();
+    const t0 = performance.now(); mostrarMason(); const ms = performance.now() - t0;
+    // referencia: cada autolazo divide por (1 − Lᵢ)
+    let ref = 1; for (let i = 0; i < n; i++) ref /= 1 - 0.1 * (1 + i % 3);
+    return { ms, tam: document.getElementById("ov-mason").innerHTML.length, ref,
+             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta") };
+  });
+  expect(r.ms).toBeLessThan(1500);                     // antes: 3,4 s y 31 MB de HTML
+  expect(r.tam).toBeLessThan(1e6);
+  expect(r.boton).toBe(true);
+  expect(r.texto).toContain("Σ[");
+  expect(Number(r.texto.split("=").pop().trim().replace(",", "."))).toBeCloseTo(r.ref, 3);
+});

@@ -1,7 +1,7 @@
 # Spec 38 — Ventana de Mason: Δ Compacto cuando Tiene Muchos Términos
 
 - **ID:** `SPEC-38`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03 (revisión de SPEC-07)
 - **Prioridad:** Baja (38 / 46)
 - **Esfuerzo estimado:** Medio (~40 minutos)
@@ -32,6 +32,16 @@ Por eso el tope de combinaciones disjuntas (`MAX_COMB = 20000` en `src/senales/m
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+- `deltaParaMostrar()` (`analisis.js`): con más de 200 términos, Δ y los cofactores se muestran como `1 − Σ[n lazos] + Σ[m productos de a 2] − …`, con el valor numérico y un botón «Copiar Δ completo».
+- `tablaRecortada()`: las tablas de lazos disjuntos muestran los primeros 100 y cuántos faltan, y arman sólo esas filas (armarlas todas era lo que tardaba).
+- `MAX_COMB` subió a 200 000.
+
+Medido en Chromium: con 16 autolazos la ventana tarda 69 ms y pesa 365 KB (antes 3,4 s y 31 MB); con 17, 86 ms; un grafo de 8 nodos todos contra todos, 183 ms.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/specs/senales.spec.js`: con 16 autolazos, `mostrarMason()` tarda menos de 500 ms, el HTML de la ventana pesa menos de 1 MB y la transferencia numérica coincide con Π(1 − Lᵢ).
@@ -41,5 +51,5 @@ Por eso el tope de combinaciones disjuntas (`MAX_COMB = 20000` en `src/senales/m
 
 ## 5. Criterios de Aceptación
 
-- [ ] La ventana nunca escribe más de unos cientos de términos.
-- [ ] Un grafo de 16 o 17 autolazos da su transferencia.
+- [x] La ventana nunca escribe más de unos cientos de términos.
+- [x] Un grafo de 16 o 17 autolazos da su transferencia.

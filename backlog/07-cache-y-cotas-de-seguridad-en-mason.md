@@ -7,7 +7,7 @@
 - **Esfuerzo estimado:** Medio (~40 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/mason.js`, `src/senales/panel.js`, `diagrama-señales.html`)
 
-- **Revisión 2026-11-03:** los topes de esta spec (200 / 200 / 2000) cortaban grafos chicos (7 nodos todos contra todos, 14 autolazos) que se calculan exactos en milisegundos, y con el corte la ventana igual mostraba una transferencia calculada con una parte de los términos. Se subieron a 5000 / 5000 / 20000 y, si hay corte, ya no se da la transferencia (commit «Mason: topes que no corten grafos chicos…»). Ver también SPEC-38.
+- **Revisión 2026-11-03:** los topes de esta spec (200 / 200 / 2000) cortaban grafos chicos (7 nodos todos contra todos, 14 autolazos) que se calculan exactos en milisegundos, y con el corte la ventana igual mostraba una transferencia calculada con una parte de los términos. Se subieron a 5000 / 5000 / 20000 y, si hay corte, ya no se da la transferencia (commit «Mason: topes que no corten grafos chicos…»). Con SPEC-38 (Δ resumido en la ventana) el de combinaciones pasó a 200 000.
 
 ---
 

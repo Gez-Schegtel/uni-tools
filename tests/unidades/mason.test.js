@@ -64,9 +64,9 @@ test("las ecuaciones nodo a nodo se arman con las ramas", () => {
 
 test("un grafo muy denso o con muchos lazos disjuntos termina en pocos milisegundos gracias a las cotas de seguridad", () => {
   const nodos = [], ramas = [];
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 18; i++) {                   // 2^18 − 1 combinaciones: más que el tope
     const id = "n" + i;
-    nodos.push(nodo(id, "x" + i, i === 0 ? "entrada" : i === 15 ? "salida" : "normal"));
+    nodos.push(nodo(id, "x" + i, i === 0 ? "entrada" : i === 17 ? "salida" : "normal"));
     ramas.push(rama(id, id, "L" + i));
     if (i > 0) ramas.push(rama("n" + (i - 1), id, "1"));
   }

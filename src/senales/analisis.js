@@ -43,30 +43,31 @@ function mostrarMason() {
 
   h += `<h4>3 · Lazos disjuntos tomados de a dos</h4>`;
   const pares = A.det.combos[2] || [];
-  h += pares.length ? tabla(["Lazos", "Producto"],
-    pares.map(c => [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
-                    `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]))
+  h += pares.length ? tablaRecortada(["Lazos", "Producto"], pares,
+    c => [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
+          `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`])
     : `<div class="nada">No hay dos lazos que no se toquen.</div>`;
 
   // si además hay grupos de tres o más, se muestran, porque entran en Δ
   const ordenes = Object.keys(A.det.combos).map(Number).filter(k => k >= 3).sort((a, b) => a - b);
   for (const k of ordenes) {
     h += `<h4>3.${k - 1} · Lazos disjuntos tomados de a ${k}</h4>`;
-    h += tabla(["Lazos", "Producto"], A.det.combos[k].map(c =>
+    h += tablaRecortada(["Lazos", "Producto"], A.det.combos[k], c =>
       [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
-       `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]));
+       `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]);
   }
 
   h += `<h4>4 · Determinante y cofactores</h4>`;
   // los números sólo tienen sentido si todas las transmitancias son números
   const todoNumerico = A.L.every(l => l.valor !== null) && A.P.every(p => p.valor !== null)
     && (A.L.length + A.P.length) > 0;
-  const dTexto = textoDelta(A.L, A.det);
+  const dTexto = deltaParaMostrar(A.L, A.det);
   const dValor = todoNumerico ? valorDelta(A.L, A.det) : null;
-  h += `<div class="caja">Δ = ${conSub(dTexto)}${dValor === null ? "" : `<br>Δ = ${redondear(dValor)}`}</div>`;
+  h += `<div class="caja">Δ = ${conSub(dTexto)}${dValor === null ? "" : `<br>Δ = ${redondear(dValor)}`}` +
+    (esLargo(A.det) ? `<br><button class="btn" id="b-copiar-delta">Copiar Δ completo (${A.det.terminos.length} términos)</button>` : "") + `</div>`;
   if (A.cof.length) {
     h += tabla(["", "Cofactor", "Lazos que no la tocan"], A.cof.map((c, i) => {
-      const t = textoDelta(c.libres, c.det);
+      const t = deltaParaMostrar(c.libres, c.det);
       const v = todoNumerico ? valorDelta(c.libres, c.det) : null;
       return [`<td class="simb">Δ${sub(i + 1)}</td>`,
               `<td class="exp">${conSub(t)}${v === null ? "" : ` &nbsp;=&nbsp; ${redondear(v)}`}</td>`,
@@ -88,7 +89,7 @@ function mostrarMason() {
     }).join(" + ");
     // un término negativo se resta, en vez de quedar "+ -G3"
     const numDes = A.P.map((p, i) => {
-      const dk = textoDelta(A.cof[i].libres, A.cof[i].det);
+      const dk = deltaParaMostrar(A.cof[i].libres, A.cof[i].det);
       return dk === "1" ? p.gan : `${envolver(p.gan)}·${envolver(dk)}`;
     }).map((t, i) => i === 0 ? t : /^-/.test(t) ? " − " + t.slice(1) : " + " + t).join("");
     h += `<div class="caja resultado">${conSub(A.salida.nombre)} / ${conSub(A.entrada.nombre)}
@@ -103,6 +104,9 @@ function mostrarMason() {
   }
   h += seccionEquivalente();
   body.innerHTML = h;
+  const copiar = $("#b-copiar-delta");
+  if (copiar) copiar.onclick = () => navigator.clipboard.writeText("Δ = " + textoDelta(A.L, A.det))
+    .then(() => toast("Δ copiado al portapapeles"), () => toast("El navegador no dejó copiar"));
   pintarEquivalente();
   $("#ov-mason").classList.add("show");
 }
@@ -145,6 +149,25 @@ function htmlEcuaciones() {
   if (!eqs.length) return `<h4>Sistema de ecuaciones</h4><div class="nada">Todavía no hay nodos.</div>`;
   return `<h4>Sistema de ecuaciones</h4><div class="caja eq">` +
     eqs.map(e => conSub(e.texto)).join("<br>") + `</div>`;
+}
+/* Con muchos lazos que no se tocan, Δ tiene miles de términos (16 autolazos: 65 535) y la
+   ventana se trababa armando su texto. Pasado este tope, Δ y los cofactores se muestran
+   resumidos (cuántos productos de cada orden) y las tablas, recortadas; el valor numérico y
+   la transferencia se siguen dando, y el texto completo se puede copiar. */
+const TOPE_TERMINOS = 200, TOPE_FILAS = 100;
+const esLargo = (det) => det.terminos.length > TOPE_TERMINOS;
+function deltaParaMostrar(ls, det) {
+  if (!esLargo(det)) return textoDelta(ls, det);
+  const porOrden = {};
+  det.terminos.forEach(t => porOrden[t.orden] = (porOrden[t.orden] || 0) + 1);
+  return "1" + Object.keys(porOrden).map(Number).sort((x, y) => x - y).map(k =>
+    (k % 2 ? " − " : " + ") + `Σ[${porOrden[k]} ${k === 1 ? "lazos" : "productos de a " + k}]`).join("");
+}
+/* fila(x) arma las celdas; se arman sólo las que se muestran */
+function tablaRecortada(cabeceras, lista, fila) {
+  const t = tabla(cabeceras, lista.slice(0, TOPE_FILAS).map(fila));
+  return lista.length <= TOPE_FILAS ? t
+    : t + `<div class="nada">… y ${lista.length - TOPE_FILAS} más (se muestran los primeros ${TOPE_FILAS}).</div>`;
 }
 function tabla(cabeceras, filas) {
   return `<table><thead><tr>${cabeceras.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
