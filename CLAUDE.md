@@ -48,7 +48,9 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
   coinciden con `src/` o si fallan las pruebas unitarias.
 - Todo el JS de una página termina en un único `<script>` clásico, así que los módulos comparten el
   ámbito global como antes: importa el **orden** de inclusión en `pagina.html` para las
-  `const`/`let` que se usan al cargar.
+  `const`/`let` que se usan al cargar. Y ningún nombre declarado al nivel de arriba puede repetirse
+  entre dos módulos de la misma página: `construir.js` falla si pasa (una función pisaría a la otra
+  sin error). Para pisar algo a propósito, el módulo que pisa lo dice con `/* @pisa nombre */`.
 
 ## Cómo se trabaja
 

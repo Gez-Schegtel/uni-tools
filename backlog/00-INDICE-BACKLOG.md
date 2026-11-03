@@ -107,7 +107,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 
 | # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
-| **40** | ⏳ Pendiente | [`40-detectar-colisiones-de-nombres-globales.md`](./40-detectar-colisiones-de-nombres-globales.md) | Informe `2.2.A` | Arquitectura / CI | Bajo (30 min) | Que el armado falle si dos módulos de una página declaran el mismo nombre global (hoy una función pisaría a otra en silencio). |
+| **40** | ✅ Hecho | [`40-detectar-colisiones-de-nombres-globales.md`](./40-detectar-colisiones-de-nombres-globales.md) | Informe `2.2.A` | Arquitectura / CI | Bajo (30 min) | Que el armado falle si dos módulos de una página declaran el mismo nombre global (hoy una función pisaría a otra en silencio). |
 | **41** | ⏳ Pendiente | [`41-redibujo-por-capas.md`](./41-redibujo-por-capas.md) | Informe `4.1` | Rendimiento | Alto (2 h) | Partir `render()` por capas para que arrastrar, seleccionar o tipear no rearme todo el SVG y el panel. Depende de `20` y `21`. |
 | **42** | ⏳ Pendiente | [`42-equivalente-en-bloques-con-el-ruteo-de-bloques.md`](./42-equivalente-en-bloques-con-el-ruteo-de-bloques.md) | Informe `4.4` | Mantenibilidad | Medio / Alto (1 h) | Que la vista previa del equivalente en bloques use el ruteo y el dibujo de `diagrama-bloque` en vez de copias propias. |
 | **43** | ⏳ Pendiente | [`43-vocabulario-del-modelo-con-accesos-comunes.md`](./43-vocabulario-del-modelo-con-accesos-comunes.md) | Informe `2.2.C` | Mantenibilidad | Bajo / Medio (40 min) | Accesos comunes (`nodosDe`, `conexionesDe`, `etiquetaDe`…) para no repetir condicionales por herramienta, sin tocar el formato de los archivos. |

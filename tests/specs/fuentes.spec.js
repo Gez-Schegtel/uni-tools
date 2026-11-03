@@ -38,3 +38,12 @@ test("src/sitio.js publica las páginas y sus imágenes, y nada de src/, tests/ 
   expect(lista).toContain("uni-tools-marca.png");
   expect(lista.filter((a) => /^(src|tests|backlog|\.github|\.claude)\//.test(a) || /\.md$/.test(a))).toEqual([]);
 });
+
+test("el armado detecta dos módulos que declaran el mismo nombre global", () => {
+  const { colisiones } = require(path.join(RAIZ, "src", "construir.js"));
+  expect(colisiones([{ nombre: "comun/vista.js", texto: "function fit() {}\nconst a = 1;" },
+                     { nombre: "senales/interaccion.js", texto: "  function local() {}\nfunction fit() {}" }]))
+    .toEqual(["«fit» está en comun/vista.js y en senales/interaccion.js"]);
+  // pisar a propósito se declara con @pisa
+  expect(colisiones([{ nombre: "a.js", texto: "function fit() {}" }, { nombre: "b.js", texto: "/* @pisa fit */\nfunction fit() {}" }])).toEqual([]);
+});

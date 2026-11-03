@@ -1,7 +1,7 @@
 # Spec 40 — Detectar Colisiones de Nombres Globales al Armar las Páginas
 
 - **ID:** `SPEC-40`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Revisión de estructura del 2026-11-03 (informe, sección `2.2.A`)
 - **Prioridad:** Media (40 / 46)
 - **Esfuerzo estimado:** Bajo (~30 minutos)
@@ -44,5 +44,5 @@ Sacar el ámbito global no se va a hacer (ver «Decisiones» en el índice): es 
 
 ## 5. Criterios de Aceptación
 
-- [ ] Un nombre global repetido entre módulos de una página hace fallar el armado y la CI.
-- [ ] El mensaje dice el nombre y los dos archivos.
+- [x] Un nombre global repetido entre módulos de una página hace fallar el armado y la CI.
+- [x] El mensaje dice el nombre y los dos archivos.
