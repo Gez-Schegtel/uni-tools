@@ -25,10 +25,13 @@ function aplicarDoc(g) {
 }
 
 /* ---------- autoguardado: sólo después de que el usuario cambia algo ---------- */
-let autoActivo = false;
+let autoActivo = false, docAlArrancar = null;
 function autoguardar() {
   if (!autoActivo) return;
-  try { localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); } catch (e) {}
+  try {
+    // si no había nada guardado y el ejercicio es el de arranque, entrar y salir no deja nada
+    if (!localStorage.getItem(CLAVE_AUTO_LGR) && JSON.stringify(docDatos()) === docAlArrancar) return;
+    localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); } catch (e) {}
 }
 function recuperarAutoguardado() {
   try {

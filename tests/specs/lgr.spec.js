@@ -132,3 +132,12 @@ test("el autoguardado usa la clave común (y migra la vieja) y la portada avisa 
   await page.goto("/index.html");
   await expect(page.locator('a[data-auto="lgr"] .guardado')).toContainText("ejercicio guardado");
 });
+
+test("entrar y salir del LGR sin tocar nada no deja nada guardado", async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem("ya")) { sessionStorage.setItem("ya", "1"); localStorage.clear(); } });
+  await page.goto(URL);
+  await page.evaluate(() => dispatchEvent(new Event("pagehide")));
+  expect(await page.evaluate(() => localStorage.getItem("uni-tools-autoguardado-lgr"))).toBeNull();
+  await page.fill("#i-N", "2");                        // un cambio sí se guarda
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("uni-tools-autoguardado-lgr"))).not.toBeNull();
+});

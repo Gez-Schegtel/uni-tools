@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **50 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **51 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -125,6 +125,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **48** | ✅ Hecho | [`48-defensa-en-profundidad-contra-html-inyectado.md`](./48-defensa-en-profundidad-contra-html-inyectado.md) | Auditoría de seguridad | Seguridad | Medio (45 min) | La auditoría no encontró agujeros, pero la seguridad dependía de que cada número llegara saneado. Ahora todo lo interpolado pasa por esc(), no hay onclick en el HTML y cada página tiene una CSP que no deja cargar ni mandar nada afuera. |
 | **49** | 🟡 Parcial | [`49-endurecer-los-workflows-de-github-actions.md`](./49-endurecer-los-workflows-de-github-actions.md) | Auditoría de seguridad | Seguridad / CI | Bajo (20 min) | persist-credentials: false en los checkout, tope de tiempo en el despliegue y una prueba que lo vigila. Fijar las acciones por SHA queda pendiente para el dueño (no se pudo consultar desde la sesión). |
 | **50** | ✅ Hecho | [`50-sitio-js-no-borra-lo-que-no-debe.md`](./50-sitio-js-no-borra-lo-que-no-debe.md) | Auditoría de seguridad | Bug / Seguridad | Muy bajo (15 min) | src/sitio.js borra la carpeta destino antes de copiar y sólo se negaba con la raíz del repo: «node src/sitio.js ..» o «/» borraba todo. Ahora rechaza cualquier carpeta que contenga el repo, y el caso del archivo faltante tiene su prueba. |
+| **51** | ✅ Hecho | [`51-lgr-entrar-y-salir-no-deja-autoguardado.md`](./51-lgr-entrar-y-salir-no-deja-autoguardado.md) | Auditoría de seguridad | Bug | Muy bajo (10 min) | Al salir de la página, el LGR guardaba aunque no se hubiera tocado nada, y la portada mostraba «Tenés un ejercicio guardado» a quien sólo entró a mirar. Lo encontró una prueba nueva de la auditoría de pruebas. |
 
 ---
 

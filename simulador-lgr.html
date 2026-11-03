@@ -1590,10 +1590,13 @@ function aplicarDoc(g) {
 }
 
 /* ---------- autoguardado: sólo después de que el usuario cambia algo ---------- */
-let autoActivo = false;
+let autoActivo = false, docAlArrancar = null;
 function autoguardar() {
   if (!autoActivo) return;
-  try { localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); } catch (e) {}
+  try {
+    // si no había nada guardado y el ejercicio es el de arranque, entrar y salir no deja nada
+    if (!localStorage.getItem(CLAVE_AUTO_LGR) && JSON.stringify(docDatos()) === docAlArrancar) return;
+    localStorage.setItem(CLAVE_AUTO_LGR, JSON.stringify({ guardado: Date.now(), doc: docDatos() })); } catch (e) {}
 }
 function recuperarAutoguardado() {
   try {
@@ -1754,6 +1757,7 @@ const recuperado = recuperarAutoguardado();
 pasarAInputs();
 if (innerWidth <= 820) { $('#detalles').classList.add('collapsed'); $('#b-det').classList.remove('on'); }
 calcular();
+docAlArrancar = JSON.stringify(docDatos());
 autoActivo = true;                                 // desde acá, cada cambio queda guardado
 if (recuperado) setTimeout(() => toast('Se recuperó tu último lugar de raíces'), 60);
 </script>
