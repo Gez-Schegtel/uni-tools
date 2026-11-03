@@ -1431,10 +1431,10 @@ $("#b-hoja").onchange = (ev) => {
   commit(); render();
   if (hojaActiva()) { fit(); toast("El SVG y el PNG van a salir con este recorte"); }
 };
-/* ======================= cajas y ruteo ortogonal =======================
+/* ======================= cajas: encuadre y alineación =======================
    Para las herramientas de elementos rectangulares (bloques y compuertas): rectOf(n)
-   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre, la
-   alineación y las conexiones en ángulo recto que esquivan a los demás. */
+   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre y la
+   alineación. El ruteo en ángulo recto está en ortogonal.js. */
 function bboxNodos() {
   const lista = S[HERRAMIENTA.nodos];
   if (!lista.length) return { l: 0, t: 0, r: 400, b: 300 };
@@ -1485,7 +1485,10 @@ function alinear(kind) {
   S[HERRAMIENTA.conexiones].forEach(c => { if (movidos.has(c.from.id) || movidos.has(c.to.id)) rutaAuto(c); });
   commit(); render();
 }
-
+/* ======================= ruteo ortogonal =======================
+   Conexiones en ángulo recto que esquivan a los demás elementos. No lee S: recibe las
+   cajas y los candidatos, así que lo usan el editor de bloques, el simulador y la vista
+   previa del equivalente en bloques del diagrama de señales. */
 /* ---- ruteo ----
    Cada herramienta arma sus recorridos candidatos; acá se les pone puntaje (quiebres,
    largo, pasar por encima de un elemento, montarse sobre otra conexión) y se elige. */

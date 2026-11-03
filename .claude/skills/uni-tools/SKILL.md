@@ -29,7 +29,9 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 | `panel.js` | `lock`, `enVivo`, `alClic`, `opciones` |
 | `barra.js` | deshacer/rehacer/borrar/duplicar, grupos plegables, panel lateral, cerrar ventanas con clic afuera |
 | `autoguardado.js` | autoguardado, «Inicio» y `arrancar()` |
-| `colores.js`, `hoja.js`, `recuadros.js`, `ortogonal.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, cajas/alineación y ruteo ortogonal (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`) |
+| `colores.js`, `hoja.js`, `recuadros.js`, `cajas.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, encuadre y alineación (`bboxAll`, `alinear`) |
+| `ortogonal.js` | bloques, simulador y señales: ruteo ortogonal que no lee `S` (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`, `segsOf`) |
+| `ruteo-bloques.js` | bloques y señales: `rectOf`, las rutas candidatas, las rutas a mano y `rutearFlechas(nodes, edges)`; `routeAll()` es eso con `S`. La vista previa del equivalente en bloques usa el mismo ruteo que el editor |
 | `puertos.js` | sólo bloques y señales: `DIRS` y `portPoint()` (el editor de bloques y el equivalente de señales usan los mismos) |
 | `base.css` (incluye `avisos.css`), `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos; el LGR usa `avisos.css`, `inicio.html` y `lienzo.js` |
 

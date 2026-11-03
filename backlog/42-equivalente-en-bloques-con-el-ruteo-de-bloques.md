@@ -1,7 +1,7 @@
 # Spec 42 — El Equivalente en Bloques Usa el Ruteo y el Dibujo de `diagrama-bloque`
 
 - **ID:** `SPEC-42`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada (el ruteo; el dibujo queda propio, ver 3.1)
 - **Origen:** Revisión de estructura del 2026-11-03 (informe, sección `4.4`)
 - **Prioridad:** Baja (42 / 46)
 - **Esfuerzo estimado:** Medio / Alto (~1 hora)
@@ -38,6 +38,17 @@ Por eso la vista previa no se ve igual que el mismo JSON abierto en `diagrama-bl
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+- `comun/ortogonal.js` se partió: lo que lee `S` (`bboxNodos`, `bboxAll`, `alinear`) pasó a `comun/cajas.js` y en `ortogonal.js` quedó el ruteo, que no depende de la herramienta.
+- `bloque/ruteo.js` pasó a `comun/ruteo-bloques.js`, con `rutearFlechas(nodes, edges)` (no lee `S`); `routeAll()` es esa función con `S.nodes` y `S.edges`.
+- `diagrama-señales` incluye `ortogonal.js` y `ruteo-bloques.js`, y `svgDeBloques()` rutea con `rutearFlechas()`. Se borró `caminoOrto()`.
+- **El dibujo no se compartió:** el `renderNode()` del editor dibuja con clases CSS de su página, capas (`gNodes`, `gAtras`), colores de tema y ecuaciones con medición del texto; la vista previa es un SVG suelto con estilos en línea para el PNG. Llevar eso a `comun/` costaba más que mantener las ~30 líneas del dibujo de la vista previa.
+
+Prueba: `senales.spec.js`, «la vista previa del equivalente usa el ruteo del editor de bloques: ninguna flecha atraviesa un bloque».
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/specs/senales.spec.js`: las pruebas del equivalente (cantidad de bloques, sumadores y bifurcaciones; transferencia igual a la del grafo) siguen pasando.
@@ -47,5 +58,5 @@ Por eso la vista previa no se ve igual que el mismo JSON abierto en `diagrama-bl
 
 ## 5. Criterios de Aceptación
 
-- [ ] `equivalente.js` sólo arma el modelo: no rutea ni dibuja por su cuenta.
-- [ ] La vista previa y `diagrama-bloque` dibujan igual el mismo diagrama.
+- [x] `equivalente.js` ya no rutea por su cuenta (usa `rutearFlechas()`); el dibujo de bloques y sumadores de la vista previa sigue siendo propio (ver 3.1).
+- [x] Las flechas de la vista previa salen del mismo ruteo que en `diagrama-bloque` (con los tamaños que estima la vista previa: el editor vuelve a medir las ecuaciones al abrir el JSON).

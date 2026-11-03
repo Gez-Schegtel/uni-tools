@@ -450,3 +450,24 @@ test("con 16 lazos que no se tocan, la ventana resume Δ, no se traba y da la tr
   expect(r.texto).toContain("Σ[");
   expect(Number(r.texto.split("=").pop().trim().replace(",", "."))).toBeCloseTo(r.ref, 3);
 });
+
+test("la vista previa del equivalente usa el ruteo del editor de bloques: ninguna flecha atraviesa un bloque", async ({ page }) => {
+  for (const ej of ["simple", "dos", "disjuntos"]) {
+    const malas = await page.evaluate((ej) => {
+      cargarEjemplo(ej);
+      const d = equivalenteEnBloques();
+      svgDeBloques(d);                                   // rutea con rutearFlechas(), como el editor
+      const porId = new Map(d.nodes.map((n) => [n.id, n])), malas = [];
+      for (const e of d.edges) {
+        if (!e.pts) { malas.push("sin ruta"); continue; }
+        for (const n of d.nodes) {
+          if (n.type !== "block" || n.id === e.from.id || n.id === e.to.id) continue;
+          const R = { l: n.x - n.w / 2 + 1, r: n.x + n.w / 2 - 1, t: n.y - n.h / 2 + 1, b: n.y + n.h / 2 - 1 };
+          if (segsOf(e.pts).some((s) => segRect(s, R))) malas.push(e.id + " atraviesa " + n.label);
+        }
+      }
+      return malas;
+    }, ej);
+    expect(malas, ej).toEqual([]);
+  }
+});

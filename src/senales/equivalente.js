@@ -222,20 +222,7 @@ function equivalenteEnBloques() {
 }
 
 /* ---- dibujo del equivalente: un SVG suelto, para la vista previa y el PNG ---- */
-/* DIRS y portPoint() vienen de comun/puertos.js, los mismos del editor de bloques */
-function caminoOrto(p1, d1, p2, d2) {          // ruteo en ángulo recto, como en el editor
-  const s = 20;
-  const a = { x: p1.x + d1.x * s, y: p1.y + d1.y * s };
-  const b = { x: p2.x + d2.x * s, y: p2.y + d2.y * s };   // se llega desde afuera del puerto
-  const medio = [];
-  const h1 = d1.x !== 0, h2 = d2.x !== 0;
-  if (h1 && h2) { const mx = (a.x + b.x) / 2; medio.push({ x: mx, y: a.y }, { x: mx, y: b.y }); }
-  else if (h1 && !h2) medio.push({ x: b.x, y: a.y });
-  else if (!h1 && h2) medio.push({ x: a.x, y: b.y });
-  else { const my = (a.y + b.y) / 2; medio.push({ x: a.x, y: my }, { x: b.x, y: my }); }
-  return [p1, a].concat(medio, [b, p2])
-    .filter((p, i, l) => i === 0 || Math.abs(p.x - l[i - 1].x) > .5 || Math.abs(p.y - l[i - 1].y) > .5);
-}
+/* DIRS, portPoint() y rutearFlechas() vienen de comun/: los mismos del editor de bloques */
 function svgDeBloques(d) {
   const m = 34;
   let l = 1e9, t = 1e9, r = -1e9, b = -1e9;
@@ -255,11 +242,11 @@ function svgDeBloques(d) {
   s.appendChild(defs);
   el("rect", { x: l, y: t, width: W, height: H, fill: "#ffffff" }, s);
   const porId = new Map(d.nodes.map(n => [n.id, n]));
+  rutearFlechas(d.nodes, d.edges);                 // el mismo ruteo que en el editor de bloques
   for (const e of d.edges) {
     const A = porId.get(e.from.id), B = porId.get(e.to.id);
-    if (!A || !B) continue;
-    const pts = caminoOrto(portPoint(A, e.from.port), DIRS[e.from.port] || DIRS.r,
-                           portPoint(B, e.to.port), DIRS[e.to.port] || DIRS.l);
+    if (!A || !B || !e.pts) continue;
+    const pts = e.pts;
     el("path", { d: "M " + pts.map(p => p.x + " " + p.y).join(" L "), fill: "none",
       stroke: "#101418", "stroke-width": 1.6, "stroke-linejoin": "round",
       "marker-end": B.type === "node" ? "" : "url(#pta)" }, s);   // a una bifurcación no se le pone punta

@@ -1363,10 +1363,10 @@ $("#b-hoja").onchange = (ev) => {
   commit(); render();
   if (hojaActiva()) { fit(); toast("El SVG y el PNG van a salir con este recorte"); }
 };
-/* ======================= cajas y ruteo ortogonal =======================
+/* ======================= cajas: encuadre y alineación =======================
    Para las herramientas de elementos rectangulares (bloques y compuertas): rectOf(n)
-   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre, la
-   alineación y las conexiones en ángulo recto que esquivan a los demás. */
+   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre y la
+   alineación. El ruteo en ángulo recto está en ortogonal.js. */
 function bboxNodos() {
   const lista = S[HERRAMIENTA.nodos];
   if (!lista.length) return { l: 0, t: 0, r: 400, b: 300 };
@@ -1417,7 +1417,10 @@ function alinear(kind) {
   S[HERRAMIENTA.conexiones].forEach(c => { if (movidos.has(c.from.id) || movidos.has(c.to.id)) rutaAuto(c); });
   commit(); render();
 }
-
+/* ======================= ruteo ortogonal =======================
+   Conexiones en ángulo recto que esquivan a los demás elementos. No lee S: recibe las
+   cajas y los candidatos, así que lo usan el editor de bloques, el simulador y la vista
+   previa del equivalente en bloques del diagrama de señales. */
 /* ---- ruteo ----
    Cada herramienta arma sus recorridos candidatos; acá se les pone puntaje (quiebres,
    largo, pasar por encima de un elemento, montarse sobre otra conexión) y se elige. */
@@ -1720,8 +1723,10 @@ function portPoint(n, port) {
   const d = DIRS[port] || DIRS.b;
   return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
 }
-/* ======================= geometría =======================
-   DIRS y portPoint() están en comun/puertos.js (los comparte el equivalente de señales) */
+/* ======================= ruteo de las flechas de un diagrama de bloques =======================
+   Lo usan el editor de bloques y la vista previa del equivalente en bloques del diagrama de
+   señales, así que las flechas salen iguales en los dos. rutearFlechas() recibe los
+   elementos y las flechas (no lee S); DIRS y portPoint() están en comun/puertos.js. */
 function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
@@ -1830,17 +1835,22 @@ function aplicarManual(e, A, B) {
 }
 // vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
-function routeAll() {
+function rutearFlechas(nodes, edges) {
   const placed = [];
-  const all = bboxNodos();
-  for (const e of S.edges) {
-    const from = getNode(e.from.id), to = getNode(e.to.id);
+  const porId = new Map(nodes.map(n => [n.id, n]));
+  let all = { l: 0, t: 0, r: 400, b: 300 };
+  if (nodes.length) {
+    all = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
+  }
+  for (const e of edges) {
+    const from = porId.get(e.from.id), to = porId.get(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
     const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
     const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
     const Rf = rectOf(from), Rt = rectOf(to);
     const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obstacles = S.nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
                                      n.type !== "node" && n.type !== "text" && n.type !== "marco")
                              .map(n => agrandar(rectOf(n), 9));
     const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
@@ -1850,6 +1860,7 @@ function routeAll() {
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
+const routeAll = () => rutearFlechas(S.nodes, S.edges);
 // Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
 const junctionDots = () => puntosDeUnion(S.edges,
   (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas
