@@ -3,7 +3,7 @@
 - **ID:** `SPEC-16`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-12` y Sección `5.4.A.3`
-- **Prioridad:** Media (16 / 27)
+- **Prioridad:** Media (16)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
 - **Herramientas afectadas:** Diagramas de bloques y Simulador lógico (`src/comun/ortogonal.js`, `diagrama-bloque.html`, `simulador-logico.html`)
 

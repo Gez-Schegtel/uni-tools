@@ -3,7 +3,7 @@
 - **ID:** `SPEC-26`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `6.1`
-- **Prioridad:** Baja (26 / 27)
+- **Prioridad:** Baja (26)
 - **Esfuerzo estimado:** Bajo (~30 minutos)
 - **Archivos afectados:** `CLAUDE.md`, `README.md`, `tests/README.md`, `.claude/skills/uni-tools/SKILL.md`, `.github/workflows/tests.yml`, `src/bloque/pagina.html`, `src/simulador/pagina.html`, `src/senales/pagina.html`
 

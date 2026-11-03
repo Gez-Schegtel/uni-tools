@@ -8,8 +8,8 @@ Chromium y en Firefox, las maneja como un usuario (teclas, clicks, arrastres) y 
 
 Las herramientas son HTML autocontenidos, sin build ni dependencias (regla de `CLAUDE.md`). Para no
 tocar eso, **todo lo de npm vive sólo en `tests/`**: es herramienta de desarrollo, no se despliega ni
-cambia cómo se usa el sitio. (`static.yml` publica la raíz entera, así que `tests/` viaja a Pages,
-pero `node_modules/` no se versiona —ver `.gitignore`— y nada del sitio lo referencia.)
+cambia cómo se usa el sitio. (`static.yml` publica sólo lo que arma `src/sitio.js`: los HTML de la
+raíz y sus imágenes; `tests/` no viaja a Pages.)
 
 ## Correrlas
 
@@ -41,13 +41,13 @@ Puerto del servidor de prueba: `PUERTO=9000 npm test` (por defecto 8780).
 | `ventanas.spec.js` | con una ventana abierta Ctrl+C copia su texto y los atajos no tocan el diagrama de atrás; Esc la cierra |
 | `comun.spec.js` | lo compartido de `src/comun/`, una vez por herramienta: Ctrl+D sin selección avisa y no toca nada, el aviso se queda el tiempo suficiente para leerlo y se cierra con la cruz, duplicar es un solo paso de deshacer, `?` abre la ayuda, Shift/Ctrl + rueda, nombres de archivo válidos, al encuadrar la paleta no tapa nada, ventana Abrir, el PNG descargado (firma y tamaño al triple), la versión del documento (en el JSON y adentro del SVG) y los gestos táctiles (un dedo mueve la hoja, dos hacen zoom) |
 | `correccion.spec.js` | exactitud contra referencias independientes (lo esperado no sale del código de la app): Mason contra resolver el sistema lineal de grafos al azar (transferencia, ecuaciones, lazos, trayectorias y el equivalente en bloques), simplificación equivalente y mínima, circuitos al azar (tabla y expresión mostradas), biestables contra el modelo de libro y ecuaciones de bloques (lo dibujado vale lo escrito y entra en el bloque) |
-| `fuentes.spec.js` | las páginas de la raíz coinciden con lo que arma `src/construir.js` y no quedan restos del armado (directivas, `{{parámetros}}`, CRLF, `<script src>`) |
+| `fuentes.spec.js` | las páginas de la raíz coinciden con lo que arma `src/construir.js` y no quedan restos del armado (directivas, `{{parámetros}}`, CRLF, `<script src>`); el armado detecta nombres globales repetidos entre módulos; `src/sitio.js` publica sólo páginas e imágenes; y los enlaces del backlog y de la documentación apuntan a archivos que existen |
 | `senales.spec.js` | regla de Mason (lazos que se tocan / no se tocan, varias trayectorias, valor numérico), el equivalente en bloques tiene la misma transferencia que el grafo (con varias ramas a la salida, autolazo y cinco ramas entrando a un nodo), flechas de la vista previa que llegan desde afuera del puerto, términos negativos que se restan, aviso cuando a la entrada le llegan ramas, y que el JSON generado se abre en `diagrama-bloque`; deshacer/rehacer, copiar/pegar y duplicar |
-| `lgr.spec.js` | simulador del LGR: todos los ejemplos se calculan sin errores y muestran los nueve pasos, un estado guardado roto no rompe la página, un grado desmesurado avisa en vez de trabarla, la rueda en líneas (Firefox) hace el mismo zoom que en píxeles y el SVG exportado es válido |
+| `lgr.spec.js` | simulador del LGR: todos los ejemplos se calculan sin errores y muestran los nueve pasos, un estado guardado roto no rompe la página, un grado desmesurado avisa en vez de trabarla, la rueda en líneas (Firefox) hace el mismo zoom que en píxeles, trazar un grado alto no traba la página, Inicio y la ayuda, el SVG exportado trae leyenda y datos y se vuelve a abrir (y uno de otra herramienta no), y el autoguardado con la clave común y el aviso en la portada |
 
 `lienzo.spec.js` repite, en las tres herramientas, el flujo copiar → pegar → mover → deseleccionar → Ctrl+clic / banda, y comprueba que el navegador no pueda seleccionar ni arrastrar el lienzo (causa de un bloqueo que sólo se veía en Firefox). Desde 2026-10 la suite entera corre también en Firefox (`--project=firefox`).
 
-`ayudas.js` tiene las utilidades comunes (`abrir`, `aPantalla`, `arrastrar`, `abrirTexto`).
+`ayudas.js` tiene las utilidades comunes (`abrir`, `aPantalla`, `arrastrar`, `abrirTexto`). Una prueba que corre en las tres herramientas lee el modelo con los accesos de la página (`nodosDe()`, `conexionesDe()`, `etiquetaDe(n)`, `tipoDe(n)`), no con `S.edges || S.wires || S.ramas`.
 Cada test que usa `abrir()` falla además si la página tiró algún error de consola.
 
 La suite corre en **Chromium y en Firefox** (los dos proyectos de `playwright.config.js`; `npx playwright test --project=firefox` corre uno solo). `CHROMIUM_PATH` sólo vale para Chromium.
@@ -72,7 +72,7 @@ Archivos de `unidades/`:
 - `ecuaciones.test.js`: parser y maquetador de ecuaciones (`parsearExpr`, `armarCaja`) de `diagrama-bloque`.
 - `logica.test.js`: evaluación de compuertas (`evalGate`), simplificación booleana exacta por Quine–McCluskey (`simplify`) y tablas de verdad (`truthTable`) de `simulador-logico`.
 - `mason.test.js`: búsqueda de trayectorias, lazos, determinante Δ y armado de ecuaciones (`analizar`, `producto`) de `diagrama-señales`.
-- `lgr.test.js`: el lugar geométrico de las raíces (`src/lgr/calculo.js`): lectura de polinomios y listas, tope de grado, un caso de libro resuelto a mano y los ejercicios de la Guía 3 contra referencias independientes (otro resolvedor de raíces para el K crítico y la estabilidad por tramos, perturbación de K para los ángulos de salida, raíz doble en los puntos de ruptura) y la condición de ángulo sobre las ramas trazadas.
+- `lgr.test.js`: el lugar geométrico de las raíces (`src/lgr/calculo.js`): lectura de polinomios y listas, tope de grado, un caso de libro resuelto a mano (también escalado por 10^±4 y 10^±6), polos y ceros cancelados, la coma decimal y la K en la entrada, y los ejercicios de la Guía 3 contra referencias independientes (otro resolvedor de raíces para el K crítico y la estabilidad por tramos, perturbación de K para los ángulos de salida, raíz doble en los puntos de ruptura) y la condición de ángulo sobre las ramas trazadas.
 
 Fijan los mismos resultados que `correccion.spec.js` verifica en el navegador, sin el costo de
 levantar Chromium o Firefox. Si alguno de esos archivos empezara a tocar el DOM al cargarse, estas
@@ -95,7 +95,8 @@ pruebas fallan: es la señal de que dejó de ser puro y hay que probarlo desde `
 (`node --test`, sin navegador), instala
 dependencias (`npm ci`, usa `package-lock.json`), instala Chromium y Firefox y corre la suite en los dos. Si algo falla,
 sube el reporte y las trazas como artefacto (`reporte-playwright`, 14 días). **No despliega**: eso
-sigue siendo `static.yml`, que publica al pushear a `main`.
+sigue siendo `static.yml`, que al pushear a `main` comprueba que las páginas coincidan con `src/`,
+corre las pruebas unitarias y publica sólo el sitio (`node src/sitio.js _sitio`).
 
 Para impedir que se mezcle a `main` algo que no pasa: *Settings → Branches → Branch protection rule*
 sobre `main` → *Require status checks to pass* → elegir «pruebas».

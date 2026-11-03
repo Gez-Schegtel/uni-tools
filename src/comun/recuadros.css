@@ -3,3 +3,25 @@
 .m-shape.solido{fill:var(--c-relleno)}
 .m-shape.suave{fill:var(--c-borde);fill-opacity:.1}
 .sel .m-shape{stroke:var(--accent)}
+/* el título también sirve para agarrarlo */
+.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
+  user-select:none;cursor:pointer}
+.node.sel .m-label{cursor:move}
+/* el borde ancho e invisible para agarrar un recuadro sin relleno */
+.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
+.node.sel .m-hit{cursor:move}
+/* tiradores de tamaño y asa para mover (recuadros; en bloques también bloques y sumadores) */
+#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
+#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
+#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
+#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
+.m-handle-wrap{cursor:nwse-resize}
+.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
+.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
+.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
+.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
+.m-handle-wrap:hover .m-handle{fill:var(--accent)}
+.m-grip-wrap{cursor:move}
+.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
+.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.m-grip-wrap:hover .m-grip{fill:var(--accent)}

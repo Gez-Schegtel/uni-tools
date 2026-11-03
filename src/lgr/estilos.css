@@ -41,6 +41,7 @@ button,select,input[type=text]{font-family:var(--ui);font-size:12px;color:var(--
 .btn svg{width:14px;height:14px;stroke:var(--ink-2);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .btn.on svg{stroke:#fff}
 .btn.ghost{border-color:transparent;background:transparent}
+a.btn{text-decoration:none;color:var(--ink)}           /* Inicio (comun/inicio.html) es un enlace */
 .btn.ghost:hover{background:var(--line-2)}
 select{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:5px 6px;max-width:230px}
 .marca-navbar{height:26px;width:auto;display:block;flex:none}

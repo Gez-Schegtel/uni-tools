@@ -3,7 +3,7 @@
 - **ID:** `SPEC-08`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-14`, `BUG-15`, `BUG-16` y Sección `5.4.B.3`
-- **Prioridad:** Media / Quick Win (8 / 27)
+- **Prioridad:** Media / Quick Win (8)
 - **Esfuerzo estimado:** Muy bajo (~15 minutos)
 - **Herramientas afectadas:** Diagramas de bloques (`src/bloque/estilos.css`, `src/bloque/pagina.html`, `src/bloque/comandos.js`, `diagrama-bloque.html`)
 

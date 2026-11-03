@@ -3,6 +3,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- @incluir comun/seguridad.html -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulador de circuitos lógicos</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -140,7 +141,7 @@
       selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
     <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve el lienzo (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
   </table>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <!-- @incluir comun/ventana-abrir.html titulo="Abrir circuito" cosa="circuito" nodos="nodes" conexiones="wires" -->
@@ -158,6 +159,7 @@
 // @incluir simulador/tipos.js
 // @incluir comun/colores.js
 // @incluir comun/hoja.js
+// @incluir comun/cajas.js
 // @incluir comun/ortogonal.js
 // @incluir simulador/modelo.js
 // @incluir simulador/geometria.js

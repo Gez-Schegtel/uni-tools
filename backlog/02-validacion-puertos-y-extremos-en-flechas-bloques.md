@@ -3,7 +3,7 @@
 - **ID:** `SPEC-02`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-02` y Sección `5.4.B.1`
-- **Prioridad:** Crítica (2 / 27)
+- **Prioridad:** Crítica (2)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
 - **Herramientas afectadas:** Diagramas de bloques (`src/bloque/modelo.js`, `diagrama-bloque.html`)
 
@@ -31,11 +31,11 @@ A diferencia de [`src/simulador/modelo.js:74-86`](../src/simulador/modelo.js) (d
 1. **No comprueba** que `e.from.port` y `e.to.port` pertenezcan a `["l", "r", "t", "b"]`.
 2. **No comprueba** que los nodos `e.from.id` y `e.to.id` no sean recuadros (`type === "marco"`), los cuales no tienen puertos de conexión.
 
-Cuando `render()` invoca `routeAll()` ([`src/bloque/ruteo.js:126`](../src/bloque/ruteo.js)):
+Cuando `render()` invoca `routeAll()` ([`src/bloque/ruteo.js:126`](../src/comun/ruteo-bloques.js)):
 ```js
 const da = dirOf(e.from.port), db = dirOf(e.to.port);
 ```
-Si `port` es `undefined` o `"zzz"`, `dirOf()` devuelve `undefined`. Acto seguido, `candidates(a, da, b, db, ...)` ([`src/bloque/ruteo.js:27`](../src/bloque/ruteo.js)) ejecuta:
+Si `port` es `undefined` o `"zzz"`, `dirOf()` devuelve `undefined`. Acto seguido, `candidates(a, da, b, db, ...)` ([`src/bloque/ruteo.js:27`](../src/comun/ruteo-bloques.js)) ejecuta:
 ```js
 const a1 = { x: a.x + da.x * STUB, y: a.y + da.y * STUB };
 ```

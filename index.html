@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>uni-tools · Simuladores</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -166,7 +170,7 @@ a.boton .flecha{
   <!-- ==========================================================
        BOTÓN 4 — Lugar geométrico de las raíces
        ========================================================== -->
-  <a class="boton" href="simulador-lgr.html">
+  <a class="boton" href="simulador-lgr.html" data-auto="lgr">
     <svg class="icono" viewBox="0 0 48 48">
       <path d="M4 24h40M24 6v36"/>
       <path d="M8 24c6 0 8-14 16-14M8 24c6 0 8 14 16 14" fill="none"/>
@@ -186,11 +190,13 @@ a.boton .flecha{
   document.querySelectorAll("[data-auto]").forEach(b => {
     try {
       const g = JSON.parse(localStorage.getItem("uni-tools-autoguardado-" + b.dataset.auto) || "null");
-      const lista = g && g.doc && (g.doc.nodes || g.doc.nodos);
+      // los diagramas tienen una lista de elementos; el LGR, el ejercicio (se guarda recién al cambiarlo)
+      const lista = g && g.doc && (g.doc.nodes || g.doc.nodos || (g.doc.herramienta === "lgr" ? [g.doc] : null));
       if (!lista || !lista.length) return;
       const d = b.querySelector(".desc"), aviso = document.createElement("span");
       aviso.className = "guardado";
-      aviso.textContent = "Tenés un diagrama guardado: seguís donde lo dejaste";
+      aviso.textContent = b.dataset.auto === "lgr" ? "Tenés un ejercicio guardado: seguís donde lo dejaste"
+                                                    : "Tenés un diagrama guardado: seguís donde lo dejaste";
       d.after(aviso);
     } catch (e) {}
   });

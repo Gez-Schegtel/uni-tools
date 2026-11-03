@@ -8,7 +8,8 @@ const vm = require("node:vm");
 const { cargar, clonar } = require("./cargar");
 
 function lgr() {
-  const m = cargar("src/lgr/calculo.js");
+  // los módulos sin DOM del LGR, en el orden de src/lgr/pagina.html
+  const m = cargar(...["polinomios", "entrada", "formato", "analisis", "trazado", "modelo"].map(x => `src/lgr/${x}.js`));
   m.performance = performance;                 // trazarLGR mide el tiempo
   return m;
 }
@@ -85,12 +86,14 @@ test("los ejercicios de la Guía 3: K crítico, estabilidad por tramos y ángulo
   const EJ = vm.runInContext("EJEMPLOS", m);
   for (const e of EJ) {
     const R = m.analizar(m.construirModelo(e));
+    // la referencia es D + K·N sin simplificar: un polo cancelado sigue siendo polo de lazo cerrado
+    const Dc = Array.from(R.Dsin), Nc = Array.from(R.Nsin);
     // cada K crítico separa una cantidad distinta de polos en el semiplano derecho
-    for (const K of R.crit) assert.notEqual(enSemiplanoDerecho(R.D, R.N, K * 0.97), enSemiplanoDerecho(R.D, R.N, K * 1.03), `${e.t}: K = ${K}`);
+    for (const K of R.crit) assert.notEqual(enSemiplanoDerecho(Dc, Nc, K * 0.97), enSemiplanoDerecho(Dc, Nc, K * 1.03), `${e.t}: K = ${K}`);
     // la tabla de tramos coincide con contar raíces
     for (const t of R.tramos) {
       const Kt = isFinite(t.b) ? (t.a + t.b) / 2 : (t.a > 0 ? t.a * 2 : 1);
-      assert.equal(t.spd, enSemiplanoDerecho(R.D, R.N, Kt), `${e.t}: tramo ${t.a}–${t.b}`);
+      assert.equal(t.spd, enSemiplanoDerecho(Dc, Nc, Kt), `${e.t}: tramo ${t.a}–${t.b}`);
     }
     // ángulo de salida: hacia dónde se mueve el polo al subir apenas K
     for (const a of R.angulos.filter(a => a.tipo === "salida" && a.g.mult === 1)) {
@@ -115,7 +118,8 @@ test("un polo y un cero cancelados en el origen no esconden el cruce que pasa po
   assert.equal(R.crit.length, 2);
   casi(R.crit[0], 210 / 534);
   assert.deepEqual(clonar(R.tramos.map(t => t.spd)), [2, 3, 1]);
-  assert.ok(R.cruce.filas[0].cancelado);
+  assert.equal(R.cancelados.length, 1);                         // el par en s = 0 queda aparte
+  assert.ok(R.tramos.every(t => t.eje === 1));                  // y es polo de lazo cerrado sobre el eje
 });
 
 test("las ramas trazadas cumplen la condición de ángulo (K real y positivo)", () => {
@@ -146,4 +150,73 @@ test("coeficientes de escalas muy distintas no pierden un polo, y se acepta nota
   }
   assert.deepEqual(Array.from(m.parsearPoli("2e-3s+1")), [0.002, 1]);
   assert.throws(() => m.construirModelo({ modo: "ec", N: "1", D: "(s+0.1)^2-s^2-0.2s+1" }), /grado 1/);   // lo que se cancela sí se saca
+});
+
+test("un polo y un cero cancelados: ni ángulos ni ramas sobre el par, y el par queda aparte", () => {
+  const m = lgr();
+  const R = m.analizar(m.construirModelo({ modo: "zp", Z: "1+7.5j; 1-7.5j; -5+8j; -5-8j", P: "-8+3.5j; -8-3.5j; 1+7.5j; 1-7.5j; -7" }));
+  assert.equal(R.cancelados.length, 2);
+  assert.ok(!R.angulos.some(a => Math.abs(a.g.z.re - 1) < 1e-6 && Math.abs(Math.abs(a.g.z.im) - 7.5) < 1e-6), "ángulo sobre el par cancelado");
+  assert.equal(R.n, 3); assert.equal(R.m, 2);
+  // el par cancelado está en el semiplano derecho: es polo de lazo cerrado para todo K
+  assert.ok(R.tramos.every(t => t.spd >= 2));
+  const ramas = m.trazarLGR(R);
+  assert.equal(ramas.length, 3);
+  for (const b of ramas) for (let i = 0; i < b.x.length; i += 5) {
+    const s = C(b.x[i], b.y[i]), Nv = m.pEval(R.N, s), Dv = m.pEval(R.D, s);
+    if (Math.hypot(Nv.re, Nv.im) < 1e-9) continue;
+    const K = div(C(-Dv.re, -Dv.im), Nv);
+    assert.ok(K.re > -1e-6 && Math.abs(K.im) <= 1e-3 * (1e-9 + Math.abs(K.re)), "punto fuera del LGR");
+  }
+  assert.throws(() => m.analizar(m.construirModelo({ modo: "zp", Z: "-1", P: "-1" })), /no queda ningún polo/);
+});
+
+test("la coma de una lista sin «;» deja una nota, y la K sólo se acepta adelante en el numerador", () => {
+  const m = lgr();
+  assert.match(m.construirModelo({ modo: "zp", Z: "", P: "1,2" }).notas.join(" "), /coma decimal/);
+  assert.equal(m.construirModelo({ modo: "zp", Z: "", P: "1,2; -3" }).notas.length, 0);
+  assert.deepEqual(Array.from(m.parsearPoli("K(s+1)", true)), [1, 1]);
+  assert.deepEqual(Array.from(m.parsearPoli("K", true)), [1]);
+  assert.throws(() => m.parsearPoli("s+K", true), /adelante/);
+  assert.throws(() => m.construirModelo({ modo: "ec", N: "1", D: "s^2+Ks+1" }), /denominador/);
+});
+
+test("el mismo problema escalado por 10^±4 y 10^±6 da los mismos resultados, escalados", () => {
+  // K/(s(s+α)(s+2α)): σa = −α, ruptura en α(−1 + 1/√3), ωc = √2·α y Kc = 6α³
+  const m = lgr();
+  for (const a of [1e-6, 1e-4, 1, 1e4, 1e6]) {
+    const R = m.analizar(m.construirModelo({ modo: "zp", Z: "", P: `0; ${-a}; ${-2 * a}` }));
+    casi(R.asint.sigma, -a);
+    const rup = R.rup.filas.filter(f => f.ok), cr = R.cruce.filas.filter(f => f.valido);
+    assert.equal(rup.length, 1, `α = ${a}`);
+    casi(rup[0].z.re, a * (-1 + 1 / Math.sqrt(3)), 1e-6);
+    casi(rup[0].K.re, 2 / (3 * Math.sqrt(3)) * a ** 3, 1e-6);
+    assert.equal(cr.length, 1, `α = ${a}`);
+    casi(cr[0].w, Math.SQRT2 * a, 1e-6);
+    casi(cr[0].K, 6 * a ** 3, 1e-6);
+    assert.deepEqual(clonar(R.tramos.map(t => t.spd)), [0, 2]);
+    const ramas = m.trazarLGR(R);
+    assert.equal(ramas.length, 3);
+    assert.ok(!ramas.incompleto);
+  }
+});
+
+test("el trazado por tandas da las mismas ramas que de un tirón", () => {
+  const m = lgr();
+  for (const e of [{ modo: "ec", N: "s+4,5", D: "s(s^2+6s+45)" }, { modo: "zp", Z: "", P: "0; -1e-4; -2e-4" }]) {
+    const R = m.analizar(m.construirModelo(e));
+    const entero = clonar(m.trazarLGR(R));
+    const t = m.crearTrazado(R);
+    let tandas = 0;
+    while (!t.avanzar(1)) tandas++;
+    assert.ok(tandas > 0, "tendría que haber hecho falta más de una tanda");
+    assert.deepEqual(clonar(t.ramas), entero);
+  }
+});
+
+test("paréntesis anidados de más o una expresión enorme dan un aviso, no un desborde de pila", () => {
+  const m = lgr();
+  assert.throws(() => m.parsearPoli("(".repeat(400) + "s" + ")".repeat(400)), /demasiados paréntesis/);
+  assert.throws(() => m.parsearPoli("s+".repeat(600) + "1"), /demasiado larga/);
+  assert.equal(m.parsearPoli("(".repeat(50) + "s+1" + ")".repeat(50)).length, 2);
 });

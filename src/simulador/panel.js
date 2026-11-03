@@ -27,7 +27,7 @@ function renderInspector() {
           <option value="fijo"${n.modo === "fijo" ? " selected" : ""}>Mantenido (toggle)</option>
           <option value="auto"${n.modo === "auto" ? " selected" : ""}>Automático</option></select></div></div>`;
       if (n.modo === "fijo") h += `<div class="io-row"><span class="io-name">Nivel</span>
-        <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+        <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
         <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`;
       if (n.modo === "auto") h += `<div class="row"><div class="fill"><button class="btn" id="clk-run" style="width:100%">
         ${n.corriendo ? "Frenar el reloj" : "Arrancar el reloj"}</button></div></div>`;
@@ -45,13 +45,14 @@ function renderInspector() {
     if (esMarco(n)) {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "las compuertas")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${esc(n.h)}"></div></div>
         </div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${n.font}"></div></div>
+        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${esc(n.font)}"></div></div>
         <div class="hint" style="margin-top:8px">Sirve para encuadrar un grupo de compuertas y ponerle
-          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde y los clics de
-          adentro pasan a lo que haya debajo.</div></div>`;
+          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde o por el asa y
+          los clics de adentro pasan a lo que haya debajo. Los cuadritos lo estiran; con la herramienta
+          (<kbd>M</kbd>) también se puede dibujar arrastrando en diagonal.</div></div>`;
     }
     h += seccionColorPropio(n, "nc-", clavesColor(n));
     if (n.type === "ff") h += panelBiestable(n);
@@ -62,12 +63,12 @@ function renderInspector() {
   h += `<div class="sec"><h3>Entradas</h3>`;
   h += ins.length ? ins.map(n => `<div class="io-row">
       <span class="io-name">${esc(n.label)}</span>
-      <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+      <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
       <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`).join("")
     : `<div class="hint">Todavía no hay interruptores. Insertá uno con <kbd>I</kbd>.</div>`;
   h += `</div><div class="sec"><h3>Salidas</h3>`;
   h += outs.length ? outs.map(n => { const v = valorDe(n.id, 0);
-      return `<div class="io-row" data-out="${n.id}"><span class="io-name">${esc(n.label)}</span>
+      return `<div class="io-row" data-out="${esc(n.id)}"><span class="io-name">${esc(n.label)}</span>
         <span class="lamp${v ? " on" : ""}"></span><span class="bit${v ? " on" : ""}">${v ? 1 : 0}</span></div>`; }).join("")
     : `<div class="hint">Agregá una salida con <kbd>O</kbd> para ver el resultado.</div>`;
   h += `</div>`;

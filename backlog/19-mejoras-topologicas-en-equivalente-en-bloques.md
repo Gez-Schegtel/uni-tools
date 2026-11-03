@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-19`
 - **Referencia en el informe:** `BUG-13`
-- **Prioridad:** Media (19 / 27)
+- **Prioridad:** Media (19)
 - **Esfuerzo estimado:** Medio (~35 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/equivalente.js`, `diagrama-señales.html`)
 
@@ -101,6 +101,16 @@ En [`src/senales/equivalente.js:88-116`](../src/senales/equivalente.js), cuando 
 
 ---
 
+### 3.2. Lo que se hizo (2026-11-03)
+
+El fragmento de arriba es de una versión anterior de `equivalente.js`; se aplicó la idea sobre la estructura actual (`cadena` y `sumador()`):
+- La salida con ramas que parten de ella (`sal.length > 0`) lleva un punto de bifurcación antes del rótulo, tanto con una rama entrando como con sumadores, y `saleDe` apunta a ese punto.
+- Un nodo interno con una entrada y una salida (o ninguna) ya no lleva un punto: lleva un rótulo `io` con el nombre de la variable. El punto queda sólo donde hay de verdad una bifurcación (`sal.length >= 2`).
+
+Prueba: `tests/specs/senales.spec.js`, «en el equivalente, lo que vuelve desde la salida sale de un punto antes del rótulo y un nodo 1→1 se rotula sin punto» (además de las de transferencia, que siguen pasando).
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 En [`tests/specs/senales.spec.js`](../tests/specs/senales.spec.js):
@@ -111,6 +121,6 @@ En [`tests/specs/senales.spec.js`](../tests/specs/senales.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] En `equivalenteEnBloques()`, el nodo `io` de salida nunca tiene flechas salientes (`e.from.id === ioSalida.id`), incluso cuando a la salida llegan varias ramas y parten lazos de realimentación desde ella.
-- [ ] Todo diagrama generado por `equivalenteEnBloques()` se abre en `diagrama-bloque.html` sin perder ninguna flecha y con la misma función de transferencia que calcula Mason.
-- [ ] `node src/construir.js` actualiza `diagrama-señales.html` y pasan `senales.spec.js` y `correccion.spec.js`.
+- [x] En `equivalenteEnBloques()`, el nodo `io` de salida nunca tiene flechas salientes (`e.from.id === ioSalida.id`), incluso cuando a la salida llegan varias ramas y parten lazos de realimentación desde ella.
+- [x] Todo diagrama generado por `equivalenteEnBloques()` se abre en `diagrama-bloque.html` sin perder ninguna flecha y con la misma función de transferencia que calcula Mason.
+- [x] `node src/construir.js` actualiza `diagrama-señales.html` y pasan `senales.spec.js` y `correccion.spec.js`.

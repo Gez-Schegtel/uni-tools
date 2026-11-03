@@ -33,6 +33,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,

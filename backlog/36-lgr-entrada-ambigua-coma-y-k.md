@@ -1,11 +1,11 @@
 # Spec 36 — LGR: Entradas Ambiguas (Coma Decimal en Listas y la Letra K)
 
 - **ID:** `SPEC-36`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03
-- **Prioridad:** Baja (36 / 39)
+- **Prioridad:** Baja (36 / 46)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
-- **Archivos afectados:** `src/lgr/calculo.js`, `src/lgr/interfaz.js`, `tests/unidades/lgr.test.js`
+- **Archivos afectados:** `src/lgr/entrada.js`, `src/lgr/modelo.js` (antes `calculo.js`), `tests/unidades/lgr.test.js`
 
 ---
 
@@ -31,6 +31,12 @@
 
 ---
 
+### 3.1. Agregado (2026-11-03)
+
+Las listas de ceros y polos también aceptan notación científica (`-1e-4`, `2e-1j`), como ya la aceptaban los polinomios.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/unidades/lgr.test.js`: `parsearLista("1,2")` devuelve un número y deja una nota; `parsearPoli("s^2+Ks+1")` tira error; `parsearPoli("K(s+1)")` sigue dando `[1, 1]`.
@@ -39,5 +45,5 @@
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ninguna entrada ambigua se toma en silencio.
-- [ ] Los 27 ejemplos de la Guía 3 se siguen leyendo igual.
+- [x] Ninguna entrada ambigua se toma en silencio.
+- [x] Los 27 ejemplos de la Guía 3 se siguen leyendo igual.

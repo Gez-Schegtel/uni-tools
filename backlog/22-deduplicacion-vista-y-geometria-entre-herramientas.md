@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-22`
 - **Referencia en el informe:** Sección `4.4`
-- **Prioridad:** Baja / Mantenibilidad (22 / 27)
+- **Prioridad:** Baja / Mantenibilidad (22)
 - **Esfuerzo estimado:** Medio (~40 minutos)
 - **Herramientas afectadas:** Las tres (`src/comun/vista.js`, `src/senales/interaccion.js`, `src/senales/pagina.html`)
 
@@ -46,7 +46,7 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
      }
      ```
 2. **Constantes de dirección de puertos (`DIRS` / `DIRP`) y geometría de puertos de bloques duplicadas entre `src/bloque/` y `src/senales/equivalente.js`:**
-   - [`src/bloque/ruteo.js:2`](../src/bloque/ruteo.js) define `const DIRS = { l: …, r: …, t: …, b: … };` y `portPoint(n, port)` (línea 11).
+   - [`src/bloque/ruteo.js:2`](../src/comun/ruteo-bloques.js) define `const DIRS = { l: …, r: …, t: …, b: … };` y `portPoint(n, port)` (línea 11).
    - [`src/senales/equivalente.js:214`](../src/senales/equivalente.js) vuelve a definir `const DIRP` y `puntoPuerto(n, p)` con la misma matemática que `portPoint(n, port)` (el diagrama de señales no incluye `bloque/ruteo.js`, así que unificarlo implica mover esas dos piezas a `src/comun/`).
 3. **Generación de letras libres (`proximoNombreFF()` y `proximaLetra()`) duplicada en el mismo archivo [`src/simulador/modelo.js:31-40`](../src/simulador/modelo.js):**
    - Ambas funciones recorren `for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; } return "X";` cambiando únicamente el filtro (`n.type === "ff"` vs `n.type === "in"`).
@@ -65,6 +65,15 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
 
 ---
 
+### 3.2. Lo que se hizo (2026-11-03)
+
+- `DIRS` y `portPoint()` pasaron a `src/comun/puertos.js`, incluido por bloques y señales; `equivalente.js` dejó de tener `DIRP` y `puntoPuerto()`.
+- `proximoNombreFF()` y `proximaLetra()` del simulador se unificaron en `proximaLetraLibre(tipo)` (`proximaLetra()` queda como atajo para las entradas).
+- **Los tres `fit()` no se unificaron, a propósito:** cambian el margen (60 o 70), el zoom máximo (2 o 1,8), la posición con la hoja vacía, si consideran el área de impresión y qué recalculan antes de encuadrar (tamaños y rutas, rutas, o curvas). Pasar todo eso por `HERRAMIENTA` dejaba una función común más difícil de leer que las tres de 4 líneas; lo común (`encuadrar()`, `instalarRueda()`, `moverVista()`) ya está en `comun/vista.js`.
+- El ruteo propio del equivalente (`caminoOrto`) es `SPEC-42`.
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 - Ejecutar [`tests/specs/comun.spec.js`](../tests/specs/comun.spec.js) (que prueba `fit()` evitando que la paleta tape elementos y prueba `Shift + rueda` y `Ctrl + rueda` en las 3 herramientas) y [`tests/specs/lienzo.spec.js`](../tests/specs/lienzo.spec.js).
@@ -73,6 +82,6 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
 
 ## 5. Criterios de Aceptación
 
-- [ ] `fit()` e `instalarRueda()` están definidos una sola vez en `src/comun/vista.js` y funcionan en las tres herramientas.
-- [ ] `src/senales/interaccion.js` tiene ~42 líneas menos de código duplicado.
-- [ ] `node src/construir.js` actualiza las tres páginas y todos los tests de `comun.spec.js`, `lienzo.spec.js` y `senales.spec.js` pasan.
+- [x] `instalarRueda()` (y `encuadrar()`, `moverVista()`) están una sola vez en `src/comun/vista.js`; `fit()` queda en cada herramienta (ver 3.2).
+- [x] No queda geometría de puertos duplicada entre bloques y señales, ni las dos funciones de letra libre del simulador.
+- [x] `node src/construir.js` actualiza las tres páginas y todos los tests de `comun.spec.js`, `lienzo.spec.js` y `senales.spec.js` pasan.

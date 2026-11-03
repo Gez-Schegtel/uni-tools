@@ -45,8 +45,15 @@ svg.addEventListener("dblclick", ev => {
 detectarDobleClic(enLaHoja, dobleClicSintetico);
 
 /* ---- puntero (mouse, lápiz y un dedo) ---- */
-const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-wid],[data-pid]"));
-svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; render(); });
+const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-wid],[data-pid],.m-handle-wrap,.m-grip-wrap"));
+svg.addEventListener("pointercancel", ev => {
+  soltarDedo(ev);
+  if (drag && drag.kind === "resize") Object.assign(getNode(drag.nodeId) || {}, drag.orig);   // vuelve como estaba
+  limpiarCursorResize();
+  drag = null; render();
+});
+const limpiarCursorResize = () => svg.classList.remove("resizing-nw", "resizing-ne", "resizing-se", "resizing-sw",
+  "resizing-n", "resizing-s", "resizing-e", "resizing-w");
 
 svg.addEventListener("pointerdown", ev => {
   capturarPuntero(ev);
@@ -65,6 +72,25 @@ svg.addEventListener("pointerdown", ev => {
   if (ev.pointerType === "touch" && esFondo(t) && !pendiente) {
     S.sel = []; S.selW = [];
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
+    render(); return;
+  }
+  // tirador de tamaño de un recuadro -> estirarlo
+  const hw = t.closest ? t.closest(".m-handle-wrap") : null;
+  if (hw && getNode(hw.getAttribute("data-nid"))) {
+    const n = getNode(hw.getAttribute("data-nid")), dir = hw.getAttribute("data-handle");
+    drag = { kind: "resize", nodeId: n.id, dir, orig: { x: n.x, y: n.y, w: n.w, h: n.h }, moved: false };
+    svg.classList.add("resizing-" + dir); return;
+  }
+  // asa de un recuadro -> moverlo (y lo que esté seleccionado con él)
+  const gp = t.closest ? t.closest(".m-grip-wrap") : null;
+  if (gp && getNode(gp.getAttribute("data-nid"))) {
+    drag = { kind: "move", w0: w, orig: S.sel.map(id => { const n = getNode(id); return { id, x: n.x, y: n.y }; }), moved: false, nid: gp.getAttribute("data-nid") };
+    return;
+  }
+  // con la herramienta Recuadro, arrastrar en diagonal lo dibuja de ese tamaño
+  if (pendiente === "marco") {
+    const sx = snapV(w.x), sy = snapV(w.y);
+    drag = { kind: "draw-marco", start: { x: sx, y: sy }, cur: { x: sx, y: sy }, moved: false };
     render(); return;
   }
   if (t.getAttribute && t.getAttribute("data-pid")) {
@@ -103,7 +129,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-pid")) || nodoCerca(w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los pines
     return;
   }
   if (drag.kind === "pan") { S.pan.x = drag.px + (ev.clientX - drag.sx); S.pan.y = drag.py + (ev.clientY - drag.sy); moverVista(); return; }
@@ -111,16 +137,32 @@ svg.addEventListener("pointermove", ev => {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
     for (const o of drag.orig) { const n = getNode(o.id); if (n) { n.x = snapV(o.x + dx); n.y = snapV(o.y + dy); } }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "connect") { drag.cur = w; render("superpuesto"); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
+  if (drag.kind === "resize") {
+    const n = getNode(drag.nodeId);
+    if (!n) return;
+    const antes = [n.x, n.y, n.w, n.h].join();
+    estirarMarco(n, drag.orig, drag.dir, w);
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
+    return;
+  }
+  if (drag.kind === "draw-marco") { if (moverRecuadroNuevo(drag, w)) render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }
   const w = toWorld(ev);
   if (!drag) return;
-  if (drag.kind === "connect") {
+  if (drag.kind === "resize") {
+    limpiarCursorResize();
+    if (drag.moved) commit();
+  } else if (drag.kind === "draw-marco") {
+    const c = recuadroArrastrado(drag);
+    const n = c ? makeNode("marco", c.x, c.y, { w: c.w, h: c.h }) : makeNode("marco", snapV(w.x), snapV(w.y));
+    S.nodes.push(n); S.sel = [n.id]; S.selW = []; setPendiente(null); commit();
+  } else if (drag.kind === "connect") {
     const t = document.elementFromPoint(ev.clientX, ev.clientY);
     let id = null, pin = null;
     if (t && t.getAttribute && t.getAttribute("data-pid")) {          // justo sobre un pin

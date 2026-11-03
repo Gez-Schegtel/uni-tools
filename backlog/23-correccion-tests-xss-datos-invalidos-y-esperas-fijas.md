@@ -3,7 +3,7 @@
 - **ID:** `SPEC-23`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** Secciones `5.2.2`, `5.2.3`, `5.2.4` y `5.2.5`
-- **Prioridad:** Media (23 / 27)
+- **Prioridad:** Media (23)
 - **Esfuerzo estimado:** Bajo (~30 minutos)
 - **Archivos afectados:** `tests/specs/archivos-danados.spec.js`, `tests/unidades/logica.test.js`, `tests/specs/comun.spec.js`, `tests/specs/bloque.spec.js`
 

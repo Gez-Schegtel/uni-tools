@@ -145,7 +145,7 @@ test("en la vista previa del equivalente, cada flecha llega desde afuera del pue
       const nums = caminos[k].getAttribute("d").match(/-?[\d.]+/g).map(Number);
       const [x1, y1, x2, y2] = nums.slice(-4), B = porId.get(e.to.id);
       if (B.type === "node") { if (caminos[k].getAttribute("marker-end")) malas.push("punta en una bifurcación"); return; }
-      const dir = DIRP[e.to.port];                       // la normal hacia afuera del puerto
+      const dir = DIRS[e.to.port];                       // la normal hacia afuera del puerto
       if ((x2 - x1) * dir.x + (y2 - y1) * dir.y >= 0) malas.push(`${B.type} ${B.label || ""} ${e.to.port}: llega desde adentro`);
     });
     return malas;
@@ -391,4 +391,83 @@ test("si el grafo supera el tope de Mason, la ventana avisa y no da una transfer
   await expect(page.locator("#ov-mason")).toContainText("no se da la función de transferencia");
   await expect(page.locator("#ov-mason .resultado")).toHaveCount(0);
   await expect(page.locator("#insp")).toContainText("≥");
+});
+
+test("en el equivalente, lo que vuelve desde la salida sale de un punto antes del rótulo y un nodo 1→1 se rotula sin punto", async ({ page }) => {
+  await grafo(page, 4, [[0, 1, "2"], [1, 2, "0.5"], [2, 3, "3"], [3, 1, "-0.1"]]);
+  const r = await page.evaluate(() => {
+    const d = equivalenteEnBloques(), porId = new Map(d.nodes.map((n) => [n.id, n]));
+    const salida = S.nodos.find((n) => n.tipo === "salida");
+    const rotulo = d.nodes.find((n) => n.type === "io" && n.label === salida.nombre);
+    const interno = S.nodos[2];                      // una rama entra y una sale
+    return {
+      desdeElRotulo: d.edges.filter((e) => e.from.id === rotulo.id).length,
+      internoEsRotulo: d.nodes.some((n) => n.type === "io" && n.label === interno.nombre),
+      puntos: d.nodes.filter((n) => n.type === "node").length,
+      haciaElRotulo: d.edges.filter((e) => e.to.id === rotulo.id).map((e) => porId.get(e.from.id).type),
+    };
+  });
+  expect(r.desdeElRotulo).toBe(0);
+  expect(r.haciaElRotulo).toEqual(["node"]);        // el punto de donde parte la realimentación
+  expect(r.internoEsRotulo).toBe(true);
+  expect(r.puntos).toBe(1);
+  const b = await transferenciaDeBloques(page);
+  expect(b.problemas).toEqual([]);
+  expect(b.T).toBeCloseTo(await transferenciaDeMason(page), 10);
+});
+
+test("el documento guarda la curva de una rama sólo si se fijó a mano", async ({ page }) => {
+  await grafo(page, 3, [[0, 1, "1"], [1, 2, "2"], [2, 1, "-1"]]);
+  const r = await page.evaluate(() => {
+    S.ramas[2].curva = 80; S.ramas[2].curvaFija = true; commit(); render();
+    const d = docDatos();
+    undo(); redo();                                   // ida y vuelta por el historial
+    return { conCurva: d.ramas.filter((x) => "curva" in x).map((x) => x.curva), curvas: S.ramas.map((x) => typeof x.curva) };
+  });
+  expect(r.conCurva).toEqual([80]);
+  expect(r.curvas).toEqual(["number", "number", "number"]);
+});
+
+test("con 16 lazos que no se tocan, la ventana resume Δ, no se traba y da la transferencia", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    S.nodos = []; S.ramas = []; S.sel = []; S.selR = [];
+    const n = 16;
+    for (let i = 0; i < n; i++) {
+      S.nodos.push({ id: "n" + i, x: i * 60, y: 0, nombre: "x" + i, tipo: i === 0 ? "entrada" : i === n - 1 ? "salida" : "normal" });
+      S.ramas.push({ id: "a" + i, de: "n" + i, a: "n" + i, g: String(0.1 * (1 + i % 3)), curva: 0 });
+      if (i > 0) S.ramas.push({ id: "c" + i, de: "n" + (i - 1), a: "n" + i, g: "1", curva: 0 });
+    }
+    commit(); render();
+    const t0 = performance.now(); mostrarMason(); const ms = performance.now() - t0;
+    // referencia: cada autolazo divide por (1 − Lᵢ)
+    let ref = 1; for (let i = 0; i < n; i++) ref /= 1 - 0.1 * (1 + i % 3);
+    return { ms, tam: document.getElementById("ov-mason").innerHTML.length, ref,
+             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta") };
+  });
+  expect(r.ms).toBeLessThan(1500);                     // antes: 3,4 s y 31 MB de HTML
+  expect(r.tam).toBeLessThan(1e6);
+  expect(r.boton).toBe(true);
+  expect(r.texto).toContain("Σ[");
+  expect(Number(r.texto.split("=").pop().trim().replace(",", "."))).toBeCloseTo(r.ref, 3);
+});
+
+test("la vista previa del equivalente usa el ruteo del editor de bloques: ninguna flecha atraviesa un bloque", async ({ page }) => {
+  for (const ej of ["simple", "dos", "disjuntos"]) {
+    const malas = await page.evaluate((ej) => {
+      cargarEjemplo(ej);
+      const d = equivalenteEnBloques();
+      svgDeBloques(d);                                   // rutea con rutearFlechas(), como el editor
+      const porId = new Map(d.nodes.map((n) => [n.id, n])), malas = [];
+      for (const e of d.edges) {
+        if (!e.pts) { malas.push("sin ruta"); continue; }
+        for (const n of d.nodes) {
+          if (n.type !== "block" || n.id === e.from.id || n.id === e.to.id) continue;
+          const R = { l: n.x - n.w / 2 + 1, r: n.x + n.w / 2 - 1, t: n.y - n.h / 2 + 1, b: n.y + n.h / 2 - 1 };
+          if (segsOf(e.pts).some((s) => segRect(s, R))) malas.push(e.id + " atraviesa " + n.label);
+        }
+      }
+      return malas;
+    }, ej);
+    expect(malas, ej).toEqual([]);
+  }
 });

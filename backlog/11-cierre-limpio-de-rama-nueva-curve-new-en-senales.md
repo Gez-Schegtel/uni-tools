@@ -3,7 +3,7 @@
 - **ID:** `SPEC-11`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-08` y Sección `5.4.D.1`
-- **Prioridad:** Media (11 / 27)
+- **Prioridad:** Media (11)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/interaccion.js`, `src/senales/barra.js`, `diagrama-señales.html`)
 

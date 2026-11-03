@@ -1,5 +1,7 @@
-/* ======================= geometría ======================= */
-const DIRS = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
+/* ======================= ruteo de las flechas de un diagrama de bloques =======================
+   Lo usan el editor de bloques y la vista previa del equivalente en bloques del diagrama de
+   señales, así que las flechas salen iguales en los dos. rutearFlechas() recibe los
+   elementos y las flechas (no lee S); DIRS y portPoint() están en comun/puertos.js. */
 function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
@@ -7,14 +9,6 @@ function rectOf(n) {
 function puntoEnMarco(p, n) {
   const R = rectOf(n);
   return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
-}
-function portPoint(n, port) {
-  if (n.type === "node") return { x: n.x, y: n.y };
-  const R = rectOf(n);
-  if (port === "l") return { x: R.l, y: n.y };
-  if (port === "r") return { x: R.r, y: n.y };
-  if (port === "t") return { x: n.x, y: R.t };
-  return { x: n.x, y: R.b };
 }
 const dirOf = (p) => DIRS[p];
 
@@ -116,17 +110,22 @@ function aplicarManual(e, A, B) {
 }
 // vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
-function routeAll() {
+function rutearFlechas(nodes, edges) {
   const placed = [];
-  const all = bboxNodos();
-  for (const e of S.edges) {
-    const from = getNode(e.from.id), to = getNode(e.to.id);
+  const porId = new Map(nodes.map(n => [n.id, n]));
+  let all = { l: 0, t: 0, r: 400, b: 300 };
+  if (nodes.length) {
+    all = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
+  }
+  for (const e of edges) {
+    const from = porId.get(e.from.id), to = porId.get(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
     const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
     const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
     const Rf = rectOf(from), Rt = rectOf(to);
     const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obstacles = S.nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
                                      n.type !== "node" && n.type !== "text" && n.type !== "marco")
                              .map(n => agrandar(rectOf(n), 9));
     const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
@@ -136,6 +135,7 @@ function routeAll() {
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
+const routeAll = () => rutearFlechas(S.nodes, S.edges);
 // Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
 const junctionDots = () => puntosDeUnion(S.edges,
   (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas

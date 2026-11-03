@@ -75,8 +75,6 @@ svg#canvas{
 .wire.sel{stroke:var(--accent);stroke-dasharray:6 3}
 .wire-hit{stroke:transparent;stroke-width:14;fill:none;cursor:pointer}
 .dot{fill:var(--c-cable)}.dot.hi{fill:var(--c-activo)}
-.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
-  pointer-events:none;user-select:none}
 .sel .g-body{stroke:var(--accent)}
 .pin{fill:var(--paper);stroke:var(--accent);stroke-width:1.4;cursor:crosshair}
 .pin:hover{fill:var(--accent)}

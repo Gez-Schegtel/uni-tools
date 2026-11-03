@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Editor de diagramas de bloques</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -103,12 +107,13 @@ input[type=text],input[type=number],select{width:100%;border:1px solid var(--lin
 .hint{font-size:11px;color:#8a97a5;line-height:1.5}
 .empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
-kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
 #status .k{color:var(--ink-2)}
+/* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
+kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
@@ -183,11 +188,6 @@ svg#canvas{
   --c-flecha:#101418; --c-fondo:#ffffff;
 }
 .n-shape{fill:var(--c-relleno);stroke:var(--c-borde);stroke-width:1.6}
-.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
-.node.sel .m-hit{cursor:move}
-.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
-  user-select:none;cursor:pointer}
-.node.sel .m-label{cursor:move}
 .n-label{font-family:var(--draw);fill:var(--c-texto);text-anchor:middle;dominant-baseline:central;
   pointer-events:none;user-select:none}
 .n-math{font-family:var(--draw);fill:var(--c-texto);text-anchor:start;dominant-baseline:central;
@@ -213,24 +213,10 @@ svg#canvas{
 #canvas.split-mode .edge{stroke:var(--accent)}
 #canvas.split-mode g:hover>.edge{stroke-width:3.4}
 #canvas.drawing-marco{cursor:crosshair}
-#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
-#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
-#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
-#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
 #canvas.moviendo-tramo-h{cursor:ns-resize!important}
 #canvas.moviendo-tramo-v{cursor:ew-resize!important}
-.m-handle-wrap{cursor:nwse-resize}
-.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
-.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
-.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
-.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
-.m-handle-wrap:hover .m-handle{fill:var(--accent)}
 /* tiradores de los tramos de una flecha seleccionada: un tramo horizontal se sube y baja, uno vertical se corre de lado */
 /* asa para mover un recuadro seleccionado: anda en cualquier modo, aunque adentro haya otros elementos */
-.m-grip-wrap{cursor:move}
-.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
-.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.m-grip-wrap:hover .m-grip{fill:var(--accent)}
 .m-grip-wrap:hover .m-grip-ico{stroke:#fff}
 .seg-handle-wrap.h{cursor:ns-resize}
 .seg-handle-wrap.v{cursor:ew-resize}
@@ -247,6 +233,28 @@ svg#canvas{
 .m-shape.solido{fill:var(--c-relleno)}
 .m-shape.suave{fill:var(--c-borde);fill-opacity:.1}
 .sel .m-shape{stroke:var(--accent)}
+/* el título también sirve para agarrarlo */
+.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
+  user-select:none;cursor:pointer}
+.node.sel .m-label{cursor:move}
+/* el borde ancho e invisible para agarrar un recuadro sin relleno */
+.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
+.node.sel .m-hit{cursor:move}
+/* tiradores de tamaño y asa para mover (recuadros; en bloques también bloques y sumadores) */
+#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
+#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
+#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
+#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
+.m-handle-wrap{cursor:nwse-resize}
+.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
+.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
+.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
+.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
+.m-handle-wrap:hover .m-handle{fill:var(--accent)}
+.m-grip-wrap{cursor:move}
+.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
+.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.m-grip-wrap:hover .m-grip{fill:var(--accent)}
 /* área de impresión: lo de afuera se sombrea porque no entra en la exportación */
 .hoja-fuera{fill:rgba(18,24,31,.06);pointer-events:none}
 .hoja-borde{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:8 5;
@@ -462,7 +470,7 @@ svg#canvas{
     <tr><td>Arrastrar un tramo de flecha</td><td>Con la flecha seleccionada, tirá de los cuadraditos del medio de cada tramo (o de la línea) para correrlo</td></tr>
     <tr><td>Tiradores de las esquinas</td><td>Con un bloque, sumador o recuadro seleccionado, estiran su tamaño (el recuadro también por los lados)</td></tr>
   </table>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <div class="overlay" id="ov-io"><div class="modal">
@@ -520,6 +528,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
@@ -554,10 +582,13 @@ const HERRAMIENTA = {
   titulo: "Editor de diagramas de bloques",        // título de la pestaña, después del nombre del archivo
   clave: "bloque",                                 // autoguardado: uni-tools-autoguardado-bloque
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges",
+  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges", etiqueta: "label", tipo: "type",
   extremos: (e) => [e.from.id, e.to.id],           // los dos elementos que une una flecha
   fondoPNG: () => temaDe("fondo"),
   cancelarArrastre: (d) => cancelarArrastrePropio(d),
+  // lo que el documento guarda y depende de otra cosa: el tamaño de un bloque sale de su
+  // ecuación. commit() lo pone al día antes de sacar la foto (si no, quedaba el del cuadro anterior)
+  actualizarDerivados: () => actualizarTamaños(),
   textos: {
     elementos: "elementos",                        // "Copiados 3 elementos"
     vacio: "La hoja está vacía",
@@ -621,6 +652,16 @@ function limpiarMarcadores() {
   for (const m of svg.querySelectorAll("defs > marker"))
     if (m.id.startsWith("arrow-") && !marcadoresUsados.has(m.id)) m.remove();
 }
+/* ---------- el modelo, sin saber qué herramienta es ----------
+   Cada herramienta nombra distinto lo mismo (nodes/nodos, edges/wires/ramas, label/nombre,
+   type/tipo) y así se guarda en los archivos, que no se van a renombrar. El código común y
+   las pruebas que valen para las tres usan estos accesos en vez de preguntar cuál es. */
+const nodosDe = () => S[HERRAMIENTA.nodos];
+const conexionesDe = () => S[HERRAMIENTA.conexiones];
+const seleccionDeConexiones = () => S[HERRAMIENTA.selConexiones];
+const etiquetaDe = (n) => n[HERRAMIENTA.etiqueta];
+const tipoDe = (n) => n[HERRAMIENTA.tipo];
+
 /* ---------- identificadores ----------
    Un id repetido es veneno: buscar por id devuelve siempre el primero, así que el
    elemento nuevo termina moviendo, duplicando o borrando al viejo. Por eso el
@@ -725,6 +766,14 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Texto (con acentos y símbolos) a base64: btoa sólo acepta bytes, así que va por UTF-8.
+   Reemplaza al viejo btoa(unescape(encodeURIComponent(s))): unescape() está obsoleta. */
+function aBase64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 /* El PNG sale de dibujar el SVG en un canvas, al triple de tamaño */
 function descargarPNG(s, W, H, fondo, nombre) {
   const img = new Image();
@@ -737,7 +786,7 @@ function descargarPNG(s, W, H, fondo, nombre) {
     c.toBlob(bl => { download(nombre, bl); toast("PNG descargado (3×)"); });
   };
   img.onerror = () => toast("No se pudo generar el PNG");
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+  img.src = "data:image/svg+xml;base64," + aBase64(new XMLSerializer().serializeToString(s));
 }
 
 /* ---- armado del SVG exportado ----
@@ -817,7 +866,11 @@ $("#b-nombre").addEventListener("keydown", ev => ev.stopPropagation());
    Cómo se vuelve a una foto lo decide restore() de cada herramienta. */
 let undoStack = [], redoStack = [], lastSnap = null;
 const snapshot = () => JSON.stringify(Object.assign(docDatos(), { uidc }));
+/* La regla es «cambiar el estado, commit() y render()». Lo que render() recalcula (rutas de
+   flechas y cables, curvas de las ramas) no entra al documento, así que no importa que todavía
+   no esté al día; lo que sí entra y depende de otra cosa lo actualiza la herramienta acá. */
 function commit() {
+  if (HERRAMIENTA.actualizarDerivados) HERRAMIENTA.actualizarDerivados();
   const s = snapshot();
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }
@@ -988,6 +1041,66 @@ function dibujarMarco(g, n, agarrable) {
   if (n.label)
     el("text", { class: "m-label", x: -n.w / 2 + 9, y: -n.h / 2 + n.font, "font-size": n.font }, g)
       .textContent = n.label;
+}
+/* Tiradores de tamaño sobre la caja R de n (l, t, r, b, cx, cy), en la capa gOv. Las cuatro
+   esquinas siempre; con conLados, también los cuatro lados y el asa de arriba a la izquierda
+   para moverlo (es lo de los recuadros: bloques y sumadores tienen los lados ocupados por los
+   puertos). sal corre los cuadritos hacia afuera para que no tapen la caja de selección. */
+function dibujarTiradores(n, R, conLados, sal) {
+  const tiradores = [
+    { dir: "nw", x: R.l, y: R.t }, { dir: "ne", x: R.r, y: R.t },
+    { dir: "se", x: R.r, y: R.b }, { dir: "sw", x: R.l, y: R.b }
+  ];
+  if (conLados) {
+    tiradores.push({ dir: "n", x: R.cx, y: R.t }, { dir: "s", x: R.cx, y: R.b },
+                   { dir: "w", x: R.l, y: R.cy }, { dir: "e", x: R.r, y: R.cy });
+    const gx = R.l + 10, gy = R.t - 24;          // asa, por fuera del recuadro
+    const g = el("g", { class: "m-grip-wrap", "data-nid": n.id }, gOv);
+    el("rect", { class: "m-grip", x: gx, y: gy, width: 26, height: 18, rx: 4 }, g);
+    el("path", { class: "m-grip-ico", d: `M ${gx + 13} ${gy + 4} V ${gy + 14} M ${gx + 8} ${gy + 9} H ${gx + 18}
+      M ${gx + 13} ${gy + 4} l -2 2 M ${gx + 13} ${gy + 4} l 2 2 M ${gx + 13} ${gy + 14} l -2 -2 M ${gx + 13} ${gy + 14} l 2 -2
+      M ${gx + 8} ${gy + 9} l 2 -2 M ${gx + 8} ${gy + 9} l 2 2 M ${gx + 18} ${gy + 9} l -2 -2 M ${gx + 18} ${gy + 9} l -2 2` }, g);
+  }
+  for (const c of tiradores) {
+    const x = c.x + (c.dir.includes("e") ? sal : c.dir.includes("w") ? -sal : 0);
+    const y = c.y + (c.dir.includes("s") ? sal : c.dir.includes("n") ? -sal : 0);
+    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id }, gOv);
+    el("rect", { x: x - 9, y: y - 9, width: 18, height: 18, fill: "transparent" }, g);
+    el("rect", { class: "m-handle", x: x - 5, y: y - 5, width: 10, height: 10, rx: 2 }, g);
+  }
+}
+/* Estira un recuadro desde su tamaño original o (x, y, w, h) con el tirador dir hasta el
+   punto w de la hoja, sin dejarlo más chico que 20 × 20 y ajustado a la grilla. */
+function estirarMarco(n, o, dir, w) {
+  const MIN = 20;
+  let l = o.x - o.w / 2, r = o.x + o.w / 2, t = o.y - o.h / 2, b = o.y + o.h / 2;
+  if (dir.includes("w")) l = Math.min(snapV(w.x), r - MIN);
+  if (dir.includes("e")) r = Math.max(snapV(w.x), l + MIN);
+  if (dir.includes("n")) t = Math.min(snapV(w.y), b - MIN);
+  if (dir.includes("s")) b = Math.max(snapV(w.y), t + MIN);
+  n.w = r - l; n.h = b - t; n.x = l + n.w / 2; n.y = t + n.h / 2;
+}
+/* La vista previa del recuadro mientras se lo dibuja arrastrando en diagonal */
+function dibujarRecuadroNuevo(d) {
+  const l = Math.min(d.start.x, d.cur.x), t = Math.min(d.start.y, d.cur.y);
+  el("rect", { class: "m-shape",
+    style: "stroke:var(--accent);stroke-dasharray:4 3;stroke-width:1.5;fill:rgba(13,91,214,.06)",
+    x: l, y: t, width: Math.abs(d.cur.x - d.start.x), height: Math.abs(d.cur.y - d.start.y), rx: 6 }, gOv);
+}
+/* Mientras se lo dibuja: true si cambió (hay que redibujar) */
+function moverRecuadroNuevo(d, w) {
+  const cx = snapV(w.x), cy = snapV(w.y);
+  if (cx === d.cur.x && cy === d.cur.y) return false;
+  d.cur = { x: cx, y: cy };
+  if (Math.abs(cx - d.start.x) > 3 || Math.abs(cy - d.start.y) > 3) d.moved = true;
+  return true;
+}
+/* Al soltar: el recuadro con el tamaño arrastrado, o null si fue un clic (va el de siempre) */
+function recuadroArrastrado(d) {
+  const dw = Math.abs(d.cur.x - d.start.x), dh = Math.abs(d.cur.y - d.start.y);
+  if (!d.moved || (dw < 10 && dh < 10)) return null;
+  const w = Math.max(20, dw), h = Math.max(20, dh);
+  return { x: Math.min(d.start.x, d.cur.x) + w / 2, y: Math.min(d.start.y, d.cur.y) + h / 2, w, h };
 }
 /* Las filas del panel que comparten todos los recuadros; "los elementos" o "las compuertas" */
 function filasRecuadro(n, cuales) {
@@ -1203,7 +1316,7 @@ function renderHoja() {
   el("rect", { class: "hoja-borde", x: H.x, y: H.y, width: H.w, height: H.h }, g);
   const t = el("text", { class: "hoja-nombre", x: H.x, y: H.y - 9,
     "font-size": Math.max(11, Math.round(11 / S.zoom)) }, g);
-  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${H.w} × ${H.h}`;
+  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${esc(H.w)} × ${esc(H.h)}`;
 }
 function seccionHoja() {
   const H = hojaActiva();
@@ -1216,8 +1329,8 @@ function seccionHoja() {
     haya dibujado. Elegí un tamaño para acomodar ${HERRAMIENTA.textos.losElementos} dentro del recuadro y que el SVG y el
     PNG salgan con esas proporciones.</div></div>`;
   h += `<div class="grid4">
-      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${H.w}"></div></div>
-      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${H.h}"></div></div>
+      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${esc(H.w)}"></div></div>
+      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${esc(H.h)}"></div></div>
       <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="h-x" step="${S.grid}" value="${Math.round(H.x)}"></div></div>
       <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="h-y" step="${S.grid}" value="${Math.round(H.y)}"></div></div>
     </div>
@@ -1254,10 +1367,10 @@ $("#b-hoja").onchange = (ev) => {
   commit(); render();
   if (hojaActiva()) { fit(); toast("El SVG y el PNG van a salir con este recorte"); }
 };
-/* ======================= cajas y ruteo ortogonal =======================
+/* ======================= cajas: encuadre y alineación =======================
    Para las herramientas de elementos rectangulares (bloques y compuertas): rectOf(n)
-   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre, la
-   alineación y las conexiones en ángulo recto que esquivan a los demás. */
+   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre y la
+   alineación. El ruteo en ángulo recto está en ortogonal.js. */
 function bboxNodos() {
   const lista = S[HERRAMIENTA.nodos];
   if (!lista.length) return { l: 0, t: 0, r: 400, b: 300 };
@@ -1308,7 +1421,10 @@ function alinear(kind) {
   S[HERRAMIENTA.conexiones].forEach(c => { if (movidos.has(c.from.id) || movidos.has(c.to.id)) rutaAuto(c); });
   commit(); render();
 }
-
+/* ======================= ruteo ortogonal =======================
+   Conexiones en ángulo recto que esquivan a los demás elementos. No lee S: recibe las
+   cajas y los candidatos, así que lo usan el editor de bloques, el simulador y la vista
+   previa del equivalente en bloques del diagrama de señales. */
 /* ---- ruteo ----
    Cada herramienta arma sus recorridos candidatos; acá se les pone puntaje (quiebres,
    largo, pasar por encima de un elemento, montarse sobre otra conexión) y se elige. */
@@ -1518,8 +1634,11 @@ const admitePuertoDestino = (id, port) => {
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
 /* El documento entero, tal como se guarda en el JSON y como viaja adentro del SVG */
+/* Las rutas automáticas (e.pts) no se guardan: routeAll() las rehace al dibujar, y la forma de
+   una ruta corrida a mano está en e.manual. */
 const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodes: S.nodes,
-                          edges: S.edges, tema: S.tema, hoja: S.hoja });
+                          edges: S.edges.map(e => { const c = Object.assign({}, e); delete c.pts; return c; }),
+                          tema: S.tema, hoja: S.hoja });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodes = d.nodes; S.edges = d.edges; uidc = d.uidc || uidc;
@@ -1597,8 +1716,21 @@ function insertar(cop, desp) {
   S.nodes.push(...nodes); S.edges.push(...edges);
   S.sel = nodes.map(c => c.id); S.selEdges = [];
 }
-/* ======================= geometría ======================= */
+/* ======================= puertos de los bloques =======================
+   Hacia dónde sale cada lado de un elemento y en qué punto está su puerto. Lo usan el
+   editor de bloques (ruteo y dibujo) y el equivalente en bloques del diagrama de señales,
+   que antes tenía su propia copia (DIRP y puntoPuerto). */
 const DIRS = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
+/* El punto del puerto: el medio de ese lado (una bifurcación es un punto, así que su centro) */
+function portPoint(n, port) {
+  if (n.type === "node") return { x: n.x, y: n.y };
+  const d = DIRS[port] || DIRS.b;
+  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
+}
+/* ======================= ruteo de las flechas de un diagrama de bloques =======================
+   Lo usan el editor de bloques y la vista previa del equivalente en bloques del diagrama de
+   señales, así que las flechas salen iguales en los dos. rutearFlechas() recibe los
+   elementos y las flechas (no lee S); DIRS y portPoint() están en comun/puertos.js. */
 function rectOf(n) {
   const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
   return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
@@ -1606,14 +1738,6 @@ function rectOf(n) {
 function puntoEnMarco(p, n) {
   const R = rectOf(n);
   return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
-}
-function portPoint(n, port) {
-  if (n.type === "node") return { x: n.x, y: n.y };
-  const R = rectOf(n);
-  if (port === "l") return { x: R.l, y: n.y };
-  if (port === "r") return { x: R.r, y: n.y };
-  if (port === "t") return { x: n.x, y: R.t };
-  return { x: n.x, y: R.b };
 }
 const dirOf = (p) => DIRS[p];
 
@@ -1715,17 +1839,22 @@ function aplicarManual(e, A, B) {
 }
 // vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
-function routeAll() {
+function rutearFlechas(nodes, edges) {
   const placed = [];
-  const all = bboxNodos();
-  for (const e of S.edges) {
-    const from = getNode(e.from.id), to = getNode(e.to.id);
+  const porId = new Map(nodes.map(n => [n.id, n]));
+  let all = { l: 0, t: 0, r: 400, b: 300 };
+  if (nodes.length) {
+    all = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
+  }
+  for (const e of edges) {
+    const from = porId.get(e.from.id), to = porId.get(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
     const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
     const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
     const Rf = rectOf(from), Rt = rectOf(to);
     const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obstacles = S.nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
                                      n.type !== "node" && n.type !== "text" && n.type !== "marco")
                              .map(n => agrandar(rectOf(n), 9));
     const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
@@ -1735,6 +1864,7 @@ function routeAll() {
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
+const routeAll = () => rutearFlechas(S.nodes, S.edges);
 // Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
 const junctionDots = () => puntosDeUnion(S.edges,
   (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas
@@ -1898,6 +2028,14 @@ function desnudar(items, siempre) {
 }
 
 /* ---------- 3. medición del texto en el propio SVG ---------- */
+/* Las cachés guardan cada texto que se escribe (también los intermedios, tecla por tecla):
+   con un tope, se olvida lo más viejo y la memoria no crece durante toda la sesión. */
+const TOPE_CACHE = 500;
+function guardarEnCache(cache, k, v) {
+  if (cache.size >= TOPE_CACHE) cache.delete(cache.keys().next().value);
+  cache.set(k, v);
+  return v;
+}
 let _mt = null; const _mcache = new Map();
 function anchoTexto(str, fs) {
   const k = fs + "|" + str;
@@ -1911,8 +2049,7 @@ function anchoTexto(str, fs) {
   let w = 0;
   try { w = _mt.getComputedTextLength(); } catch (e) { w = str.length * fs * .55; }
   if (!w && str) w = str.length * fs * .55;
-  _mcache.set(k, w);
-  return w;
+  return guardarEnCache(_mcache, k, w);
 }
 
 /* ---------- 4. del árbol a cajas con alto y ancho ---------- */
@@ -1984,12 +2121,29 @@ function cajaDe(it, fs) {
   return { w: 0, up: fs * .55, down: fs * .45, draw() {} };
 }
 const _bcache = new Map();
+/* Una etiqueta absurda (miles de paréntesis anidados, un texto de un megabyte) desbordaba la
+   pila o tardaba minutos, y como el dibujo se rehace siempre, la herramienta quedaba rota; con
+   el autoguardado, también al recargar. Más allá de estos topes, o si el análisis falla por
+   cualquier motivo, la etiqueta se muestra como texto plano (recortado) en vez de ecuación. */
+const TOPE_LARGO_ECUACION = 2000, TOPE_ANIDADO_ECUACION = 60;
+function anidamiento(s) {
+  let d = 0, max = 0;
+  for (const c of s) { if (c === "(" || c === "{") max = Math.max(max, ++d); else if (c === ")" || c === "}") d = Math.max(0, d - 1); }
+  return max;
+}
+function itemsDeEtiqueta(label) {
+  const s = String(label == null ? "" : label);
+  const plano = () => [{ t: "run", s: s.length > 80 ? s.slice(0, 80) + "…" : s }];
+  if (s.length > TOPE_LARGO_ECUACION || anidamiento(s) > TOPE_ANIDADO_ECUACION) return plano();
+  try { return analizar(s); } catch (e) { return plano(); }
+}
 function cajaEtiqueta(label, fs) {
   const k = fs + "|" + label;
   if (_bcache.has(k)) return _bcache.get(k);
-  const b = cajaFila(analizar(label), fs);
-  _bcache.set(k, b);
-  return b;
+  let caja;
+  try { caja = cajaFila(itemsDeEtiqueta(label), fs); }
+  catch (e) { caja = cajaFila([{ t: "run", s: "…" }], fs); }   // ni el texto plano se pudo medir
+  return guardarEnCache(_bcache, k, caja);
 }
 function dibujarMath(g, label, fs, cx, cy) {
   if (!label) return;
@@ -2103,31 +2257,8 @@ function renderHandles() {
   if (S.sel.length !== 1) return;
   const n = getNode(S.sel[0]);
   if (!esEstirable(n)) return;
-  const R = rectOf(n);
-  const tiradores = [
-    { dir: "nw", x: R.l, y: R.t }, { dir: "ne", x: R.r, y: R.t },
-    { dir: "se", x: R.r, y: R.b }, { dir: "sw", x: R.l, y: R.b }
-  ];
-  if (esMarco(n)) tiradores.push(
-    { dir: "n", x: R.cx, y: R.t }, { dir: "s", x: R.cx, y: R.b },
-    { dir: "w", x: R.l, y: R.cy }, { dir: "e", x: R.r, y: R.cy });
-  if (esMarco(n)) {                            // asa de arriba a la izquierda, por fuera del recuadro
-    const gx = R.l + 10, gy = R.t - 24;
-    const g = el("g", { class: "m-grip-wrap", "data-nid": n.id }, gOv);
-    el("rect", { class: "m-grip", x: gx, y: gy, width: 26, height: 18, rx: 4 }, g);
-    el("path", { class: "m-grip-ico", d: `M ${gx + 13} ${gy + 4} V ${gy + 14} M ${gx + 8} ${gy + 9} H ${gx + 18}
-      M ${gx + 13} ${gy + 4} l -2 2 M ${gx + 13} ${gy + 4} l 2 2 M ${gx + 13} ${gy + 14} l -2 -2 M ${gx + 13} ${gy + 14} l 2 -2
-      M ${gx + 8} ${gy + 9} l 2 -2 M ${gx + 8} ${gy + 9} l 2 2 M ${gx + 18} ${gy + 9} l -2 -2 M ${gx + 18} ${gy + 9} l -2 2` }, g);
-  }
-  // el cuadrito de dibujo queda por fuera de la caja de selección punteada
-  const sal = esMarco(n) ? 0 : 4;
-  for (const c of tiradores) {
-    const x = c.x + (c.dir.includes("e") ? sal : c.dir.includes("w") ? -sal : 0);
-    const y = c.y + (c.dir.includes("s") ? sal : c.dir.includes("n") ? -sal : 0);
-    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id }, gOv);
-    el("rect", { x: x - 9, y: y - 9, width: 18, height: 18, fill: "transparent" }, g);
-    el("rect", { class: "m-handle", x: x - 5, y: y - 5, width: 10, height: 10, rx: 2 }, g);
-  }
+  // el cuadrito de dibujo queda por fuera de la caja de selección punteada (salvo en recuadros)
+  dibujarTiradores(n, rectOf(n), esMarco(n), esMarco(n) ? 0 : 4);
 }
 // una flecha seleccionada muestra un tirador en el medio de cada tramo
 function renderTiradoresTramo() {
@@ -2147,20 +2278,11 @@ function renderTiradoresTramo() {
   }
 }
 let hoverNode = null;
-function render() {
-  actualizarTamaños();
-  routeAll();
-  aplicarTema();
-  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  marcadoresUsados.clear();
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const e of S.edges) renderEdge(e);
-  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo que se dibuja encima de todo y no se exporta: área de impresión, puertos, tiradores,
+   vista previa de la flecha, banda y recuadro en dibujo. Es lo único que cambia al pasar el
+   mouse, así que render("superpuesto") redibuja sólo esto. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPorts();
   renderHandles();
@@ -2173,15 +2295,30 @@ function render() {
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
-  if (drag && drag.kind === "draw-marco") {
-    const x1 = drag.start.x, y1 = drag.start.y;
-    const x2 = drag.cur.x, y2 = drag.cur.y;
-    const l = Math.min(x1, x2), t = Math.min(y1, y2);
-    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-    el("rect", { class: "m-shape",
-      style: "stroke:var(--accent);stroke-dasharray:4 3;stroke-width:1.5;fill:rgba(13,91,214,.06)",
-      x: l, y: t, width: w, height: h, rx: 6 }, gOv);
-  }
+  if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
+}
+/* firma de un elemento: si no cambió, su <g> se reusa (ver dibujarReusando en comun/lienzo.js) */
+const firmaNodo = (n) => JSON.stringify(n) + (S.sel.includes(n.id) ? "|sel" : "");
+const nodoReusando = (n, capa) => dibujarReusando(capa, n.id, firmaNodo(n), c => renderNode(n, c));
+/* render() redibuja todo; render("lienzo"), todo menos el panel (mientras se arrastra);
+   render("superpuesto"), sólo lo de encima (al pasar el mouse) */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  actualizarTamaños();
+  routeAll();
+  aplicarTema();
+  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
+  marcadoresUsados.clear();
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
+  for (const n of S.nodes) if (esMarco(n) && n.atras) nodoReusando(n, gAtras);
+  for (const e of S.edges) renderEdge(e);
+  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
+  for (const n of S.nodes) if (!esMarco(n)) nodoReusando(n, gNodes);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) nodoReusando(n, gNodes);
+  cerrarReusando(gAtras); cerrarReusando(gNodes);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.length;
   $("#st-e").textContent = S.edges.length;
   $("#st-s").textContent = (S.sel.length + S.selEdges.length) ? (S.sel.length + " elem · " + S.selEdges.length + " flechas") : "—";
@@ -2191,7 +2328,7 @@ function render() {
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
   limpiarMarcadores();
-  renderInspector();
+  if (que !== "lienzo") renderInspector();
 }
 /* ======================= inspector ======================= */
 function renderInspector() {
@@ -2221,7 +2358,7 @@ function renderInspector() {
         <option value="solid">Continuo</option><option value="dashed">Punteado</option></select></div></div>
       <div class="row"><label>Punta</label><div class="fill"><select id="e-arrow">
         <option value="1">Con flecha</option><option value="0">Sin flecha</option></select></div></div>
-      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${e.width || 1.6}"></div></div>
+      <div class="row"><label>Grosor</label><div class="fill"><input type="number" id="e-width" step="0.2" min="0.6" max="6" value="${esc(e.width || 1.6)}"></div></div>
       <div class="iconbar" style="margin-top:10px">
         <button class="btn" id="e-flip">Invertir sentido</button>
       </div>
@@ -2242,10 +2379,10 @@ function renderInspector() {
       h += `<div class="sec"><h3>${T}${nsel.length > 1 ? " (" + nsel.length + ")" : ""}</h3>`;
       if (n.type === "marco") {
         h += `<div class="row"><label>Título</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional, arriba a la izquierda"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else if (n.type !== "node") {
         h += `<div class="row"><label>Contenido</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label)}" placeholder="K/(s+1), G_1, C(s)…"></div></div>
-          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${n.font}"></div></div>`;
+          <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="n-font" min="8" max="40" value="${esc(n.font)}"></div></div>`;
       } else {
         h += `<div class="row"><label>Nombre</label><div class="fill"><input type="text" id="n-label" value="${esc(n.label || "")}" placeholder="opcional"></div></div>`;
       }
@@ -2264,8 +2401,8 @@ function renderInspector() {
     if (n.type === "marco") {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "los elementos")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="10" min="20" value="${esc(n.h)}"></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
@@ -2283,7 +2420,7 @@ function renderInspector() {
         </div>
         <div class="row" style="margin-top:10px"><label>Cruz interna</label><div class="fill"><select id="s-cross">
           <option value="1">Mostrar</option><option value="0">Ocultar</option></select></div></div>
-        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${n.w}"></div></div>
+        <div class="row"><label>Diámetro</label><div class="fill"><input type="number" id="n-w" min="20" max="120" step="2" value="${esc(n.w)}"></div></div>
         <div class="hint">Vacío = ese lado queda sin signo.</div>
       </div>`;
     } else if (n.type === "block" || n.type === "io" || n.type === "text") {   // el marco tiene su propia sección
@@ -2293,8 +2430,8 @@ function renderInspector() {
           <option value="1"${auto ? " selected" : ""}>Ajustar al contenido</option>
           <option value="0"${auto ? "" : " selected"}>Manual</option></select></div></div>
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${n.w}"${dis}></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${n.h}"${dis}></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="n-w" step="2" value="${esc(n.w)}"${dis}></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="n-h" step="2" value="${esc(n.h)}"${dis}></div></div>
           <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="n-x" step="${S.grid}" value="${Math.round(n.x)}"></div></div>
           <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="n-y" step="${S.grid}" value="${Math.round(n.y)}"></div></div>
         </div>
@@ -2630,16 +2767,7 @@ svg.addEventListener("pointercancel", ev => { soltarDedo(ev); cancelarDrag(); re
    las flechas no se quiebran. Al estirar a mano un bloque deja de ajustarse a la ecuación. */
 function estirar(n, d, w) {
   const dir = d.dir, o = d.orig;
-  if (esMarco(n)) {
-    const MIN = 20;
-    let l = o.x - o.w / 2, r = o.x + o.w / 2, t = o.y - o.h / 2, b = o.y + o.h / 2;
-    if (dir.includes("w")) l = Math.min(snapV(w.x), r - MIN);
-    if (dir.includes("e")) r = Math.max(snapV(w.x), l + MIN);
-    if (dir.includes("n")) t = Math.min(snapV(w.y), b - MIN);
-    if (dir.includes("s")) b = Math.max(snapV(w.y), t + MIN);
-    n.w = r - l; n.h = b - t; n.x = l + n.w / 2; n.y = t + n.h / 2;
-    return;
-  }
+  if (esMarco(n)) return estirarMarco(n, o, dir, w);
   const paso = S.snap ? S.grid / 2 : 1;              // el ancho total sube de a una celda
   const medio = (v) => Math.round(v / paso) * paso;
   const hw = medio(Math.abs(w.x - o.x)), hh = medio(Math.abs(w.y - o.y));
@@ -2856,7 +2984,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = nodoCercaDePuertos(ev, w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los puertos
     return;
   }
   if (drag.kind === "pan") {
@@ -2869,7 +2997,7 @@ svg.addEventListener("pointermove", ev => {
     if (!n) return;
     const antes = [n.x, n.y, n.w, n.h].join();
     estirar(n, drag, w);
-    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render(); }
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
     return;
   }
   if (drag.kind === "tramo") {
@@ -2884,18 +3012,11 @@ svg.addEventListener("pointermove", ev => {
     drag.moved = true;
     e.manual = { c: drag.c.slice() };
     e.manual.c[drag.idx] = c;
-    render();
+    render("lienzo");
     return;
   }
   if (drag.kind === "draw-marco") {
-    const cx = snapV(w.x), cy = snapV(w.y);
-    if (cx !== drag.cur.x || cy !== drag.cur.y) {
-      drag.cur = { x: cx, y: cy };
-      if (Math.abs(drag.cur.x - drag.start.x) > 3 || Math.abs(drag.cur.y - drag.start.y) > 3) {
-        drag.moved = true;
-      }
-      render();
-    }
+    if (moverRecuadroNuevo(drag, w)) render("superpuesto");
     return;
   }
   if (drag.kind === "move") {
@@ -2905,15 +3026,15 @@ svg.addEventListener("pointermove", ev => {
       const n = getNode(o.id); if (!n) continue;
       n.x = snapV(o.x + dx); n.y = snapV(o.y + dy);
     }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
   if (drag.kind === "connect") {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
     drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
-    render(); return;
+    render("superpuesto"); return;
   }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }
@@ -2927,17 +3048,11 @@ svg.addEventListener("pointerup", ev => {
     return;
   }
   if (drag.kind === "draw-marco") {
-    const x1 = drag.start.x, y1 = drag.start.y;
-    const x2 = drag.cur.x, y2 = drag.cur.y;
-    const dw = Math.abs(x2 - x1), dh = Math.abs(y2 - y1);
-    if (!drag.moved || (dw < 10 && dh < 10)) {
+    const c = recuadroArrastrado(drag);
+    if (!c) {
       addAt("marco", snapV(w.x), snapV(w.y));
     } else {
-      const nw = Math.max(20, dw);
-      const nh = Math.max(20, dh);
-      const cx = Math.min(x1, x2) + nw / 2;
-      const cy = Math.min(y1, y2) + nh / 2;
-      const n = makeNode("marco", cx, cy, { w: nw, h: nh });
+      const n = makeNode("marco", c.x, c.y, { w: c.w, h: c.h });
       S.nodes.push(n);
       S.sel = [n.id]; S.selEdges = [];
       setPending(null);
@@ -3125,6 +3240,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

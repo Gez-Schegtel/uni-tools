@@ -704,3 +704,26 @@ test("sumador: no tiene campo Contenido, muestra 'vacío' en las opciones de sig
   expect(await page.evaluate(() => S.nodes.find((n) => n.type === "sum").signs)).toEqual({ l: "+", t: "+", r: "", b: "−" });
   expect(await page.locator('.sgn[data-side="r"]').inputValue()).toBe("");
 });
+
+test("commit() guarda el tamaño nuevo del bloque y el documento no lleva las rutas automáticas", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    S.nodes = [makeNode("block", 200, 200, { id: "a", label: "G" }), makeNode("block", 500, 320, { id: "b", label: "H" })];
+    S.edges = [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" }, variant: 0, manual: { c: [340] } },
+               { id: "e2", from: { id: "b", port: "b" }, to: { id: "a", port: "b" }, variant: 0 }];
+    commit(); render();
+    getNode("a").label = "\\frac{K}{s^2+2\\zeta\\omega_n s+\\omega_n^2}";
+    commit();                                         // antes de render(), como en todo el código
+    const foto = JSON.parse(lastSnap).nodes.find((n) => n.id === "a");
+    render();
+    const doc = docDatos();
+    const ptsAntes = JSON.stringify(getEdge("e1").pts);
+    abrirTexto(JSON.stringify(doc), "x.json");
+    return { fotoW: foto.w, realW: getNode("a").w, conPts: doc.edges.filter((e) => "pts" in e).length,
+             manual: doc.edges[0].manual, mismaRuta: JSON.stringify(getEdge("e1").pts) === ptsAntes };
+  });
+  expect(r.fotoW).toBe(r.realW);                      // antes la foto tenía el ancho de «G»
+  expect(r.fotoW).toBeGreaterThan(80);
+  expect(r.conPts).toBe(0);
+  expect(r.manual).toEqual({ c: [340] });
+  expect(r.mismaRuta).toBe(true);                     // la ruta a mano se rehace igual al abrir
+});

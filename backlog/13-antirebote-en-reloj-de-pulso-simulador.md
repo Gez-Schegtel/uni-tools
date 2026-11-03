@@ -3,7 +3,7 @@
 - **ID:** `SPEC-13`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-17` y Sección `5.4.C.2`
-- **Prioridad:** Baja (13 / 27)
+- **Prioridad:** Baja (13)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
 - **Herramientas afectadas:** Simulador de circuitos lógicos (`src/simulador/interaccion.js`, `simulador-logico.html`)
 

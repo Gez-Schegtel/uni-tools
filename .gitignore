@@ -31,3 +31,6 @@ desktop.ini
 # --- Registros y temporales ---
 *.log
 *.tmp
+
+# carpeta que arma src/sitio.js para GitHub Pages
+/_sitio/

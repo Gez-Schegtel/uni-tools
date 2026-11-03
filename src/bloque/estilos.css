@@ -40,11 +40,6 @@ svg#canvas{
   --c-flecha:#101418; --c-fondo:#ffffff;
 }
 .n-shape{fill:var(--c-relleno);stroke:var(--c-borde);stroke-width:1.6}
-.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
-.node.sel .m-hit{cursor:move}
-.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
-  user-select:none;cursor:pointer}
-.node.sel .m-label{cursor:move}
 .n-label{font-family:var(--draw);fill:var(--c-texto);text-anchor:middle;dominant-baseline:central;
   pointer-events:none;user-select:none}
 .n-math{font-family:var(--draw);fill:var(--c-texto);text-anchor:start;dominant-baseline:central;
@@ -70,24 +65,10 @@ svg#canvas{
 #canvas.split-mode .edge{stroke:var(--accent)}
 #canvas.split-mode g:hover>.edge{stroke-width:3.4}
 #canvas.drawing-marco{cursor:crosshair}
-#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
-#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
-#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
-#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
 #canvas.moviendo-tramo-h{cursor:ns-resize!important}
 #canvas.moviendo-tramo-v{cursor:ew-resize!important}
-.m-handle-wrap{cursor:nwse-resize}
-.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
-.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
-.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
-.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
-.m-handle-wrap:hover .m-handle{fill:var(--accent)}
 /* tiradores de los tramos de una flecha seleccionada: un tramo horizontal se sube y baja, uno vertical se corre de lado */
 /* asa para mover un recuadro seleccionado: anda en cualquier modo, aunque adentro haya otros elementos */
-.m-grip-wrap{cursor:move}
-.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
-.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.m-grip-wrap:hover .m-grip{fill:var(--accent)}
 .m-grip-wrap:hover .m-grip-ico{stroke:#fff}
 .seg-handle-wrap.h{cursor:ns-resize}
 .seg-handle-wrap.v{cursor:ew-resize}

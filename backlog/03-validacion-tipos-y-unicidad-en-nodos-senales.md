@@ -3,7 +3,7 @@
 - **ID:** `SPEC-03`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-10` y Sección `5.4.D.3`
-- **Prioridad:** Alta (3 / 27)
+- **Prioridad:** Alta (3)
 - **Esfuerzo estimado:** Bajo (~15 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/modelo.js`, `diagrama-señales.html`)
 

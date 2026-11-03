@@ -2,7 +2,7 @@
 
 - **ID:** `SPEC-21`
 - **Referencia en el informe:** Secciones `4.1`, `4.2` y `4.3`
-- **Prioridad:** Media / Baja (21 / 27)
+- **Prioridad:** Media / Baja (21)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Herramientas afectadas:** Las tres (`src/bloque/interaccion.js`, `src/bloque/dibujo.js`, `src/bloque/ecuaciones.js`, `src/simulador/interaccion.js`, `src/comun/documento.js`)
 
@@ -83,6 +83,16 @@ const aBase64 = (s) => btoa(encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, (_,
 
 ---
 
+### Lo que se hizo (2026-11-03)
+
+- `render("superpuesto")` en bloques y simulador redibuja sólo `gOv` (`dibujarSuperpuesto()`): lo usan el mouse sin arrastre, la conexión en curso, la banda y el recuadro en dibujo.
+- `_mcache` y `_bcache` tienen un tope de 500 (`guardarEnCache()`).
+- `unescape()` se reemplazó por `aBase64()` con `TextEncoder` en `comun/documento.js`.
+
+Pruebas: en `lienzo.spec.js`, los puertos y pines aparecen sin rearmar los elementos ni el panel, y `aBase64` conserva acentos; en `ecuaciones.test.js`, el tope de las cachés.
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 En [`tests/specs/lienzo.spec.js`](../tests/specs/lienzo.spec.js):
@@ -94,7 +104,7 @@ En [`tests/specs/lienzo.spec.js`](../tests/specs/lienzo.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] Mover el puntero sin arrastrar (`!drag`) no invoca `render()` en ninguna de las tres herramientas; en `diagrama-bloque` los puertos del bloque bajo el cursor siguen mostrándose con la clase `.hover`.
-- [ ] `_mcache` y `_bcache` nunca superan las 500 entradas.
-- [ ] No quedan usos de `unescape()` en el código fuente.
-- [ ] `node src/construir.js` actualiza las tres páginas y todos los tests pasan.
+- [x] Mover el puntero sin arrastrar (`!drag`) no hace un `render()` completo en ninguna de las tres herramientas (bloques y simulador redibujan sólo la capa de encima; señales no redibuja nada), y los puertos o pines del elemento bajo el cursor se siguen mostrando.
+- [x] `_mcache` y `_bcache` nunca superan las 500 entradas.
+- [x] No quedan usos de `unescape()` en el código fuente.
+- [x] `node src/construir.js` actualiza las tres páginas y todos los tests pasan.

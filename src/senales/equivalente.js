@@ -85,12 +85,16 @@ function equivalenteEnBloques() {
       }
       return el;
     };
-    let cadena;
+    let cadena, salida = null;                     // salida: de dónde parten sus ramas, si no es el último
     const autolazo = ent.some(r => r.de === n.id);
+    const punto = () => agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }));
     if (n.tipo === "entrada" || !ent.length) {     // la entrada, o un nodo sin nada que le entre
       cadena = [io()];
     } else if (n.tipo === "salida" && ent.length === 1 && !autolazo) {
-      cadena = [io()];                             // la salida con una sola rama: el rótulo y listo
+      /* la salida con una sola rama: el rótulo. Si además salen ramas (una realimentación),
+         salen de un punto antes del rótulo, no del texto */
+      if (sal.length) { const p = punto(); cadena = [p, io()]; unir(p, "r", cadena[1], "l"); salida = p; }
+      else cadena = [io()];
     } else if (ent.length >= 2 || n.tipo === "salida") {
       /* Varias ramas entrando (o la salida con un autolazo): sumador. Entran tres por
          sumador; si son más, se encadenan, y cada uno recibe al anterior por la izquierda. */
@@ -103,16 +107,23 @@ function equivalenteEnBloques() {
       }
       const ultimo = cadena[cadena.length - 1];
       if (n.tipo === "salida") {                   // el rótulo de la salida va después de la suma
-        cadena.push(io()); unir(ultimo, "r", cadena[cadena.length - 1], "l");
+        if (sal.length) {                          // y lo que vuelve sale de un punto antes del rótulo
+          salida = punto(); cadena.push(salida); unir(ultimo, "r", salida, "l");
+        }
+        cadena.push(io()); unir(cadena[cadena.length - 2], "r", cadena[cadena.length - 1], "l");
       } else if (sal.length >= 2) {                // y si además reparte, va un punto de bifurcación
-        cadena.push(agregar(Object.assign(base(), { type: "node", w: 10, h: 10 })));
+        cadena.push(punto());
         unir(ultimo, "r", cadena[cadena.length - 1], "l");
       }
-    } else {                                       // una sola entrada: un punto sobre la línea
-      cadena = [agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }))];
+    } else if (sal.length >= 2) {                  // una sola entrada que se reparte: bifurcación
+      cadena = [punto()];
+    } else {
+      /* una entrada y una salida (o ninguna): no hay nada que se bifurque, así que en vez de
+         un punto va el nombre de la variable, como se la rotula sobre la línea */
+      cadena = [io()];
     }
     cadenaDe.set(n.id, cadena);
-    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, cadena[cadena.length - 1]);
+    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, salida || cadena[cadena.length - 1]);
   }
 
   /* Acomodo de izquierda a derecha: cada cosa se apoya contra la anterior dejando
@@ -211,25 +222,7 @@ function equivalenteEnBloques() {
 }
 
 /* ---- dibujo del equivalente: un SVG suelto, para la vista previa y el PNG ---- */
-const DIRP = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
-function puntoPuerto(n, p) {
-  if (n.type === "node") return { x: n.x, y: n.y };     // la bifurcación es un punto
-  const d = DIRP[p] || DIRP.l;
-  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
-}
-function caminoOrto(p1, d1, p2, d2) {          // ruteo en ángulo recto, como en el editor
-  const s = 20;
-  const a = { x: p1.x + d1.x * s, y: p1.y + d1.y * s };
-  const b = { x: p2.x + d2.x * s, y: p2.y + d2.y * s };   // se llega desde afuera del puerto
-  const medio = [];
-  const h1 = d1.x !== 0, h2 = d2.x !== 0;
-  if (h1 && h2) { const mx = (a.x + b.x) / 2; medio.push({ x: mx, y: a.y }, { x: mx, y: b.y }); }
-  else if (h1 && !h2) medio.push({ x: b.x, y: a.y });
-  else if (!h1 && h2) medio.push({ x: a.x, y: b.y });
-  else { const my = (a.y + b.y) / 2; medio.push({ x: a.x, y: my }, { x: b.x, y: my }); }
-  return [p1, a].concat(medio, [b, p2])
-    .filter((p, i, l) => i === 0 || Math.abs(p.x - l[i - 1].x) > .5 || Math.abs(p.y - l[i - 1].y) > .5);
-}
+/* DIRS, portPoint() y rutearFlechas() vienen de comun/: los mismos del editor de bloques */
 function svgDeBloques(d) {
   const m = 34;
   let l = 1e9, t = 1e9, r = -1e9, b = -1e9;
@@ -249,11 +242,11 @@ function svgDeBloques(d) {
   s.appendChild(defs);
   el("rect", { x: l, y: t, width: W, height: H, fill: "#ffffff" }, s);
   const porId = new Map(d.nodes.map(n => [n.id, n]));
+  rutearFlechas(d.nodes, d.edges);                 // el mismo ruteo que en el editor de bloques
   for (const e of d.edges) {
     const A = porId.get(e.from.id), B = porId.get(e.to.id);
-    if (!A || !B) continue;
-    const pts = caminoOrto(puntoPuerto(A, e.from.port), DIRP[e.from.port] || DIRP.r,
-                           puntoPuerto(B, e.to.port), DIRP[e.to.port] || DIRP.l);
+    if (!A || !B || !e.pts) continue;
+    const pts = e.pts;
     el("path", { d: "M " + pts.map(p => p.x + " " + p.y).join(" L "), fill: "none",
       stroke: "#101418", "stroke-width": 1.6, "stroke-linejoin": "round",
       "marker-end": B.type === "node" ? "" : "url(#pta)" }, s);   // a una bifurcación no se le pone punta
@@ -276,7 +269,7 @@ function svgDeBloques(d) {
         stroke: "#101418", "stroke-width": 1.4, fill: "none" }, s);
       for (const p in n.signs) {
         if (!n.signs[p]) continue;
-        const dd = DIRP[p];
+        const dd = DIRS[p];
         texto(n.x + dd.x * rad * 0.58, n.y + dd.y * rad * 0.58, n.signs[p], 13);
       }
     } else if (n.type === "node") {

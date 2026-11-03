@@ -5,10 +5,13 @@ const HERRAMIENTA = {
   titulo: "Editor de diagramas de bloques",        // título de la pestaña, después del nombre del archivo
   clave: "bloque",                                 // autoguardado: uni-tools-autoguardado-bloque
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges",
+  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges", etiqueta: "label", tipo: "type",
   extremos: (e) => [e.from.id, e.to.id],           // los dos elementos que une una flecha
   fondoPNG: () => temaDe("fondo"),
   cancelarArrastre: (d) => cancelarArrastrePropio(d),
+  // lo que el documento guarda y depende de otra cosa: el tamaño de un bloque sale de su
+  // ecuación. commit() lo pone al día antes de sacar la foto (si no, quedaba el del cuadro anterior)
+  actualizarDerivados: () => actualizarTamaños(),
   textos: {
     elementos: "elementos",                        // "Copiados 3 elementos"
     vacio: "La hoja está vacía",

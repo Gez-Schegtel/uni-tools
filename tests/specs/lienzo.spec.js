@@ -62,8 +62,8 @@ for (const [archivo, clave] of HERRAMIENTAS) {
       const aPantalla = (x, y) => page.evaluate(([x, y]) => { const r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + S.pan.x + x * S.zoom, y: r.top + S.pan.y + y * S.zoom }; }, [x, y]);
       // un único elemento, a la vista y lejos de los paneles
       await page.evaluate((k) => {
-        const n = S[k].find((n) => n.type === "block" || n.type === "and" || n.tipo === "normal") || S[k][0];
-        S[k] = [n]; (S.edges || S.wires || S.ramas).length = 0; n.x = 400; n.y = 300; S.sel = [];
+        const n = nodosDe().find((n) => ["block", "and", "normal"].includes(tipoDe(n))) || nodosDe()[0];
+        S[k] = [n]; conexionesDe().length = 0; n.x = 400; n.y = 300; S.sel = [];
         S.zoom = 1; S.pan = { x: 100, y: 60 }; commit(); render();
       }, clave);
       const id = await page.evaluate((k) => S[k][0].id, clave);
@@ -98,3 +98,49 @@ for (const [archivo, clave] of HERRAMIENTAS) {
     });
   });
 }
+
+/* Redibujar por capas (SPEC-21 y SPEC-41): pasar el mouse sólo toca lo de encima, y arrastrar
+   un elemento no rearma los demás ni el panel. */
+test("bloques: pasar el mouse muestra los puertos sin rearmar los elementos ni el panel, y arrastrar uno no rearma los otros", async ({ page }) => {
+  const errores = await abrir(page, "diagrama-bloque.html");
+  await page.evaluate(() => {
+    S.nodes = [makeNode("block", 200, 200, { id: "a", label: "G" }), makeNode("block", 500, 200, { id: "b", label: "H" }),
+               makeNode("block", 350, 400, { id: "c", label: "K" })];
+    S.edges = []; S.sel = []; S.zoom = 1; S.pan = { x: 0, y: 0 }; commit(); render();
+    window.__g = { a: document.querySelector('#gNodes [data-id="a"]'), b: document.querySelector('#gNodes [data-id="b"]') };
+    window.__insp = document.getElementById("insp").firstElementChild;
+  });
+  const r = await page.locator("#canvas").boundingBox();
+  await page.mouse.move(r.x + 200, r.y + 200);                   // sobre el bloque a
+  await expect(page.locator('#gOverlay .port[data-pid="a"]')).toHaveCount(4);
+  expect(await page.evaluate(() => document.querySelector('#gNodes [data-id="a"]') === __g.a
+    && document.getElementById("insp").firstElementChild === __insp)).toBe(true);
+  // arrastrar a: el <g> de b es el mismo de antes
+  await page.mouse.down(); await page.mouse.move(r.x + 260, r.y + 260, { steps: 4 }); await page.mouse.up();
+  expect(await page.evaluate(() => getNode("a").x)).toBeGreaterThan(200);
+  expect(await page.evaluate(() => document.querySelector('#gNodes [data-id="b"]') === __g.b)).toBe(true);
+  expect(await page.evaluate(() => document.querySelector('#gNodes [data-id="a"]') !== __g.a)).toBe(true);
+  expect(errores).toEqual([]);
+});
+
+test("simulador: pasar el mouse muestra los pines sin rearmar el panel", async ({ page }) => {
+  const errores = await abrir(page, "simulador-logico.html");
+  await page.evaluate(() => {
+    S.nodes = [makeNode("and", 300, 300, { id: "g" })]; S.wires = []; S.sel = []; S.zoom = 1; S.pan = { x: 0, y: 0 }; commit(); render();
+    window.__insp = document.getElementById("insp").firstElementChild;
+  });
+  const r = await page.locator("#canvas").boundingBox();
+  await page.mouse.move(r.x + 300, r.y + 300);
+  await expect(page.locator('#gOverlay [data-pid="g"]').first()).toBeAttached();
+  expect(await page.evaluate(() => document.getElementById("insp").firstElementChild === __insp)).toBe(true);
+  expect(errores).toEqual([]);
+});
+
+test("aBase64 (el PNG exportado) conserva acentos y símbolos sin usar unescape()", async ({ page }) => {
+  await abrir(page, "diagrama-señales.html");
+  const vuelta = await page.evaluate(() => {
+    const s = "Señal ω₀ → Δ = 1 − ΣLᵢ · «acentuado»";
+    return new TextDecoder().decode(Uint8Array.from(atob(aBase64(s)), (c) => c.charCodeAt(0))) === s;
+  });
+  expect(vuelta).toBe(true);
+});

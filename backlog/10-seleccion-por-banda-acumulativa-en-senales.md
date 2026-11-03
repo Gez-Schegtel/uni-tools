@@ -3,7 +3,7 @@
 - **ID:** `SPEC-10`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-09` y Sección `5.4.D.2`
-- **Prioridad:** Media / Quick Win (10 / 27)
+- **Prioridad:** Media / Quick Win (10)
 - **Esfuerzo estimado:** Muy bajo (~15 minutos)
 - **Herramientas afectadas:** Diagramas de flujo de señales (`src/senales/interaccion.js`, `diagrama-señales.html`)
 

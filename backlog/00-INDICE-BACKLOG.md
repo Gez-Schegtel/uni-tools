@@ -1,10 +1,10 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **39 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **48 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
-El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio orden sugerido más abajo) combina tres factores:
+El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio orden sugerido más abajo) combina tres factores:
 1. **Riesgo e Impacto (Primero lo crítico):** Primero se resuelven los bugs que provocan pérdida silenciosa de datos (`01`), caídas por `TypeError` (`02`), corrupción de estado al cargar (`03`, `04`), resultados incorrectos en tablas de verdad (`05`), bloqueo de edición con el reloj (`06`) o congelamiento del navegador (`07`).
 2. **Relación Impacto / Esfuerzo (Quick Wins temprano):** A continuación (`08` a `16`) se ubican las correcciones rápidas de unas pocas líneas en CSS, HTML y manejadores de eventos que tienen bajo riesgo de regresión y alto valor percibido.
 3. **Dependencias lógicas:** Las mejoras de dominio (`17` a `19`) y de arquitectura/rendimiento (`20` a `22`) van antes del saneamiento final de la suite de pruebas (`23` a `25`) y del cierre de documentación e higiene (`26`, `27`).
@@ -56,8 +56,8 @@ El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **17** | ✅ Hecho | [`17-reglas-completas-de-conexion-en-diagrama-de-bloques.md`](./17-reglas-completas-de-conexion-en-diagrama-de-bloques.md) | `BUG-07` | Bug Medio / Dominio | Medio (45 min) | Completar reglas de conexión en bloques (validar `#e-flip`, entradas en `node`/`io`, salidas únicas, signos de sumador y lazos). |
-| **18** | ⏳ Pendiente | [`18-paridad-de-recuadros-marco-en-simulador-logico.md`](./18-paridad-de-recuadros-marco-en-simulador-logico.md) | `BUG-11` | Bug Medio / UI | Medio (45 min) | Habilitar el área de agarre, los tiradores de tamaño y el dibujo por arrastre para recuadros (`marco`) en el simulador. |
-| **19** | ⏳ Pendiente | [`19-mejoras-topologicas-en-equivalente-en-bloques.md`](./19-mejoras-topologicas-en-equivalente-en-bloques.md) | `BUG-13` | Bug Medio | Medio (35 min) | Insertar bifurcación antes del rótulo de salida cuando salen lazos de una salida sumada y limpiar bifurcaciones 1→1 superfluas. |
+| **18** | ✅ Hecho | [`18-paridad-de-recuadros-marco-en-simulador-logico.md`](./18-paridad-de-recuadros-marco-en-simulador-logico.md) | `BUG-11` | Bug Medio / UI | Medio (45 min) | Habilitar el área de agarre, los tiradores de tamaño y el dibujo por arrastre para recuadros (`marco`) en el simulador. |
+| **19** | ✅ Hecho | [`19-mejoras-topologicas-en-equivalente-en-bloques.md`](./19-mejoras-topologicas-en-equivalente-en-bloques.md) | `BUG-13` | Bug Medio | Medio (35 min) | Insertar bifurcación antes del rótulo de salida cuando salen lazos de una salida sumada y limpiar bifurcaciones 1→1 superfluas. |
 
 ---
 
@@ -65,9 +65,9 @@ El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio 
 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
-| **20** | ⏳ Pendiente | [`20-saneamiento-ciclo-commit-render-y-datos-derivados.md`](./20-saneamiento-ciclo-commit-render-y-datos-derivados.md) | `BUG-06` + Sec. `2.2.B` | Arquitectura | Medio (45 min) | Actualizar geometrías antes de `snapshot()` en `commit()` y no serializar `e.pts` automáticos en `docDatos()`. |
-| **21** | ⏳ Pendiente | [`21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md`](./21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md) | Sec. `4.1`, `4.2`, `4.3` | Rendimiento | Medio (45 min) | Evitar redibujar todo el SVG y `#insp` en `pointermove` sin arrastre, acotar `_mcache`/`_bcache` y quitar `unescape()`. |
-| **22** | ⏳ Pendiente | [`22-deduplicacion-vista-y-geometria-entre-herramientas.md`](./22-deduplicacion-vista-y-geometria-entre-herramientas.md) | Sec. `4.4` | Mantenibilidad | Medio (40 min) | Unificar `fit()` e `instalarRueda()` de `senales` con `src/comun/vista.js` y centralizar helpers repetidos. |
+| **20** | ✅ Hecho | [`20-saneamiento-ciclo-commit-render-y-datos-derivados.md`](./20-saneamiento-ciclo-commit-render-y-datos-derivados.md) | `BUG-06` + Sec. `2.2.B` | Arquitectura | Medio (45 min) | Actualizar geometrías antes de `snapshot()` en `commit()` y no serializar `e.pts` automáticos en `docDatos()`. |
+| **21** | ✅ Hecho | [`21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md`](./21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md) | Sec. `4.1`, `4.2`, `4.3` | Rendimiento | Medio (45 min) | Evitar redibujar todo el SVG y `#insp` en `pointermove` sin arrastre, acotar `_mcache`/`_bcache` y quitar `unescape()`. |
+| **22** | ✅ Hecho | [`22-deduplicacion-vista-y-geometria-entre-herramientas.md`](./22-deduplicacion-vista-y-geometria-entre-herramientas.md) | Sec. `4.4` | Mantenibilidad | Medio (40 min) | Unificar `fit()` e `instalarRueda()` de `senales` con `src/comun/vista.js` y centralizar helpers repetidos. |
 
 ---
 
@@ -94,21 +94,42 @@ El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio 
 
 | # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
-| **34** | ⏳ Pendiente | [`34-lgr-cancelaciones-polo-cero.md`](./34-lgr-cancelaciones-polo-cero.md) | Auditoría LGR | Bug Medio / Dominio | Medio (45 min) | Con un polo y un cero cancelados, no dibujar ángulos ni ramas sobre el par y explicar el modo cancelado en la conclusión. |
-| **35** | ⏳ Pendiente | [`35-lgr-paridad-con-las-otras-herramientas.md`](./35-lgr-paridad-con-las-otras-herramientas.md) | Auditoría LGR | Paridad / UX | Alto (2 h, en 3 pasos) | Inicio y ayuda `?` comunes, autoguardado con la clave común y aviso en la portada, guardar/abrir JSON, SVG con datos y leyenda, PNG 3×. |
-| **36** | ⏳ Pendiente | [`36-lgr-entrada-ambigua-coma-y-k.md`](./36-lgr-entrada-ambigua-coma-y-k.md) | Auditoría LGR | UX / Entrada | Bajo (20 min) | Avisar cuando `1,2` en una lista se lee como decimal y no aceptar `K` dentro de un polinomio. |
-| **37** | ⏳ Pendiente | [`37-publicacion-en-pages-solo-con-pruebas-verdes.md`](./37-publicacion-en-pages-solo-con-pruebas-verdes.md) | Auditoría CI | CI / Publicación | Bajo (25 min) | Que Pages publique sólo páginas e imágenes, y sólo si las páginas coinciden con `src/` (o con las pruebas en verde). |
-| **38** | ⏳ Pendiente | [`38-ventana-de-mason-con-delta-compacto.md`](./38-ventana-de-mason-con-delta-compacto.md) | Revisión SPEC-07 | Rendimiento / UX | Medio (40 min) | Mostrar Δ resumido cuando tiene muchos términos, para poder subir el tope de combinaciones disjuntas. |
-| **39** | ⏳ Pendiente | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
+| **34** | ✅ Hecho | [`34-lgr-cancelaciones-polo-cero.md`](./34-lgr-cancelaciones-polo-cero.md) | Auditoría LGR | Bug Medio / Dominio | Medio (45 min) | Con un polo y un cero cancelados, no dibujar ángulos ni ramas sobre el par y explicar el modo cancelado en la conclusión. |
+| **35** | ✅ Hecho | [`35-lgr-paridad-con-las-otras-herramientas.md`](./35-lgr-paridad-con-las-otras-herramientas.md) | Auditoría LGR | Paridad / UX | Alto (2 h, en 3 pasos) | Inicio y ayuda `?` comunes, autoguardado con la clave común y aviso en la portada, guardar/abrir JSON, SVG con datos y leyenda, PNG 3×. |
+| **36** | ✅ Hecho | [`36-lgr-entrada-ambigua-coma-y-k.md`](./36-lgr-entrada-ambigua-coma-y-k.md) | Auditoría LGR | UX / Entrada | Bajo (20 min) | Avisar cuando `1,2` en una lista se lee como decimal y no aceptar `K` dentro de un polinomio. |
+| **37** | ✅ Hecho | [`37-publicacion-en-pages-solo-con-pruebas-verdes.md`](./37-publicacion-en-pages-solo-con-pruebas-verdes.md) | Auditoría CI | CI / Publicación | Bajo (25 min) | Que Pages publique sólo páginas e imágenes, y sólo si las páginas coinciden con `src/` (o con las pruebas en verde). |
+| **38** | ✅ Hecho | [`38-ventana-de-mason-con-delta-compacto.md`](./38-ventana-de-mason-con-delta-compacto.md) | Revisión SPEC-07 | Rendimiento / UX | Medio (40 min) | Mostrar Δ resumido cuando tiene muchos términos, para poder subir el tope de combinaciones disjuntas. |
+| **39** | ✅ Hecho | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
 
-**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `34` → `19` → `18` → `20` → `36` → `35` → `21` → `38` → `22` → `39`.
+---
+
+### Bloque 8 — Revisión de Estructura y Estilo del 2026-11-03
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **40** | ✅ Hecho | [`40-detectar-colisiones-de-nombres-globales.md`](./40-detectar-colisiones-de-nombres-globales.md) | Informe `2.2.A` | Arquitectura / CI | Bajo (30 min) | Que el armado falle si dos módulos de una página declaran el mismo nombre global (hoy una función pisaría a otra en silencio). |
+| **41** | ✅ Hecho | [`41-redibujo-por-capas.md`](./41-redibujo-por-capas.md) | Informe `4.1` | Rendimiento | Alto (2 h) | Partir `render()` por capas para que arrastrar, seleccionar o tipear no rearme todo el SVG y el panel. Depende de `20` y `21`. |
+| **42** | ✅ Hecho (ruteo) | [`42-equivalente-en-bloques-con-el-ruteo-de-bloques.md`](./42-equivalente-en-bloques-con-el-ruteo-de-bloques.md) | Informe `4.4` | Mantenibilidad | Medio / Alto (1 h) | Que la vista previa del equivalente en bloques use el ruteo y el dibujo de `diagrama-bloque` en vez de copias propias. |
+| **43** | ✅ Hecho | [`43-vocabulario-del-modelo-con-accesos-comunes.md`](./43-vocabulario-del-modelo-con-accesos-comunes.md) | Informe `2.2.C` | Mantenibilidad | Bajo / Medio (40 min) | Accesos comunes (`nodosDe`, `conexionesDe`, `etiquetaDe`…) para no repetir condicionales por herramienta, sin tocar el formato de los archivos. |
+| **44** | ✅ Hecho | [`44-lgr-organizacion-y-estilo-del-codigo.md`](./44-lgr-organizacion-y-estilo-del-codigo.md) | Revisión LGR | Mantenibilidad | Medio (1 h) | Partir `interfaz.js` y `calculo.js` en módulos, nombres claros en vez de `V`, `Rg`, `t`, y estilo como el resto. |
+| **45** | ✅ Hecho | [`45-lgr-trazado-sin-trabar-la-pagina.md`](./45-lgr-trazado-sin-trabar-la-pagina.md) | Auditoría LGR | Rendimiento / UX | Medio (45 min) | Trazado incremental y cancelable: hoy un grado 20 traba la página 1,5 s con cada tecla. |
+| **46** | ✅ Hecho | [`46-lgr-tolerancias-de-ruptura-y-cruce.md`](./46-lgr-tolerancias-de-ruptura-y-cruce.md) | Auditoría LGR | Exactitud numérica | Medio (40 min) | Escalar el problema antes de analizarlo para que las tolerancias fijas de ruptura, cruce y raíces nulas no fallen con escalas extremas. |
+
+**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `40` (barato y previene) → `34` → `19` → `18` → `20` → `36` → `45` → `35` + `44` (juntas) → `21` → `41` → `22` + `42` → `43` → `46` → `38` → `39`.
+
+### Bloque 9 — Auditoría de seguridad, robustez y de la suite de pruebas (2026-11-03, segunda parte)
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **47** | ✅ Hecho | [`47-etiquetas-absurdas-no-rompen-la-herramienta.md`](./47-etiquetas-absurdas-no-rompen-la-herramienta.md) | Auditoría de seguridad | Bug / Robustez | Bajo (30 min) | Una etiqueta con miles de paréntesis o de un megabyte (de un archivo armado a propósito) desbordaba la pila en cada dibujo y, por el autoguardado, la herramienta quedaba en blanco también al recargar. |
+| **48** | ✅ Hecho | [`48-defensa-en-profundidad-contra-html-inyectado.md`](./48-defensa-en-profundidad-contra-html-inyectado.md) | Auditoría de seguridad | Seguridad | Medio (45 min) | La auditoría no encontró agujeros, pero la seguridad dependía de que cada número llegara saneado. Ahora todo lo interpolado pasa por esc(), no hay onclick en el HTML y cada página tiene una CSP que no deja cargar ni mandar nada afuera. |
 
 ---
 
 ## Decisiones (lo que el informe señaló y no se va a hacer)
 
-- **Unificar el vocabulario del modelo** (`nodes`/`nodos`, `edges`/`wires`/`ramas`, `label`/`nombre`; informe, sección `2.2.C`): no se hace. Cambiaría el formato de los archivos guardados y del autoguardado, y obligaría a migrar todos los JSON y SVG que ya tienen los estudiantes. El código común resuelve la diferencia con `HERRAMIENTA`.
-- **Sacar el ámbito global compartido** (informe, sección `2.2.A`): no se hace. Es consecuencia de la regla de un único `<script>` clásico sin bundler; el orden de inclusión está documentado en `CLAUDE.md`.
+- **Renombrar las claves del modelo** (`nodes`/`nodos`, `edges`/`wires`/`ramas`, `label`/`nombre`; informe, sección `2.2.C`): no se hace. Cambiaría el formato de los archivos guardados y del autoguardado, y obligaría a migrar todos los JSON y SVG que ya tienen los estudiantes. Lo que sí se hace es esconder la diferencia detrás de accesos comunes (`SPEC-43`).
+- **Sacar el ámbito global compartido** (informe, sección `2.2.A`): no se hace. Es consecuencia de la regla de un único `<script>` clásico sin bundler; el orden de inclusión está documentado en `CLAUDE.md`. Lo que sí se hace es detectar las colisiones de nombres al armar (`SPEC-40`).
 
 ---
 

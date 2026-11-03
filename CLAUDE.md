@@ -25,7 +25,14 @@ abrir en la compu de la facultad o guardar en un pendrive. Cualquier propuesta q
 —un `<script src>` externo, una librería, un bundler con dependencias— hay que conversarla antes, no
 darla por supuesta.
 
-Las únicas dependencias externas son las tres imágenes del logo, y sólo para mostrarse.
+Las únicas dependencias externas son las dos imágenes del logo (`uni-tools-logo.png` y
+`uni-tools-marca.png`), y sólo para mostrarse.
+
+Cada página trae una **política de seguridad del contenido** (`src/comun/seguridad.html`, y la misma
+copiada en `index.html`): no se puede cargar ni mandar nada afuera, ni ejecutar manejadores escritos en
+el HTML que no sean el único `<script>`. Por eso no se usan `onclick="…"` en las plantillas (los botones
+«Cerrar» llevan `data-cerrar="id"`), y lo que se interpola en un `innerHTML` pasa siempre por `esc()`,
+también los números.
 
 ## Las fuentes viven en `src/` y las páginas se arman
 
@@ -35,17 +42,22 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 
 | carpeta | qué tiene |
 |---|---|
-| `src/comun/` | lo compartido: `base.css`, pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y ruteo ortogonal) |
+| `src/comun/` | lo compartido: `base.css` (que incluye `avisos.css`: avisos, ventanas y teclas), pedazos de HTML (barra, ventana Abrir) y los módulos de JS (historial, ids, copiar/pegar, teclado, zoom, gestos táctiles, doble clic, abrir/exportar, autoguardado, panel; y para bloques y simulador también colores, área de impresión, recuadros y cajas; el ruteo ortogonal, y para bloques y señales, los puertos y el ruteo de flechas de bloques) |
 | `src/bloque/`, `src/simulador/`, `src/senales/` | lo propio de cada una: `pagina.html` (la plantilla, que dice qué se incluye y en qué orden), `estilos.css`, `herramienta.js` (lo que el código común necesita saber de ella) y sus módulos |
-| `src/lgr/` | el simulador del LGR: `pagina.html`, `estilos.css`, `calculo.js` (polinomios, raíces y los pasos de la teoría, sin DOM: lo prueban `tests/unidades/`) e `interfaz.js` (gráfico, panel y barra). Todavía no usa `src/comun/` |
+| `src/lgr/` | el simulador del LGR: `pagina.html`, `estilos.css`; sin DOM (lo prueba `tests/unidades/lgr.test.js`): `polinomios.js` (complejos, polinomios y raíces), `entrada.js` (lo que se escribe), `formato.js`, `analisis.js` (los pasos de la teoría), `trazado.js` (las ramas) y `modelo.js` (ejemplos y armado); con DOM: `estado.js`, `dibujo.js`, `puntero.js`, `detalles.js`, `documento.js` (autoguardado, Abrir, Guardar, Inicio, ayuda y atajos), `barra.js` y `arranque.js`. De `src/comun/` usa `lienzo.js` (`$`, `svg`, `el`, `esc`, `toast`), `avisos.css` e `inicio.html`; el resto de lo común supone un diagrama con nodos e historial |
 
 - **Nunca se editan a mano los HTML de la raíz**: se edita `src/` y se corre `node src/construir.js`.
   Las páginas armadas se commitean junto con sus fuentes (Pages publica la raíz tal cual).
 - `node src/construir.js --comprobar` falla si alguna página no coincide con sus fuentes; lo corren
-  el workflow y `tests/specs/fuentes.spec.js`.
+  los dos workflows y `tests/specs/fuentes.spec.js`.
+- GitHub Pages publica sólo lo que arma `node src/sitio.js _sitio`: los HTML de la raíz y los
+  archivos locales que piden (falla si falta alguno). `static.yml` no despliega si las páginas no
+  coinciden con `src/` o si fallan las pruebas unitarias.
 - Todo el JS de una página termina en un único `<script>` clásico, así que los módulos comparten el
   ámbito global como antes: importa el **orden** de inclusión en `pagina.html` para las
-  `const`/`let` que se usan al cargar.
+  `const`/`let` que se usan al cargar. Y ningún nombre declarado al nivel de arriba puede repetirse
+  entre dos módulos de la misma página: `construir.js` falla si pasa (una función pisaría a la otra
+  sin error). Para pisar algo a propósito, el módulo que pisa lo dice con `/* @pisa nombre */`.
 
 ## Cómo se trabaja
 

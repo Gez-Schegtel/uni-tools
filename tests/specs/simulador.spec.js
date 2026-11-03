@@ -333,3 +333,25 @@ test("pasar el recuadro de selección sobre un cable lo deja seleccionado", asyn
   await page.mouse.up();
   expect(await page.evaluate(() => ({ sel: S.sel, selW: S.selW }))).toEqual({ sel: [], selW: ["w1"] });
 });
+
+test("los recuadros se dibujan arrastrando, se estiran con los tiradores y se agarran por el borde", async ({ page }) => {
+  await page.evaluate(() => { S.nodes = []; S.wires = []; S.sel = []; S.zoom = 1; S.pan = { x: 0, y: 0 }; commit(); render(); });
+  const r = await page.locator("#canvas").boundingBox();
+  await page.keyboard.press("m");
+  await page.mouse.move(r.x + 400, r.y + 300); await page.mouse.down();
+  await page.mouse.move(r.x + 600, r.y + 400, { steps: 5 }); await page.mouse.up();
+  expect(await page.evaluate(() => S.nodes.map((n) => [n.type, n.w, n.h]))).toEqual([["marco", 200, 100]]);
+  // tirador de la esquina de abajo a la derecha
+  const h = await page.locator('.m-handle-wrap[data-handle="se"]').boundingBox();
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down();
+  await page.mouse.move(h.x + 100, h.y + 60, { steps: 5 }); await page.mouse.up();
+  expect(await page.evaluate(() => [S.nodes[0].w, S.nodes[0].h])).toEqual([300, 160]);
+  // sin seleccionar y sin relleno, se agarra por el borde (antes había que acertarle a la línea de 1,4 px)
+  await page.mouse.click(r.x + 100, r.y + 700);
+  const x0 = await page.evaluate(() => S.nodes[0].x);
+  await page.mouse.move(r.x + 400, r.y + 350); await page.mouse.down();
+  await page.mouse.move(r.x + 440, r.y + 390, { steps: 5 }); await page.mouse.up();
+  expect(await page.evaluate(() => S.nodes[0].x)).toBeGreaterThan(x0 + 20);   // 40 px, ajustado a la grilla
+  // el borde para agarrarlo no viaja al SVG exportado
+  expect(await page.evaluate(() => buildExportSVG().svg.querySelectorAll(".m-hit").length)).toBe(0);
+});

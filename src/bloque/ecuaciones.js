@@ -157,6 +157,14 @@ function desnudar(items, siempre) {
 }
 
 /* ---------- 3. medición del texto en el propio SVG ---------- */
+/* Las cachés guardan cada texto que se escribe (también los intermedios, tecla por tecla):
+   con un tope, se olvida lo más viejo y la memoria no crece durante toda la sesión. */
+const TOPE_CACHE = 500;
+function guardarEnCache(cache, k, v) {
+  if (cache.size >= TOPE_CACHE) cache.delete(cache.keys().next().value);
+  cache.set(k, v);
+  return v;
+}
 let _mt = null; const _mcache = new Map();
 function anchoTexto(str, fs) {
   const k = fs + "|" + str;
@@ -170,8 +178,7 @@ function anchoTexto(str, fs) {
   let w = 0;
   try { w = _mt.getComputedTextLength(); } catch (e) { w = str.length * fs * .55; }
   if (!w && str) w = str.length * fs * .55;
-  _mcache.set(k, w);
-  return w;
+  return guardarEnCache(_mcache, k, w);
 }
 
 /* ---------- 4. del árbol a cajas con alto y ancho ---------- */
@@ -243,12 +250,29 @@ function cajaDe(it, fs) {
   return { w: 0, up: fs * .55, down: fs * .45, draw() {} };
 }
 const _bcache = new Map();
+/* Una etiqueta absurda (miles de paréntesis anidados, un texto de un megabyte) desbordaba la
+   pila o tardaba minutos, y como el dibujo se rehace siempre, la herramienta quedaba rota; con
+   el autoguardado, también al recargar. Más allá de estos topes, o si el análisis falla por
+   cualquier motivo, la etiqueta se muestra como texto plano (recortado) en vez de ecuación. */
+const TOPE_LARGO_ECUACION = 2000, TOPE_ANIDADO_ECUACION = 60;
+function anidamiento(s) {
+  let d = 0, max = 0;
+  for (const c of s) { if (c === "(" || c === "{") max = Math.max(max, ++d); else if (c === ")" || c === "}") d = Math.max(0, d - 1); }
+  return max;
+}
+function itemsDeEtiqueta(label) {
+  const s = String(label == null ? "" : label);
+  const plano = () => [{ t: "run", s: s.length > 80 ? s.slice(0, 80) + "…" : s }];
+  if (s.length > TOPE_LARGO_ECUACION || anidamiento(s) > TOPE_ANIDADO_ECUACION) return plano();
+  try { return analizar(s); } catch (e) { return plano(); }
+}
 function cajaEtiqueta(label, fs) {
   const k = fs + "|" + label;
   if (_bcache.has(k)) return _bcache.get(k);
-  const b = cajaFila(analizar(label), fs);
-  _bcache.set(k, b);
-  return b;
+  let caja;
+  try { caja = cajaFila(itemsDeEtiqueta(label), fs); }
+  catch (e) { caja = cajaFila([{ t: "run", s: "…" }], fs); }   // ni el texto plano se pudo medir
+  return guardarEnCache(_bcache, k, caja);
 }
 function dibujarMath(g, label, fs, cx, cy) {
   if (!label) return;

@@ -1,3 +1,13 @@
+/* ---------- el modelo, sin saber qué herramienta es ----------
+   Cada herramienta nombra distinto lo mismo (nodes/nodos, edges/wires/ramas, label/nombre,
+   type/tipo) y así se guarda en los archivos, que no se van a renombrar. El código común y
+   las pruebas que valen para las tres usan estos accesos en vez de preguntar cuál es. */
+const nodosDe = () => S[HERRAMIENTA.nodos];
+const conexionesDe = () => S[HERRAMIENTA.conexiones];
+const seleccionDeConexiones = () => S[HERRAMIENTA.selConexiones];
+const etiquetaDe = (n) => n[HERRAMIENTA.etiqueta];
+const tipoDe = (n) => n[HERRAMIENTA.tipo];
+
 /* ---------- identificadores ----------
    Un id repetido es veneno: buscar por id devuelve siempre el primero, así que el
    elemento nuevo termina moviendo, duplicando o borrando al viejo. Por eso el

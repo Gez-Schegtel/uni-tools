@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulador de circuitos lógicos</title>
 <link rel="icon" type="image/png" href="uni-tools-marca.png">
@@ -104,12 +108,13 @@ input[type=text],input[type=number],select{width:100%;border:1px solid var(--lin
 .hint{font-size:11px;color:#8a97a5;line-height:1.5}
 .empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
-kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
 #status .k{color:var(--ink-2)}
+/* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
+kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
@@ -219,8 +224,6 @@ svg#canvas{
 .wire.sel{stroke:var(--accent);stroke-dasharray:6 3}
 .wire-hit{stroke:transparent;stroke-width:14;fill:none;cursor:pointer}
 .dot{fill:var(--c-cable)}.dot.hi{fill:var(--c-activo)}
-.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
-  pointer-events:none;user-select:none}
 .sel .g-body{stroke:var(--accent)}
 .pin{fill:var(--paper);stroke:var(--accent);stroke-width:1.4;cursor:crosshair}
 .pin:hover{fill:var(--accent)}
@@ -237,6 +240,28 @@ svg#canvas{
 .m-shape.solido{fill:var(--c-relleno)}
 .m-shape.suave{fill:var(--c-borde);fill-opacity:.1}
 .sel .m-shape{stroke:var(--accent)}
+/* el título también sirve para agarrarlo */
+.m-label{font-family:var(--draw);fill:var(--c-borde);text-anchor:start;dominant-baseline:central;
+  user-select:none;cursor:pointer}
+.node.sel .m-label{cursor:move}
+/* el borde ancho e invisible para agarrar un recuadro sin relleno */
+.m-hit{fill:none;stroke:transparent;stroke-width:20;cursor:pointer}
+.node.sel .m-hit{cursor:move}
+/* tiradores de tamaño y asa para mover (recuadros; en bloques también bloques y sumadores) */
+#canvas.resizing-nw,#canvas.resizing-se{cursor:nwse-resize!important}
+#canvas.resizing-ne,#canvas.resizing-sw{cursor:nesw-resize!important}
+#canvas.resizing-n,#canvas.resizing-s{cursor:ns-resize!important}
+#canvas.resizing-e,#canvas.resizing-w{cursor:ew-resize!important}
+.m-handle-wrap{cursor:nwse-resize}
+.m-handle-wrap[data-handle="ne"],.m-handle-wrap[data-handle="sw"]{cursor:nesw-resize}
+.m-handle-wrap[data-handle="n"],.m-handle-wrap[data-handle="s"]{cursor:ns-resize}
+.m-handle-wrap[data-handle="e"],.m-handle-wrap[data-handle="w"]{cursor:ew-resize}
+.m-handle{fill:var(--paper);stroke:var(--accent);stroke-width:1.5;pointer-events:none}
+.m-handle-wrap:hover .m-handle{fill:var(--accent)}
+.m-grip-wrap{cursor:move}
+.m-grip{fill:var(--paper);stroke:var(--accent);stroke-width:1.5}
+.m-grip-ico{stroke:var(--accent);stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.m-grip-wrap:hover .m-grip{fill:var(--accent)}
 /* área de impresión: lo de afuera se sombrea porque no entra en la exportación */
 .hoja-fuera{fill:rgba(18,24,31,.06);pointer-events:none}
 .hoja-borde{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:8 5;
@@ -408,7 +433,7 @@ svg#canvas{
       selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
     <tr><td>Rueda / Espacio / <kbd>Ctrl</kbd>+clic</td><td>Mueve el lienzo (con el botón del medio, la barra espaciadora o <kbd>Ctrl</kbd> + clic izquierdo arrastrando) · <kbd>Ctrl</kbd>+rueda hace zoom · <kbd>Shift</kbd>+rueda a lo ancho</td></tr>
   </table>
-  <div style="margin-top:16px;text-align:right"><button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button></div>
+  <div style="margin-top:16px;text-align:right"><button class="btn" data-cerrar="ov-help">Cerrar</button></div>
 </div></div>
 
 <div class="overlay" id="ov-io"><div class="modal">
@@ -466,6 +491,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
@@ -500,7 +545,7 @@ const HERRAMIENTA = {
   titulo: "Simulador de circuitos lógicos",        // título de la pestaña, después del nombre del archivo
   clave: "simulador",                              // autoguardado: uni-tools-autoguardado-simulador
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodes", conexiones: "wires", selConexiones: "selW",
+  nodos: "nodes", conexiones: "wires", selConexiones: "selW", etiqueta: "label", tipo: "type",
   extremos: (w) => [w.from.id, w.to.id],           // las dos compuertas que une un cable
   fondoPNG: () => temaDe("fondo"),
   textos: {
@@ -536,6 +581,16 @@ function aplicarTema() {
   }
   $("#stage").style.background = temaDe("fondo");
 }
+/* ---------- el modelo, sin saber qué herramienta es ----------
+   Cada herramienta nombra distinto lo mismo (nodes/nodos, edges/wires/ramas, label/nombre,
+   type/tipo) y así se guarda en los archivos, que no se van a renombrar. El código común y
+   las pruebas que valen para las tres usan estos accesos en vez de preguntar cuál es. */
+const nodosDe = () => S[HERRAMIENTA.nodos];
+const conexionesDe = () => S[HERRAMIENTA.conexiones];
+const seleccionDeConexiones = () => S[HERRAMIENTA.selConexiones];
+const etiquetaDe = (n) => n[HERRAMIENTA.etiqueta];
+const tipoDe = (n) => n[HERRAMIENTA.tipo];
+
 /* ---------- identificadores ----------
    Un id repetido es veneno: buscar por id devuelve siempre el primero, así que el
    elemento nuevo termina moviendo, duplicando o borrando al viejo. Por eso el
@@ -640,6 +695,14 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Texto (con acentos y símbolos) a base64: btoa sólo acepta bytes, así que va por UTF-8.
+   Reemplaza al viejo btoa(unescape(encodeURIComponent(s))): unescape() está obsoleta. */
+function aBase64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 /* El PNG sale de dibujar el SVG en un canvas, al triple de tamaño */
 function descargarPNG(s, W, H, fondo, nombre) {
   const img = new Image();
@@ -652,7 +715,7 @@ function descargarPNG(s, W, H, fondo, nombre) {
     c.toBlob(bl => { download(nombre, bl); toast("PNG descargado (3×)"); });
   };
   img.onerror = () => toast("No se pudo generar el PNG");
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+  img.src = "data:image/svg+xml;base64," + aBase64(new XMLSerializer().serializeToString(s));
 }
 
 /* ---- armado del SVG exportado ----
@@ -732,7 +795,11 @@ $("#b-nombre").addEventListener("keydown", ev => ev.stopPropagation());
    Cómo se vuelve a una foto lo decide restore() de cada herramienta. */
 let undoStack = [], redoStack = [], lastSnap = null;
 const snapshot = () => JSON.stringify(Object.assign(docDatos(), { uidc }));
+/* La regla es «cambiar el estado, commit() y render()». Lo que render() recalcula (rutas de
+   flechas y cables, curvas de las ramas) no entra al documento, así que no importa que todavía
+   no esté al día; lo que sí entra y depende de otra cosa lo actualiza la herramienta acá. */
 function commit() {
+  if (HERRAMIENTA.actualizarDerivados) HERRAMIENTA.actualizarDerivados();
   const s = snapshot();
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }
@@ -903,6 +970,66 @@ function dibujarMarco(g, n, agarrable) {
   if (n.label)
     el("text", { class: "m-label", x: -n.w / 2 + 9, y: -n.h / 2 + n.font, "font-size": n.font }, g)
       .textContent = n.label;
+}
+/* Tiradores de tamaño sobre la caja R de n (l, t, r, b, cx, cy), en la capa gOv. Las cuatro
+   esquinas siempre; con conLados, también los cuatro lados y el asa de arriba a la izquierda
+   para moverlo (es lo de los recuadros: bloques y sumadores tienen los lados ocupados por los
+   puertos). sal corre los cuadritos hacia afuera para que no tapen la caja de selección. */
+function dibujarTiradores(n, R, conLados, sal) {
+  const tiradores = [
+    { dir: "nw", x: R.l, y: R.t }, { dir: "ne", x: R.r, y: R.t },
+    { dir: "se", x: R.r, y: R.b }, { dir: "sw", x: R.l, y: R.b }
+  ];
+  if (conLados) {
+    tiradores.push({ dir: "n", x: R.cx, y: R.t }, { dir: "s", x: R.cx, y: R.b },
+                   { dir: "w", x: R.l, y: R.cy }, { dir: "e", x: R.r, y: R.cy });
+    const gx = R.l + 10, gy = R.t - 24;          // asa, por fuera del recuadro
+    const g = el("g", { class: "m-grip-wrap", "data-nid": n.id }, gOv);
+    el("rect", { class: "m-grip", x: gx, y: gy, width: 26, height: 18, rx: 4 }, g);
+    el("path", { class: "m-grip-ico", d: `M ${gx + 13} ${gy + 4} V ${gy + 14} M ${gx + 8} ${gy + 9} H ${gx + 18}
+      M ${gx + 13} ${gy + 4} l -2 2 M ${gx + 13} ${gy + 4} l 2 2 M ${gx + 13} ${gy + 14} l -2 -2 M ${gx + 13} ${gy + 14} l 2 -2
+      M ${gx + 8} ${gy + 9} l 2 -2 M ${gx + 8} ${gy + 9} l 2 2 M ${gx + 18} ${gy + 9} l -2 -2 M ${gx + 18} ${gy + 9} l -2 2` }, g);
+  }
+  for (const c of tiradores) {
+    const x = c.x + (c.dir.includes("e") ? sal : c.dir.includes("w") ? -sal : 0);
+    const y = c.y + (c.dir.includes("s") ? sal : c.dir.includes("n") ? -sal : 0);
+    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id }, gOv);
+    el("rect", { x: x - 9, y: y - 9, width: 18, height: 18, fill: "transparent" }, g);
+    el("rect", { class: "m-handle", x: x - 5, y: y - 5, width: 10, height: 10, rx: 2 }, g);
+  }
+}
+/* Estira un recuadro desde su tamaño original o (x, y, w, h) con el tirador dir hasta el
+   punto w de la hoja, sin dejarlo más chico que 20 × 20 y ajustado a la grilla. */
+function estirarMarco(n, o, dir, w) {
+  const MIN = 20;
+  let l = o.x - o.w / 2, r = o.x + o.w / 2, t = o.y - o.h / 2, b = o.y + o.h / 2;
+  if (dir.includes("w")) l = Math.min(snapV(w.x), r - MIN);
+  if (dir.includes("e")) r = Math.max(snapV(w.x), l + MIN);
+  if (dir.includes("n")) t = Math.min(snapV(w.y), b - MIN);
+  if (dir.includes("s")) b = Math.max(snapV(w.y), t + MIN);
+  n.w = r - l; n.h = b - t; n.x = l + n.w / 2; n.y = t + n.h / 2;
+}
+/* La vista previa del recuadro mientras se lo dibuja arrastrando en diagonal */
+function dibujarRecuadroNuevo(d) {
+  const l = Math.min(d.start.x, d.cur.x), t = Math.min(d.start.y, d.cur.y);
+  el("rect", { class: "m-shape",
+    style: "stroke:var(--accent);stroke-dasharray:4 3;stroke-width:1.5;fill:rgba(13,91,214,.06)",
+    x: l, y: t, width: Math.abs(d.cur.x - d.start.x), height: Math.abs(d.cur.y - d.start.y), rx: 6 }, gOv);
+}
+/* Mientras se lo dibuja: true si cambió (hay que redibujar) */
+function moverRecuadroNuevo(d, w) {
+  const cx = snapV(w.x), cy = snapV(w.y);
+  if (cx === d.cur.x && cy === d.cur.y) return false;
+  d.cur = { x: cx, y: cy };
+  if (Math.abs(cx - d.start.x) > 3 || Math.abs(cy - d.start.y) > 3) d.moved = true;
+  return true;
+}
+/* Al soltar: el recuadro con el tamaño arrastrado, o null si fue un clic (va el de siempre) */
+function recuadroArrastrado(d) {
+  const dw = Math.abs(d.cur.x - d.start.x), dh = Math.abs(d.cur.y - d.start.y);
+  if (!d.moved || (dw < 10 && dh < 10)) return null;
+  const w = Math.max(20, dw), h = Math.max(20, dh);
+  return { x: Math.min(d.start.x, d.cur.x) + w / 2, y: Math.min(d.start.y, d.cur.y) + h / 2, w, h };
 }
 /* Las filas del panel que comparten todos los recuadros; "los elementos" o "las compuertas" */
 function filasRecuadro(n, cuales) {
@@ -1257,7 +1384,7 @@ function renderHoja() {
   el("rect", { class: "hoja-borde", x: H.x, y: H.y, width: H.w, height: H.h }, g);
   const t = el("text", { class: "hoja-nombre", x: H.x, y: H.y - 9,
     "font-size": Math.max(11, Math.round(11 / S.zoom)) }, g);
-  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${H.w} × ${H.h}`;
+  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${esc(H.w)} × ${esc(H.h)}`;
 }
 function seccionHoja() {
   const H = hojaActiva();
@@ -1270,8 +1397,8 @@ function seccionHoja() {
     haya dibujado. Elegí un tamaño para acomodar ${HERRAMIENTA.textos.losElementos} dentro del recuadro y que el SVG y el
     PNG salgan con esas proporciones.</div></div>`;
   h += `<div class="grid4">
-      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${H.w}"></div></div>
-      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${H.h}"></div></div>
+      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${esc(H.w)}"></div></div>
+      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${esc(H.h)}"></div></div>
       <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="h-x" step="${S.grid}" value="${Math.round(H.x)}"></div></div>
       <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="h-y" step="${S.grid}" value="${Math.round(H.y)}"></div></div>
     </div>
@@ -1308,10 +1435,10 @@ $("#b-hoja").onchange = (ev) => {
   commit(); render();
   if (hojaActiva()) { fit(); toast("El SVG y el PNG van a salir con este recorte"); }
 };
-/* ======================= cajas y ruteo ortogonal =======================
+/* ======================= cajas: encuadre y alineación =======================
    Para las herramientas de elementos rectangulares (bloques y compuertas): rectOf(n)
-   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre, la
-   alineación y las conexiones en ángulo recto que esquivan a los demás. */
+   de cada una da la caja que ocupa un elemento, y con eso salen el encuadre y la
+   alineación. El ruteo en ángulo recto está en ortogonal.js. */
 function bboxNodos() {
   const lista = S[HERRAMIENTA.nodos];
   if (!lista.length) return { l: 0, t: 0, r: 400, b: 300 };
@@ -1362,7 +1489,10 @@ function alinear(kind) {
   S[HERRAMIENTA.conexiones].forEach(c => { if (movidos.has(c.from.id) || movidos.has(c.to.id)) rutaAuto(c); });
   commit(); render();
 }
-
+/* ======================= ruteo ortogonal =======================
+   Conexiones en ángulo recto que esquivan a los demás elementos. No lee S: recibe las
+   cajas y los candidatos, así que lo usan el editor de bloques, el simulador y la vista
+   previa del equivalente en bloques del diagrama de señales. */
 /* ---- ruteo ----
    Cada herramienta arma sus recorridos candidatos; acá se les pone puntaje (quiebres,
    largo, pasar por encima de un elemento, montarse sobre otra conexión) y se elige. */
@@ -1545,23 +1675,20 @@ function makeNode(type, x, y, extra) {
     n.kind = n.kind || kind || "d";
     if (n.conClk === undefined) n.conClk = conClk;
     n.pins = n.pins || pinsDe(n.kind, n.conClk);
-    n.label = n.label || proximoNombreFF();
+    n.label = n.label || proximaLetraLibre("ff");
     n.q = n.q || 0; n.clkPrev = 0; n.clkArranque = false;
     n.salida = n.salida || "Q"; n.salidaNeg = n.salidaNeg || "Q";
     tablaDe(n);
   }
   return n;
 }
-function proximoNombreFF() {
-  const usadas = new Set(S.nodes.filter(n => n.type === "ff").map(n => n.label));
+/* La primera letra libre entre los elementos de ese tipo (entradas A, B, C…; biestables también) */
+function proximaLetraLibre(tipo) {
+  const usadas = new Set(S.nodes.filter(n => n.type === tipo).map(n => n.label));
   for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; }
   return "X";
 }
-function proximaLetra() {
-  const usadas = new Set(S.nodes.filter(n => n.type === "in").map(n => n.label));
-  for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; }
-  return "X";
-}
+const proximaLetra = () => proximaLetraLibre("in");
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
@@ -1981,7 +2108,7 @@ function renderNode(n, destino) {
   const g = el("g", { class: "node" + (S.sel.includes(n.id) ? " sel" : ""), "data-id": n.id,
     style: estiloColor(n.color), transform: `translate(${n.x},${n.y})` }, destino || gNodes);
   if (esMarco(n)) {
-    dibujarMarco(g, n, false);
+    dibujarMarco(g, n, true);
   } else if (n.type === "in") {
     const w = T.in.w, h = T.in.h;
     el("rect", { class: "sw-track" + (n.on ? " on" : ""), x: -w / 2, y: -h / 2, width: w, height: h, rx: h / 2 }, g);
@@ -2126,20 +2253,15 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
-function render(soloLienzo) {
-  correr(); routeAll(); aplicarTema();
-  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const w of S.wires) renderWire(w);
-  for (const d of junctionDots())
-    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo de encima, que no se exporta: área de impresión, pines, tiradores del recuadro, vista
+   previa del cable, banda y recuadro en dibujo. Es lo único que cambia al pasar el mouse. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPins();
+  // un recuadro seleccionado solo: tiradores de tamaño y asa, como en diagrama-bloque
+  if (S.sel.length === 1 && esMarco(getNode(S.sel[0]))) dibujarTiradores(getNode(S.sel[0]), rectOf(getNode(S.sel[0])), true, 0);
+  if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
   if (drag && drag.kind === "connect" && drag.cur) {
     const pts = ptsPrevia(drag.start, pinDir(getNode(drag.fromId), drag.fromPin), drag.cur);
     el("path", { class: "ghostline", d: pathD(pts, 5) }, gOv);
@@ -2149,6 +2271,24 @@ function render(soloLienzo) {
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
+}
+/* render() redibuja todo; render("lienzo") (o el reloj automático, con true) todo menos el
+   panel, del que sólo actualiza los valores; render("superpuesto"), sólo lo de encima */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  const soloLienzo = que === true || que === "lienzo";
+  correr(); routeAll(); aplicarTema();
+  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = "";
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
+  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
+  for (const w of S.wires) renderWire(w);
+  for (const d of junctionDots())
+    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
+  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.filter(n => n.type !== "label" && !esMarco(n)).length;
   $("#st-e").textContent = S.wires.length;
   $("#st-s").textContent = (S.sel.length + S.selW.length) ? S.sel.length + " · " + S.selW.length + " cables" : "—";
@@ -2193,7 +2333,7 @@ function renderInspector() {
           <option value="fijo"${n.modo === "fijo" ? " selected" : ""}>Mantenido (toggle)</option>
           <option value="auto"${n.modo === "auto" ? " selected" : ""}>Automático</option></select></div></div>`;
       if (n.modo === "fijo") h += `<div class="io-row"><span class="io-name">Nivel</span>
-        <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+        <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
         <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`;
       if (n.modo === "auto") h += `<div class="row"><div class="fill"><button class="btn" id="clk-run" style="width:100%">
         ${n.corriendo ? "Frenar el reloj" : "Arrancar el reloj"}</button></div></div>`;
@@ -2211,13 +2351,14 @@ function renderInspector() {
     if (esMarco(n)) {
       h += `<div class="sec"><h3>Recuadro</h3>${filasRecuadro(n, "las compuertas")}
         <div class="grid4">
-          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${n.w}"></div></div>
-          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${n.h}"></div></div>
+          <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="m-w" step="10" min="20" value="${esc(n.w)}"></div></div>
+          <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="m-h" step="10" min="20" value="${esc(n.h)}"></div></div>
         </div>
-        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${n.font}"></div></div>
+        <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${esc(n.font)}"></div></div>
         <div class="hint" style="margin-top:8px">Sirve para encuadrar un grupo de compuertas y ponerle
-          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde y los clics de
-          adentro pasan a lo que haya debajo.</div></div>`;
+          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde o por el asa y
+          los clics de adentro pasan a lo que haya debajo. Los cuadritos lo estiran; con la herramienta
+          (<kbd>M</kbd>) también se puede dibujar arrastrando en diagonal.</div></div>`;
     }
     h += seccionColorPropio(n, "nc-", clavesColor(n));
     if (n.type === "ff") h += panelBiestable(n);
@@ -2228,12 +2369,12 @@ function renderInspector() {
   h += `<div class="sec"><h3>Entradas</h3>`;
   h += ins.length ? ins.map(n => `<div class="io-row">
       <span class="io-name">${esc(n.label)}</span>
-      <span class="sw${n.on ? " on" : ""}" data-sw="${n.id}" role="button" tabindex="0"></span>
+      <span class="sw${n.on ? " on" : ""}" data-sw="${esc(n.id)}" role="button" tabindex="0"></span>
       <span class="bit${n.on ? " on" : ""}">${n.on ? 1 : 0}</span></div>`).join("")
     : `<div class="hint">Todavía no hay interruptores. Insertá uno con <kbd>I</kbd>.</div>`;
   h += `</div><div class="sec"><h3>Salidas</h3>`;
   h += outs.length ? outs.map(n => { const v = valorDe(n.id, 0);
-      return `<div class="io-row" data-out="${n.id}"><span class="io-name">${esc(n.label)}</span>
+      return `<div class="io-row" data-out="${esc(n.id)}"><span class="io-name">${esc(n.label)}</span>
         <span class="lamp${v ? " on" : ""}"></span><span class="bit${v ? " on" : ""}">${v ? 1 : 0}</span></div>`; }).join("")
     : `<div class="hint">Agregá una salida con <kbd>O</kbd> para ver el resultado.</div>`;
   h += `</div>`;
@@ -2490,6 +2631,7 @@ function buildExportSVG() {
   fondoExportado(s, b, m, W, H, temaDe("fondo"));
   const [ga, gw, gn] = capasSinSeleccion([gAtras, gWires, gNodes]);
   gw.querySelectorAll(".wire-hit").forEach(x => x.remove());
+  [ga, gn].forEach(g => g.querySelectorAll(".m-hit").forEach(x => x.remove()));   // el borde para agarrar recuadros
   inlinarEstilos(ga); inlinarEstilos(gw); inlinarEstilos(gn);   // el SVG queda autosuficiente
   s.appendChild(ga); s.appendChild(gw); s.appendChild(gn);
   return { svg: s, W, H };
@@ -2657,8 +2799,15 @@ svg.addEventListener("dblclick", ev => {
 detectarDobleClic(enLaHoja, dobleClicSintetico);
 
 /* ---- puntero (mouse, lápiz y un dedo) ---- */
-const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-wid],[data-pid]"));
-svg.addEventListener("pointercancel", ev => { soltarDedo(ev); drag = null; render(); });
+const esFondo = (t) => !(t && t.closest && t.closest("[data-id],[data-wid],[data-pid],.m-handle-wrap,.m-grip-wrap"));
+svg.addEventListener("pointercancel", ev => {
+  soltarDedo(ev);
+  if (drag && drag.kind === "resize") Object.assign(getNode(drag.nodeId) || {}, drag.orig);   // vuelve como estaba
+  limpiarCursorResize();
+  drag = null; render();
+});
+const limpiarCursorResize = () => svg.classList.remove("resizing-nw", "resizing-ne", "resizing-se", "resizing-sw",
+  "resizing-n", "resizing-s", "resizing-e", "resizing-w");
 
 svg.addEventListener("pointerdown", ev => {
   capturarPuntero(ev);
@@ -2677,6 +2826,25 @@ svg.addEventListener("pointerdown", ev => {
   if (ev.pointerType === "touch" && esFondo(t) && !pendiente) {
     S.sel = []; S.selW = [];
     drag = { kind: "pan", sx: ev.clientX, sy: ev.clientY, px: S.pan.x, py: S.pan.y };
+    render(); return;
+  }
+  // tirador de tamaño de un recuadro -> estirarlo
+  const hw = t.closest ? t.closest(".m-handle-wrap") : null;
+  if (hw && getNode(hw.getAttribute("data-nid"))) {
+    const n = getNode(hw.getAttribute("data-nid")), dir = hw.getAttribute("data-handle");
+    drag = { kind: "resize", nodeId: n.id, dir, orig: { x: n.x, y: n.y, w: n.w, h: n.h }, moved: false };
+    svg.classList.add("resizing-" + dir); return;
+  }
+  // asa de un recuadro -> moverlo (y lo que esté seleccionado con él)
+  const gp = t.closest ? t.closest(".m-grip-wrap") : null;
+  if (gp && getNode(gp.getAttribute("data-nid"))) {
+    drag = { kind: "move", w0: w, orig: S.sel.map(id => { const n = getNode(id); return { id, x: n.x, y: n.y }; }), moved: false, nid: gp.getAttribute("data-nid") };
+    return;
+  }
+  // con la herramienta Recuadro, arrastrar en diagonal lo dibuja de ese tamaño
+  if (pendiente === "marco") {
+    const sx = snapV(w.x), sy = snapV(w.y);
+    drag = { kind: "draw-marco", start: { x: sx, y: sy }, cur: { x: sx, y: sy }, moved: false };
     render(); return;
   }
   if (t.getAttribute && t.getAttribute("data-pid")) {
@@ -2715,7 +2883,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-pid")) || nodoCerca(w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los pines
     return;
   }
   if (drag.kind === "pan") { S.pan.x = drag.px + (ev.clientX - drag.sx); S.pan.y = drag.py + (ev.clientY - drag.sy); moverVista(); return; }
@@ -2723,16 +2891,32 @@ svg.addEventListener("pointermove", ev => {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
     for (const o of drag.orig) { const n = getNode(o.id); if (n) { n.x = snapV(o.x + dx); n.y = snapV(o.y + dy); } }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "connect") { drag.cur = w; render("superpuesto"); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
+  if (drag.kind === "resize") {
+    const n = getNode(drag.nodeId);
+    if (!n) return;
+    const antes = [n.x, n.y, n.w, n.h].join();
+    estirarMarco(n, drag.orig, drag.dir, w);
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
+    return;
+  }
+  if (drag.kind === "draw-marco") { if (moverRecuadroNuevo(drag, w)) render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }
   const w = toWorld(ev);
   if (!drag) return;
-  if (drag.kind === "connect") {
+  if (drag.kind === "resize") {
+    limpiarCursorResize();
+    if (drag.moved) commit();
+  } else if (drag.kind === "draw-marco") {
+    const c = recuadroArrastrado(drag);
+    const n = c ? makeNode("marco", c.x, c.y, { w: c.w, h: c.h }) : makeNode("marco", snapV(w.x), snapV(w.y));
+    S.nodes.push(n); S.sel = [n.id]; S.selW = []; setPendiente(null); commit();
+  } else if (drag.kind === "connect") {
     const t = document.elementFromPoint(ev.clientX, ev.clientY);
     let id = null, pin = null;
     if (t && t.getAttribute && t.getAttribute("data-pid")) {          // justo sobre un pin
@@ -2988,6 +3172,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

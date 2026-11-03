@@ -3,7 +3,7 @@
 - **ID:** `SPEC-05`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** `BUG-05` y Sección `5.4.C.4`
-- **Prioridad:** Alta (5 / 27)
+- **Prioridad:** Alta (5)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
 - **Herramientas afectadas:** Simulador de circuitos lógicos (`src/simulador/logica.js`, `simulador-logico.html`)
 

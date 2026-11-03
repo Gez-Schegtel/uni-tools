@@ -3,7 +3,7 @@
 - **ID:** `SPEC-27`
 - **Estado:** ✅ Completada
 - **Referencia en el informe:** Sección `6.2`
-- **Prioridad:** Baja (27 / 27)
+- **Prioridad:** Baja (27)
 - **Esfuerzo estimado:** Muy bajo (~10 minutos)
 - **Archivos afectados:** `uni-tools-logo.jpg` (versionado en Git), `/node_modules/` y `/test-results/` (locales en la raíz)
 

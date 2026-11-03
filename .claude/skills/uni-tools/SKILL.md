@@ -29,8 +29,11 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 | `panel.js` | `lock`, `enVivo`, `alClic`, `opciones` |
 | `barra.js` | deshacer/rehacer/borrar/duplicar, grupos plegables, panel lateral, cerrar ventanas con clic afuera |
 | `autoguardado.js` | autoguardado, «Inicio» y `arrancar()` |
-| `colores.js`, `hoja.js`, `recuadros.js`, `ortogonal.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, cajas/alineación y ruteo ortogonal (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`) |
-| `base.css`, `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos |
+| `colores.js`, `hoja.js`, `recuadros.js`, `cajas.js` | sólo bloques y simulador: paleta y colores, área de impresión, recuadros, encuadre y alineación (`bboxAll`, `alinear`) |
+| `ortogonal.js` | bloques, simulador y señales: ruteo ortogonal que no lee `S` (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`, `segsOf`) |
+| `ruteo-bloques.js` | bloques y señales: `rectOf`, las rutas candidatas, las rutas a mano y `rutearFlechas(nodes, edges)`; `routeAll()` es eso con `S`. La vista previa del equivalente en bloques usa el mismo ruteo que el editor |
+| `puertos.js` | sólo bloques y señales: `DIRS` y `portPoint()` (el editor de bloques y el equivalente de señales usan los mismos) |
+| `base.css` (incluye `avisos.css`), `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos; el LGR usa `avisos.css`, `inicio.html` y `lienzo.js` |
 
 Cada herramienta (`src/bloque/`, `src/simulador/`, `src/senales/`) tiene su `pagina.html` (marcado y
 **el orden** en que se pegan CSS y JS), `estilos.css` (después de `base.css`, así que manda),
@@ -43,9 +46,14 @@ El código común no sabe cómo se llaman las cosas en cada herramienta: lo lee 
 (en `herramienta.js`) y de funciones globales que cada una define.
 
 - `HERRAMIENTA`: `nombre`, `titulo`, `clave` (autoguardado), `nodos`/`conexiones`/`selConexiones`
-  (los nombres de las colecciones en `S`), `extremos(c)` (los dos ids que une una conexión),
-  `fondoPNG()`, `cancelarArrastre(drag)` opcional, y `textos` (las frases que cambian: «diagrama» o
-  «circuito», mensajes de abrir/guardar…).
+  (los nombres de las colecciones en `S`), `etiqueta`/`tipo` (`label`/`type` o `nombre`/`tipo`),
+  `extremos(c)` (los dos ids que une una conexión), `fondoPNG()`, `cancelarArrastre(drag)` y
+  `actualizarDerivados()` opcionales, y `textos` (las frases que cambian: «diagrama» o «circuito»,
+  mensajes de abrir/guardar…).
+- Para leer el modelo sin preguntar qué herramienta es, `comun/ids.js` tiene `nodosDe()`,
+  `conexionesDe()`, `seleccionDeConexiones()`, `etiquetaDe(n)` y `tipoDe(n)`. Las pruebas que valen
+  para las tres los usan también (en vez de `S.edges || S.wires || S.ramas`). Los archivos siguen
+  guardando cada clave con su nombre de siempre.
 - Funciones que tiene que definir cada una: `render`, `renderInspector`, `docDatos`, `restore`,
   `cargarDoc`, `insertar`, `fit`, `buildExportSVG`, `teclaPropia(k, ev)` (devuelve `true` si usó la
   tecla), `alEscape`, y la constante `NOMBRE_DEF`. Bloques y simulador además `rectOf`, `rutaAuto`,
@@ -91,6 +99,14 @@ Dos consecuencias que importan:
   de un nodo, hay que volver a buscarlo por `[data-id]`.
 - Las funciones de acomodo (`routeAll()`, `acomodarRamas()`, `aplicarTema()`) se llaman al principio
   de `render()`. Lo que se calcula ahí es derivado: se puede recalcular siempre.
+- **Redibujo por capas** (bloques y simulador): `render()` redibuja todo; `render("lienzo")`, todo
+  menos el panel (se usa mientras se arrastra: el panel se rehace al soltar); `render("superpuesto")`,
+  sólo `dibujarSuperpuesto()` (puertos o pines, tiradores, banda, vista previa: lo de pasar el mouse).
+  En bloques, los `<g>` de los elementos se reusan si su firma (`firmaNodo`: el nodo en JSON y si está
+  seleccionado) no cambió, con `dibujarReusando()` de `comun/lienzo.js`. Si el dibujo de un elemento
+  empieza a depender de otra cosa (el zoom, el modo, otro elemento), esa cosa tiene que entrar en la
+  firma o el elemento queda viejo. En el simulador no se reusan: cada compuerta muestra los valores
+  de la simulación.
 
 ### Historial
 
@@ -101,6 +117,12 @@ usa `lock()` para no re-renderizar el panel mientras se tipea.
 Lo que no esté en `snapshot()` **no sobrevive un deshacer**. Al agregar un campo nuevo al modelo,
 revisar los tres lugares: `snapshot()`, `docDatos()` (lo que se guarda) y `cargarDoc()` (lo que se
 abre).
+
+Lo que `render()` recalcula **no entra al documento**: las rutas automáticas de flechas y cables
+(`e.pts`, `w.pts`) y la curva automática de una rama (`r.curva` sin `curvaFija`). Así no importa
+que `commit()` vaya antes de `render()`. Si un dato guardado depende de otro (en bloques, el tamaño
+del bloque sale de su ecuación), la herramienta lo actualiza en `HERRAMIENTA.actualizarDerivados()`,
+que `commit()` llama antes de sacar la foto.
 
 ### Identificadores
 
@@ -175,9 +197,19 @@ elemento suelto va por `style`, que sí le gana a la clase.
   de largo cero no tiene orientación.
 - Los tiradores de tamaño salen de `renderHandles()` para `esEstirable(n)`; la cuenta está en
   `estirar()`. Los recuadros dejan fijo el lado opuesto; bloques y sumadores crecen desde el centro
-  para no desalinear los puertos.
+  para no desalinear los puertos. Lo de los recuadros es común con el simulador y vive en
+  `comun/recuadros.js`: `dibujarTiradores()`, `estirarMarco()`, y para dibujarlos arrastrando
+  `dibujarRecuadroNuevo()`, `moverRecuadroNuevo()` y `recuadroArrastrado()`. Los dos dibujan el
+  recuadro con `dibujarMarco(g, n, true)`, que agrega el borde ancho invisible `.m-hit` para
+  agarrarlo sin relleno (la exportación lo saca).
 
 ## Trampas conocidas
+
+- **Seguridad:** lo que se interpola en un `innerHTML` va con `esc()`, aunque sea un número (que hoy
+  llegue saneado no quiere decir que mañana también). Nada de `onclick="…"` en las plantillas: la CSP
+  de `comun/seguridad.html` es la red si algo se cuela, y para cerrar una ventana está `data-cerrar`.
+  Una etiqueta de bloque absurda (miles de paréntesis, un megabyte) se muestra como texto plano:
+  `itemsDeEtiqueta()` pone los topes; no llamar a `analizar()` directo para dibujar.
 
 - **Las imágenes no cargan con `file://`.** El previsualizador sirve las páginas locales como
   snapshot `data:` y las rutas relativas mueren. Hay que levantar un servidor HTTP.
@@ -230,7 +262,10 @@ elemento suelto va por `style`, que sí le gana a la clase.
   `correccion.spec.js` evalúa lo dibujado contra lo escrito: si se toca el tipógrafo, tiene que pasar.
 - **Equivalente en bloques del diagrama de señales:** a un sumador entran a lo sumo tres ramas (la
   pata derecha es la salida); si son más, se encadenan sumadores. La salida con varias ramas o con
-  un autolazo lleva un sumador antes del rótulo. Antes, la salida recibía varias flechas sin sumar y
+  un autolazo lleva un sumador antes del rótulo; si además de la salida parten ramas (una
+  realimentación), salen de un punto de bifurcación antes del rótulo, nunca del texto. Un nodo
+  interno con una sola rama entrando y una saliendo no lleva punto (no se bifurca nada): lleva el
+  rótulo con el nombre de la variable. Antes, la salida recibía varias flechas sin sumar y
   con cinco ramas dos compartían pata y signo. `correccion.spec.js` resuelve el sistema del
   equivalente y lo compara con el grafo.
 - **Mason supone que la entrada es una fuente.** Si al nodo de entrada le llegan ramas, la ventana

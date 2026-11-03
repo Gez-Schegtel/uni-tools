@@ -3,6 +3,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- Política de seguridad del contenido: la página no carga ni manda nada afuera (ni scripts, ni
+     imágenes, ni conexiones). Si alguna vez se colara HTML en un archivo abierto, no podría ni
+     traer código ni sacar datos. Lo único local son las imágenes del logo (también con file://). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' file: data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diagramas de flujo de señales</title>
 <meta name="description" content="Nodos, transmitancias y la regla de Mason: trayectorias, lazos, cofactores y función de transferencia">
@@ -104,12 +108,13 @@ input[type=text],input[type=number],select{width:100%;border:1px solid var(--lin
 .hint{font-size:11px;color:#8a97a5;line-height:1.5}
 .empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
-kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
   border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
 #status .k{color:var(--ink-2)}
+/* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
+kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
@@ -329,7 +334,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
   <p class="sub" id="mason-sub"></p>
   <div id="mason-body"></div>
   <div style="margin-top:18px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-mason').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-mason">Cerrar</button>
   </div>
 </div></div>
 
@@ -353,7 +358,7 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
       rama lo selecciona y lo arrastra; dos dedos hacen zoom</td></tr>
   </table>
   <div style="margin-top:16px;text-align:right">
-    <button class="btn" onclick="document.getElementById('ov-help').classList.remove('show')">Cerrar</button>
+    <button class="btn" data-cerrar="ov-help">Cerrar</button>
   </div>
 </div></div>
 
@@ -412,6 +417,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
@@ -446,7 +471,7 @@ const HERRAMIENTA = {
   titulo: "Diagramas de flujo de señales",         // título de la pestaña, después del nombre del archivo
   clave: "senales",                                // autoguardado: uni-tools-autoguardado-senales
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodos", conexiones: "ramas", selConexiones: "selR",
+  nodos: "nodos", conexiones: "ramas", selConexiones: "selR", etiqueta: "nombre", tipo: "tipo",
   extremos: (r) => [r.de, r.a],                    // los dos nodos que une una rama
   fondoPNG: () => "#fff",
   textos: {
@@ -471,6 +496,16 @@ let S = {
   nombre: "flujo-de-senales"
 };
 const NOMBRE_DEF = "flujo-de-senales";
+/* ---------- el modelo, sin saber qué herramienta es ----------
+   Cada herramienta nombra distinto lo mismo (nodes/nodos, edges/wires/ramas, label/nombre,
+   type/tipo) y así se guarda en los archivos, que no se van a renombrar. El código común y
+   las pruebas que valen para las tres usan estos accesos en vez de preguntar cuál es. */
+const nodosDe = () => S[HERRAMIENTA.nodos];
+const conexionesDe = () => S[HERRAMIENTA.conexiones];
+const seleccionDeConexiones = () => S[HERRAMIENTA.selConexiones];
+const etiquetaDe = (n) => n[HERRAMIENTA.etiqueta];
+const tipoDe = (n) => n[HERRAMIENTA.tipo];
+
 /* ---------- identificadores ----------
    Un id repetido es veneno: buscar por id devuelve siempre el primero, así que el
    elemento nuevo termina moviendo, duplicando o borrando al viejo. Por eso el
@@ -575,6 +610,14 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Texto (con acentos y símbolos) a base64: btoa sólo acepta bytes, así que va por UTF-8.
+   Reemplaza al viejo btoa(unescape(encodeURIComponent(s))): unescape() está obsoleta. */
+function aBase64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 /* El PNG sale de dibujar el SVG en un canvas, al triple de tamaño */
 function descargarPNG(s, W, H, fondo, nombre) {
   const img = new Image();
@@ -587,7 +630,7 @@ function descargarPNG(s, W, H, fondo, nombre) {
     c.toBlob(bl => { download(nombre, bl); toast("PNG descargado (3×)"); });
   };
   img.onerror = () => toast("No se pudo generar el PNG");
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+  img.src = "data:image/svg+xml;base64," + aBase64(new XMLSerializer().serializeToString(s));
 }
 
 /* ---- armado del SVG exportado ----
@@ -667,7 +710,11 @@ $("#b-nombre").addEventListener("keydown", ev => ev.stopPropagation());
    Cómo se vuelve a una foto lo decide restore() de cada herramienta. */
 let undoStack = [], redoStack = [], lastSnap = null;
 const snapshot = () => JSON.stringify(Object.assign(docDatos(), { uidc }));
+/* La regla es «cambiar el estado, commit() y render()». Lo que render() recalcula (rutas de
+   flechas y cables, curvas de las ramas) no entra al documento, así que no importa que todavía
+   no esté al día; lo que sí entra y depende de otra cosa lo actualiza la herramienta acá. */
 function commit() {
+  if (HERRAMIENTA.actualizarDerivados) HERRAMIENTA.actualizarDerivados();
   const s = snapshot();
   if (s === lastSnap) return;
   if (lastSnap !== null) { undoStack.push(lastSnap); if (undoStack.length > 120) undoStack.shift(); }
@@ -865,10 +912,13 @@ function nodoDeSalida() {
 
 /* ======================= el documento =======================
    Lo que se guarda en el JSON, viaja adentro del SVG y entra al historial. */
-const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodos: S.nodos, ramas: S.ramas });
+/* La curva de una rama sólo se guarda si se fijó a mano: la automática la rehace acomodarRamas() */
+const docDatos = () => ({ version: VERSION_DOC, herramienta: HERRAMIENTA.clave, nombre: limpiarNombre(S.nombre), nodos: S.nodos,
+  ramas: S.ramas.map(r => { if (r.curvaFija) return r; const c = Object.assign({}, r); delete c.curva; return c; }) });
 function restore(js) {
   const d = JSON.parse(js);
   S.nodos = d.nodos; S.ramas = d.ramas; uidc = d.uidc || uidc;
+  S.ramas.forEach(r => { if (typeof r.curva !== "number") r.curva = 0; });   // la automática la rehace render()
   S.nombre = d.nombre || S.nombre;
   S.sel = S.sel.filter(getNodo); S.selR = S.selR.filter(getRama);
 }
@@ -1199,10 +1249,10 @@ const salientesDe = (id) => S.ramas.filter(r => r.de === id);
 /* Topes para que un grafo muy denso no congele la página. Con 200 lazos ya se cortaba un
    grafo de 7 nodos todos contra todos (409 lazos), que se calcula en 20 ms; con estos, ése da
    exacto y uno de 9 se corta en menos de un segundo, una sola vez (después queda en la caché).
-   Las combinaciones disjuntas se cortan antes porque la ventana de análisis escribe Δ término
-   a término: con 65 000 eran 31 MB de HTML y 3 s trabado. Si se corta, no se da la función
-   de transferencia. */
-const MAX_CAMINOS = 5000, MAX_LAZOS = 5000, MAX_COMB = 20000;
+   Las combinaciones disjuntas se calculan rápido (17 autolazos, 131 071 combinaciones, en
+   unos 70 ms); la ventana de análisis las muestra resumidas (deltaParaMostrar en analisis.js).
+   Si se corta, no se da la función de transferencia. */
+const MAX_CAMINOS = 5000, MAX_LAZOS = 5000, MAX_COMB = 200000;
 let _truncadoMason = false;
 let _cacheMason = { clave: "", valor: null };
 
@@ -1379,6 +1429,322 @@ function ecuaciones() {
     return { nodo: n, texto };
   });
 }
+/* ======================= puertos de los bloques =======================
+   Hacia dónde sale cada lado de un elemento y en qué punto está su puerto. Lo usan el
+   editor de bloques (ruteo y dibujo) y el equivalente en bloques del diagrama de señales,
+   que antes tenía su propia copia (DIRP y puntoPuerto). */
+const DIRS = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
+/* El punto del puerto: el medio de ese lado (una bifurcación es un punto, así que su centro) */
+function portPoint(n, port) {
+  if (n.type === "node") return { x: n.x, y: n.y };
+  const d = DIRS[port] || DIRS.b;
+  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
+}
+/* ======================= ruteo ortogonal =======================
+   Conexiones en ángulo recto que esquivan a los demás elementos. No lee S: recibe las
+   cajas y los candidatos, así que lo usan el editor de bloques, el simulador y la vista
+   previa del equivalente en bloques del diagrama de señales. */
+/* ---- ruteo ----
+   Cada herramienta arma sus recorridos candidatos; acá se les pone puntaje (quiebres,
+   largo, pasar por encima de un elemento, montarse sobre otra conexión) y se elige. */
+function cleanPts(pts) {
+  const out = [];
+  for (const p of pts) {
+    const q = { x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 };
+    if (out.length && Math.abs(out[out.length - 1].x - q.x) < .3 && Math.abs(out[out.length - 1].y - q.y) < .3) continue;
+    out.push(q);
+  }
+  const res = [];
+  for (let i = 0; i < out.length; i++) {
+    if (i > 0 && i < out.length - 1) {
+      const a = out[i - 1], b = out[i], c = out[i + 1];
+      const col = (Math.abs(a.x - b.x) < .3 && Math.abs(b.x - c.x) < .3) ||
+                  (Math.abs(a.y - b.y) < .3 && Math.abs(b.y - c.y) < .3);
+      if (col) continue;
+    }
+    res.push(out[i]);
+  }
+  return res;
+}
+function segsOf(pts) {
+  const s = [];
+  for (let i = 0; i < pts.length - 1; i++) s.push([pts[i], pts[i + 1]]);
+  return s;
+}
+function segRect(seg, R) {
+  const x1 = Math.min(seg[0].x, seg[1].x), x2 = Math.max(seg[0].x, seg[1].x);
+  const y1 = Math.min(seg[0].y, seg[1].y), y2 = Math.max(seg[0].y, seg[1].y);
+  return !(x2 < R.l || x1 > R.r || y2 < R.t || y1 > R.b);
+}
+function overlapInfo(seg, other) {
+  const horiz = Math.abs(seg[0].y - seg[1].y) < .5, horiz2 = Math.abs(other[0].y - other[1].y) < .5;
+  const vert = Math.abs(seg[0].x - seg[1].x) < .5, vert2 = Math.abs(other[0].x - other[1].x) < .5;
+  if (horiz && horiz2 && Math.abs(seg[0].y - other[0].y) < 7) {
+    const a1 = Math.min(seg[0].x, seg[1].x), a2 = Math.max(seg[0].x, seg[1].x);
+    const b1 = Math.min(other[0].x, other[1].x), b2 = Math.max(other[0].x, other[1].x);
+    const ov = Math.min(a2, b2) - Math.max(a1, b1);
+    if (ov > 6) return { kind: "col", ov, exact: Math.abs(seg[0].y - other[0].y) < .6 };
+  }
+  if (vert && vert2 && Math.abs(seg[0].x - other[0].x) < 7) {
+    const a1 = Math.min(seg[0].y, seg[1].y), a2 = Math.max(seg[0].y, seg[1].y);
+    const b1 = Math.min(other[0].y, other[1].y), b2 = Math.max(other[0].y, other[1].y);
+    const ov = Math.min(a2, b2) - Math.max(a1, b1);
+    if (ov > 6) return { kind: "col", ov, exact: Math.abs(seg[0].x - other[0].x) < .6 };
+  }
+  if ((horiz && vert2) || (vert && horiz2)) return { kind: "cross" };
+  return null;
+}
+/* ¿El tramo se mete adentro del rectángulo? Tocar el borde (donde están los puertos) no cuenta. */
+function entraEn(seg, R) {
+  const x1 = Math.min(seg[0].x, seg[1].x), x2 = Math.max(seg[0].x, seg[1].x);
+  const y1 = Math.min(seg[0].y, seg[1].y), y2 = Math.max(seg[0].y, seg[1].y);
+  return x2 > R.l + 1 && x1 < R.r - 1 && y2 > R.t + 1 && y1 < R.b - 1;
+}
+/* Dos conexiones hermanas (sonHermanas() de la herramienta: las que comparten tronco)
+   se premian por viajar juntas en vez de abrirse en canales paralelos. Los propios son
+   el origen y el destino de la conexión: puede salir de su borde, pero no pasarles por
+   encima (un cable que sale de una compuerta y vuelve cruzándola se lee mal). */
+function scorePath(pts, obstacles, placed, keys, propios) {
+  let s = 0;
+  const segs = segsOf(pts);
+  s += (segs.length - 1) * 16;
+  for (const seg of segs) {
+    s += (Math.abs(seg[0].x - seg[1].x) + Math.abs(seg[0].y - seg[1].y)) * 0.012;
+    for (const R of obstacles) if (segRect(seg, R)) s += 500;
+    for (const R of propios) if (entraEn(seg, R)) s += 500;
+    for (const o of placed) {
+      const r = overlapInfo(seg, o.seg);
+      if (!r) continue;
+      if (r.kind === "cross") { s += 3; continue; }
+      if (sonHermanas(keys, o.keys)) s -= r.exact ? Math.min(r.ov, 260) * 0.7 : 0;
+      else s += 140 + r.ov * 0.6;
+    }
+  }
+  return s;
+}
+/* Los candidatos ordenados por puntaje, sin repetidos y a lo sumo cuantos+1. El orden es
+   estable: ante igual puntaje gana el que vino primero. La variante elegida a mano
+   ("Ruta alternativa") recorre esta lista. */
+function rutasPorPuntaje(cands, obstacles, placed, keys, cuantos, propios) {
+  const scored = cands.map(p => ({ p, s: scorePath(p, obstacles, placed, keys, propios) })).sort((x, y) => x.s - y.s);
+  const uniq = [];
+  for (const c of scored) {
+    const key = c.p.map(q => q.x + "," + q.y).join("|");
+    if (!uniq.some(u => u.key === key)) uniq.push({ key, p: c.p });
+    if (uniq.length > cuantos) break;
+  }
+  return uniq.map(u => u.p);
+}
+const variante = (lista, v) => lista[((v || 0) % lista.length + lista.length) % lista.length];
+const agrandar = (R, k) => ({ l: R.l - k, r: R.r + k, t: R.t - k, b: R.b + k });
+/* El trazo de una ruta, con las esquinas redondeadas con radio r */
+function pathD(pts, r) {
+  if (!pts || pts.length < 2) return "";
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i], a = pts[i - 1], b = pts[i + 1];
+    const d1 = Math.hypot(p.x - a.x, p.y - a.y), d2 = Math.hypot(b.x - p.x, b.y - p.y);
+    const k = Math.min(r, d1 / 2, d2 / 2);
+    const u1 = { x: (a.x - p.x) / (d1 || 1), y: (a.y - p.y) / (d1 || 1) };
+    const u2 = { x: (b.x - p.x) / (d2 || 1), y: (b.y - p.y) / (d2 || 1) };
+    d += ` L ${p.x + u1.x * k} ${p.y + u1.y * k} Q ${p.x} ${p.y} ${p.x + u2.x * k} ${p.y + u2.y * k}`;
+  }
+  const e = pts[pts.length - 1];
+  d += ` L ${e.x} ${e.y}`;
+  return d;
+}
+/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión */
+function ptsPrevia(A, dA, B) {
+  const stub = 20;
+  const h = dA.x !== 0;
+  const avanza = h ? (B.x - A.x) * dA.x >= stub : (B.y - A.y) * dA.y >= stub;
+  if (avanza) {
+    if (h) {
+      const mx = Math.round((A.x + B.x) / 2);
+      return cleanPts([A, { x: mx, y: A.y }, { x: mx, y: B.y }, B]);
+    }
+    const my = Math.round((A.y + B.y) / 2);
+    return cleanPts([A, { x: A.x, y: my }, { x: B.x, y: my }, B]);
+  }
+  const a1 = { x: A.x + dA.x * stub, y: A.y + dA.y * stub };
+  return h
+    ? cleanPts([A, a1, { x: a1.x, y: B.y }, B])
+    : cleanPts([A, a1, { x: B.x, y: a1.y }, B]);
+}
+/* Donde una conexión se desprende del tronco que comparte con su hermana va un punto de
+   unión. hermanas(a, b) dice qué pares cuentan; dato(a, p) es lo que se devuelve por punto. */
+function puntosDeUnion(conexiones, hermanas, dato) {
+  const inSeg = (p, sg) => {
+    const h = Math.abs(sg[0].y - sg[1].y) < .6, v = Math.abs(sg[0].x - sg[1].x) < .6;
+    if (h && Math.abs(p.y - sg[0].y) < .6) {
+      const a = Math.min(sg[0].x, sg[1].x), b = Math.max(sg[0].x, sg[1].x);
+      return p.x > a + 2 && p.x < b - 2;
+    }
+    if (v && Math.abs(p.x - sg[0].x) < .6) {
+      const a = Math.min(sg[0].y, sg[1].y), b = Math.max(sg[0].y, sg[1].y);
+      return p.y > a + 2 && p.y < b - 2;
+    }
+    return false;
+  };
+  const dots = new Map();
+  for (const a of conexiones) {
+    if (!a.pts) continue;
+    for (let i = 1; i < a.pts.length - 1; i++) {
+      const p = a.pts[i];
+      for (const b of conexiones) {
+        if (b === a || !b.pts) continue;
+        if (!hermanas(a, b)) continue;
+        if (segsOf(b.pts).some(sg => inSeg(p, sg))) {
+          dots.set(Math.round(p.x) + "," + Math.round(p.y), dato(a, p));
+          break;
+        }
+      }
+    }
+  }
+  return Array.from(dots.values());
+}
+/* ======================= ruteo de las flechas de un diagrama de bloques =======================
+   Lo usan el editor de bloques y la vista previa del equivalente en bloques del diagrama de
+   señales, así que las flechas salen iguales en los dos. rutearFlechas() recibe los
+   elementos y las flechas (no lee S); DIRS y portPoint() están en comun/puertos.js. */
+function rectOf(n) {
+  const w = n.type === "node" ? 12 : n.w, h = n.type === "node" ? 12 : n.h;
+  return { l: n.x - w / 2, r: n.x + w / 2, t: n.y - h / 2, b: n.y + h / 2, w, h, cx: n.x, cy: n.y };
+}
+function puntoEnMarco(p, n) {
+  const R = rectOf(n);
+  return p.x >= R.l && p.x <= R.r && p.y >= R.t && p.y <= R.b;
+}
+const dirOf = (p) => DIRS[p];
+
+/* ======================= flechas ======================= */
+// Dos flechas que salen del mismo punto (o entran al mismo) comparten tronco: se premia
+// que viajen juntas en vez de abrirse en canales paralelos.
+function sonHermanas(a, b) { return a.from === b.from || a.to === b.to; }
+function candidates(A, dA, B, dB, near, all) {
+  const stub = 20;
+  const a = { x: A.x + dA.x * stub, y: A.y + dA.y * stub };
+  const b = { x: B.x + dB.x * stub, y: B.y + dB.y * stub };
+  const out = [];
+  const push = (mids) => out.push(cleanPts([A, a].concat(mids, [b, B])));
+  const hA = dA.x !== 0, hB = dB.x !== 0;
+  const offs = [0, 20, -20, 40, -40, 70, -70, 110, -110, 160, -160];
+
+  if (hA && hB) {
+    for (const o of offs) {
+      const mx = (a.x + b.x) / 2 + o;
+      if (Math.abs(a.y - b.y) < .5 && o === 0) push([]);
+      else push([{ x: mx, y: a.y }, { x: mx, y: b.y }]);
+    }
+    const ys = [near.t - 34, near.b + 34, all.t - 34, all.b + 34, (a.y + b.y) / 2];
+    for (const base of ys) for (const o of [0, 22, -22, 44, -44, 66, -66])
+      push([{ x: a.x, y: base + o }, { x: b.x, y: base + o }]);
+  } else if (!hA && !hB) {
+    for (const o of offs) {
+      const my = (a.y + b.y) / 2 + o;
+      if (Math.abs(a.x - b.x) < .5 && o === 0) push([]);
+      else push([{ x: a.x, y: my }, { x: b.x, y: my }]);
+    }
+    const xs = [near.l - 34, near.r + 34, all.l - 34, all.r + 34, (a.x + b.x) / 2];
+    for (const base of xs) for (const o of [0, 22, -22, 44, -44])
+      push([{ x: base + o, y: a.y }, { x: base + o, y: b.y }]);
+  } else {
+    push([{ x: b.x, y: a.y }]);
+    push([{ x: a.x, y: b.y }]);
+    for (const o of offs) {
+      if (hA) { const mx = (a.x + b.x) / 2 + o; push([{ x: mx, y: a.y }, { x: mx, y: b.y }]); }
+      else { const my = (a.y + b.y) / 2 + o; push([{ x: a.x, y: my }, { x: b.x, y: my }]); }
+    }
+    const ys = [near.t - 34, near.b + 34, all.b + 34, all.t - 34];
+    const xs = [near.l - 34, near.r + 34, all.l - 34, all.r + 34];
+    if (hA) for (const y of ys) push([{ x: a.x, y }, { x: b.x, y }]);
+    else for (const x of xs) push([{ x, y: a.y }, { x, y: b.y }]);
+  }
+  return out;
+}
+/* ---- ruta manual ----
+   Una ruta ortogonal es una sucesión de tramos que alternan horizontal y vertical. Cada tramo
+   vive sobre una "línea": la y de uno horizontal, la x de uno vertical. La primera línea la fija
+   el puerto de salida, la última el de llegada, y las del medio se pueden elegir a mano.
+   Una flecha corrida a mano guarda sólo esas líneas del medio en e.manual.c (coordenadas
+   absolutas, de afuera hacia adentro); el resto sale de dónde estén los puertos. Así la ruta
+   sigue siendo válida aunque se muevan los bloques. */
+const TRAMO_MIN = 12;                           // lo que tiene que sobresalir el tramo pegado a un puerto
+const TRAMO_PUNTA = 20;                         // lo que sale un tramo nuevo antes de doblar
+const puertoHoriz = (port) => dirOf(port).x !== 0;     // ¿el tramo pegado a este puerto es horizontal?
+// ¿el tramo i de la ruta es horizontal? Se deduce por la paridad y no de los puntos, que pueden coincidir
+const tramoHoriz = (e, i) => puertoHoriz(e.from.port) === (i % 2 === 0);
+// una flecha corrida a mano tiene que terminar con el tramo del puerto de llegada en la orientación que corresponde
+function manualValida(e) {
+  const c = e.manual && e.manual.c;
+  if (!Array.isArray(c) || !c.length || c.some(v => typeof v !== "number" || !isFinite(v))) return false;
+  return tramoHoriz(e, c.length + 1) === puertoHoriz(e.to.port);
+}
+// las líneas del medio no pueden hacer que el tramo pegado a un puerto salga para atrás
+function acotarLinea(e, c, j, k, A, B) {
+  const horiz = tramoHoriz(e, j + 1);             // la línea j+1 de la ruta (la 0 es la del puerto)
+  const eje = horiz ? "y" : "x";
+  const lado = (P, port) => {
+    const d = dirOf(port)[eje];
+    if (!d) return;
+    const min = P[eje] + d * TRAMO_MIN;
+    c = d > 0 ? Math.max(c, min) : Math.min(c, min);
+  };
+  if (j === 0) lado(A, e.from.port);
+  if (j === k - 1) lado(B, e.to.port);
+  return c;
+}
+function aplicarManual(e, A, B) {
+  if (!manualValida(e)) return null;
+  const k = e.manual.c.length;
+  const lineas = e.manual.c.map((v, j) => acotarLinea(e, v, j, k, A, B));
+  if (k === 1) {                                  // un solo tramo del medio: tiene que servir a los dos puertos
+    const eje = tramoHoriz(e, 1) ? "y" : "x";
+    const ok = (P, port) => (lineas[0] - P[eje]) * dirOf(port)[eje] >= TRAMO_MIN - .01;
+    if (!ok(A, e.from.port) || !ok(B, e.to.port)) return null;
+  }
+  const todas = [puertoHoriz(e.from.port) ? A.y : A.x].concat(lineas,
+    [tramoHoriz(e, k + 1) ? B.y : B.x]);
+  const pts = [{ x: A.x, y: A.y }];
+  for (let j = 1; j < todas.length; j++) {        // el punto j es donde se cruzan las líneas j-1 y j
+    pts.push(tramoHoriz(e, j) ? { x: todas[j - 1], y: todas[j] }    // la j horizontal aporta la y
+                              : { x: todas[j], y: todas[j - 1] });
+  }
+  pts.push({ x: B.x, y: B.y });
+  return pts;
+}
+// vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
+function rutaAuto(e) { e.variant = 0; delete e.manual; }
+function rutearFlechas(nodes, edges) {
+  const placed = [];
+  const porId = new Map(nodes.map(n => [n.id, n]));
+  let all = { l: 0, t: 0, r: 400, b: 300 };
+  if (nodes.length) {
+    all = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
+  }
+  for (const e of edges) {
+    const from = porId.get(e.from.id), to = porId.get(e.to.id);
+    if (!from || !to) { e.pts = null; continue; }
+    const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
+    const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
+    const Rf = rectOf(from), Rt = rectOf(to);
+    const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+                                     n.type !== "node" && n.type !== "text" && n.type !== "marco")
+                             .map(n => agrandar(rectOf(n), 9));
+    const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
+    const cands = candidates(A, dA, B, dB, near, all);
+    const propios = [from, to].filter(n => n.type !== "node").map(rectOf);
+    e.pts = aplicarManual(e, A, B) || variante(rutasPorPuntaje(cands, obstacles, placed, keys, 12, propios), e.variant);
+    for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
+  }
+}
+const routeAll = () => rutearFlechas(S.nodes, S.edges);
+// Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
+const junctionDots = () => puntosDeUnion(S.edges,
+  (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas
+  (a, p) => p);
 /* ======================= diagrama de bloques equivalente =======================
    El grafo y el diagrama de bloques dicen lo mismo de dos formas: un nodo con
    varias ramas que entran es un sumador, una rama con transmitancia distinta de 1
@@ -1466,12 +1832,16 @@ function equivalenteEnBloques() {
       }
       return el;
     };
-    let cadena;
+    let cadena, salida = null;                     // salida: de dónde parten sus ramas, si no es el último
     const autolazo = ent.some(r => r.de === n.id);
+    const punto = () => agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }));
     if (n.tipo === "entrada" || !ent.length) {     // la entrada, o un nodo sin nada que le entre
       cadena = [io()];
     } else if (n.tipo === "salida" && ent.length === 1 && !autolazo) {
-      cadena = [io()];                             // la salida con una sola rama: el rótulo y listo
+      /* la salida con una sola rama: el rótulo. Si además salen ramas (una realimentación),
+         salen de un punto antes del rótulo, no del texto */
+      if (sal.length) { const p = punto(); cadena = [p, io()]; unir(p, "r", cadena[1], "l"); salida = p; }
+      else cadena = [io()];
     } else if (ent.length >= 2 || n.tipo === "salida") {
       /* Varias ramas entrando (o la salida con un autolazo): sumador. Entran tres por
          sumador; si son más, se encadenan, y cada uno recibe al anterior por la izquierda. */
@@ -1484,16 +1854,23 @@ function equivalenteEnBloques() {
       }
       const ultimo = cadena[cadena.length - 1];
       if (n.tipo === "salida") {                   // el rótulo de la salida va después de la suma
-        cadena.push(io()); unir(ultimo, "r", cadena[cadena.length - 1], "l");
+        if (sal.length) {                          // y lo que vuelve sale de un punto antes del rótulo
+          salida = punto(); cadena.push(salida); unir(ultimo, "r", salida, "l");
+        }
+        cadena.push(io()); unir(cadena[cadena.length - 2], "r", cadena[cadena.length - 1], "l");
       } else if (sal.length >= 2) {                // y si además reparte, va un punto de bifurcación
-        cadena.push(agregar(Object.assign(base(), { type: "node", w: 10, h: 10 })));
+        cadena.push(punto());
         unir(ultimo, "r", cadena[cadena.length - 1], "l");
       }
-    } else {                                       // una sola entrada: un punto sobre la línea
-      cadena = [agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }))];
+    } else if (sal.length >= 2) {                  // una sola entrada que se reparte: bifurcación
+      cadena = [punto()];
+    } else {
+      /* una entrada y una salida (o ninguna): no hay nada que se bifurque, así que en vez de
+         un punto va el nombre de la variable, como se la rotula sobre la línea */
+      cadena = [io()];
     }
     cadenaDe.set(n.id, cadena);
-    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, cadena[cadena.length - 1]);
+    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, salida || cadena[cadena.length - 1]);
   }
 
   /* Acomodo de izquierda a derecha: cada cosa se apoya contra la anterior dejando
@@ -1592,25 +1969,7 @@ function equivalenteEnBloques() {
 }
 
 /* ---- dibujo del equivalente: un SVG suelto, para la vista previa y el PNG ---- */
-const DIRP = { l: { x: -1, y: 0 }, r: { x: 1, y: 0 }, t: { x: 0, y: -1 }, b: { x: 0, y: 1 } };
-function puntoPuerto(n, p) {
-  if (n.type === "node") return { x: n.x, y: n.y };     // la bifurcación es un punto
-  const d = DIRP[p] || DIRP.l;
-  return { x: n.x + d.x * n.w / 2, y: n.y + d.y * n.h / 2 };
-}
-function caminoOrto(p1, d1, p2, d2) {          // ruteo en ángulo recto, como en el editor
-  const s = 20;
-  const a = { x: p1.x + d1.x * s, y: p1.y + d1.y * s };
-  const b = { x: p2.x + d2.x * s, y: p2.y + d2.y * s };   // se llega desde afuera del puerto
-  const medio = [];
-  const h1 = d1.x !== 0, h2 = d2.x !== 0;
-  if (h1 && h2) { const mx = (a.x + b.x) / 2; medio.push({ x: mx, y: a.y }, { x: mx, y: b.y }); }
-  else if (h1 && !h2) medio.push({ x: b.x, y: a.y });
-  else if (!h1 && h2) medio.push({ x: a.x, y: b.y });
-  else { const my = (a.y + b.y) / 2; medio.push({ x: a.x, y: my }, { x: b.x, y: my }); }
-  return [p1, a].concat(medio, [b, p2])
-    .filter((p, i, l) => i === 0 || Math.abs(p.x - l[i - 1].x) > .5 || Math.abs(p.y - l[i - 1].y) > .5);
-}
+/* DIRS, portPoint() y rutearFlechas() vienen de comun/: los mismos del editor de bloques */
 function svgDeBloques(d) {
   const m = 34;
   let l = 1e9, t = 1e9, r = -1e9, b = -1e9;
@@ -1630,11 +1989,11 @@ function svgDeBloques(d) {
   s.appendChild(defs);
   el("rect", { x: l, y: t, width: W, height: H, fill: "#ffffff" }, s);
   const porId = new Map(d.nodes.map(n => [n.id, n]));
+  rutearFlechas(d.nodes, d.edges);                 // el mismo ruteo que en el editor de bloques
   for (const e of d.edges) {
     const A = porId.get(e.from.id), B = porId.get(e.to.id);
-    if (!A || !B) continue;
-    const pts = caminoOrto(puntoPuerto(A, e.from.port), DIRP[e.from.port] || DIRP.r,
-                           puntoPuerto(B, e.to.port), DIRP[e.to.port] || DIRP.l);
+    if (!A || !B || !e.pts) continue;
+    const pts = e.pts;
     el("path", { d: "M " + pts.map(p => p.x + " " + p.y).join(" L "), fill: "none",
       stroke: "#101418", "stroke-width": 1.6, "stroke-linejoin": "round",
       "marker-end": B.type === "node" ? "" : "url(#pta)" }, s);   // a una bifurcación no se le pone punta
@@ -1657,7 +2016,7 @@ function svgDeBloques(d) {
         stroke: "#101418", "stroke-width": 1.4, fill: "none" }, s);
       for (const p in n.signs) {
         if (!n.signs[p]) continue;
-        const dd = DIRP[p];
+        const dd = DIRS[p];
         texto(n.x + dd.x * rad * 0.58, n.y + dd.y * rad * 0.58, n.signs[p], 13);
       }
     } else if (n.type === "node") {
@@ -1713,30 +2072,31 @@ function mostrarMason() {
 
   h += `<h4>3 · Lazos disjuntos tomados de a dos</h4>`;
   const pares = A.det.combos[2] || [];
-  h += pares.length ? tabla(["Lazos", "Producto"],
-    pares.map(c => [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
-                    `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]))
+  h += pares.length ? tablaRecortada(["Lazos", "Producto"], pares,
+    c => [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
+          `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`])
     : `<div class="nada">No hay dos lazos que no se toquen.</div>`;
 
   // si además hay grupos de tres o más, se muestran, porque entran en Δ
   const ordenes = Object.keys(A.det.combos).map(Number).filter(k => k >= 3).sort((a, b) => a - b);
   for (const k of ordenes) {
     h += `<h4>3.${k - 1} · Lazos disjuntos tomados de a ${k}</h4>`;
-    h += tabla(["Lazos", "Producto"], A.det.combos[k].map(c =>
+    h += tablaRecortada(["Lazos", "Producto"], A.det.combos[k], c =>
       [`<td class="simb">${c.map(i => conSub(A.L[i].simbolo)).join(" · ")}</td>`,
-       `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]));
+       `<td class="exp">${conSub(producto(c.map(i => A.L[i].gan)))}</td>`]);
   }
 
   h += `<h4>4 · Determinante y cofactores</h4>`;
   // los números sólo tienen sentido si todas las transmitancias son números
   const todoNumerico = A.L.every(l => l.valor !== null) && A.P.every(p => p.valor !== null)
     && (A.L.length + A.P.length) > 0;
-  const dTexto = textoDelta(A.L, A.det);
+  const dTexto = deltaParaMostrar(A.L, A.det);
   const dValor = todoNumerico ? valorDelta(A.L, A.det) : null;
-  h += `<div class="caja">Δ = ${conSub(dTexto)}${dValor === null ? "" : `<br>Δ = ${redondear(dValor)}`}</div>`;
+  h += `<div class="caja">Δ = ${conSub(dTexto)}${dValor === null ? "" : `<br>Δ = ${redondear(dValor)}`}` +
+    (esLargo(A.det) ? `<br><button class="btn" id="b-copiar-delta">Copiar Δ completo (${A.det.terminos.length} términos)</button>` : "") + `</div>`;
   if (A.cof.length) {
     h += tabla(["", "Cofactor", "Lazos que no la tocan"], A.cof.map((c, i) => {
-      const t = textoDelta(c.libres, c.det);
+      const t = deltaParaMostrar(c.libres, c.det);
       const v = todoNumerico ? valorDelta(c.libres, c.det) : null;
       return [`<td class="simb">Δ${sub(i + 1)}</td>`,
               `<td class="exp">${conSub(t)}${v === null ? "" : ` &nbsp;=&nbsp; ${redondear(v)}`}</td>`,
@@ -1758,7 +2118,7 @@ function mostrarMason() {
     }).join(" + ");
     // un término negativo se resta, en vez de quedar "+ -G3"
     const numDes = A.P.map((p, i) => {
-      const dk = textoDelta(A.cof[i].libres, A.cof[i].det);
+      const dk = deltaParaMostrar(A.cof[i].libres, A.cof[i].det);
       return dk === "1" ? p.gan : `${envolver(p.gan)}·${envolver(dk)}`;
     }).map((t, i) => i === 0 ? t : /^-/.test(t) ? " − " + t.slice(1) : " + " + t).join("");
     h += `<div class="caja resultado">${conSub(A.salida.nombre)} / ${conSub(A.entrada.nombre)}
@@ -1773,6 +2133,9 @@ function mostrarMason() {
   }
   h += seccionEquivalente();
   body.innerHTML = h;
+  const copiar = $("#b-copiar-delta");
+  if (copiar) copiar.onclick = () => navigator.clipboard.writeText("Δ = " + textoDelta(A.L, A.det))
+    .then(() => toast("Δ copiado al portapapeles"), () => toast("El navegador no dejó copiar"));
   pintarEquivalente();
   $("#ov-mason").classList.add("show");
 }
@@ -1815,6 +2178,25 @@ function htmlEcuaciones() {
   if (!eqs.length) return `<h4>Sistema de ecuaciones</h4><div class="nada">Todavía no hay nodos.</div>`;
   return `<h4>Sistema de ecuaciones</h4><div class="caja eq">` +
     eqs.map(e => conSub(e.texto)).join("<br>") + `</div>`;
+}
+/* Con muchos lazos que no se tocan, Δ tiene miles de términos (16 autolazos: 65 535) y la
+   ventana se trababa armando su texto. Pasado este tope, Δ y los cofactores se muestran
+   resumidos (cuántos productos de cada orden) y las tablas, recortadas; el valor numérico y
+   la transferencia se siguen dando, y el texto completo se puede copiar. */
+const TOPE_TERMINOS = 200, TOPE_FILAS = 100;
+const esLargo = (det) => det.terminos.length > TOPE_TERMINOS;
+function deltaParaMostrar(ls, det) {
+  if (!esLargo(det)) return textoDelta(ls, det);
+  const porOrden = {};
+  det.terminos.forEach(t => porOrden[t.orden] = (porOrden[t.orden] || 0) + 1);
+  return "1" + Object.keys(porOrden).map(Number).sort((x, y) => x - y).map(k =>
+    (k % 2 ? " − " : " + ") + `Σ[${porOrden[k]} ${k === 1 ? "lazos" : "productos de a " + k}]`).join("");
+}
+/* fila(x) arma las celdas; se arman sólo las que se muestran */
+function tablaRecortada(cabeceras, lista, fila) {
+  const t = tabla(cabeceras, lista.slice(0, TOPE_FILAS).map(fila));
+  return lista.length <= TOPE_FILAS ? t
+    : t + `<div class="nada">… y ${lista.length - TOPE_FILAS} más (se muestran los primeros ${TOPE_FILAS}).</div>`;
 }
 function tabla(cabeceras, filas) {
   return `<table><thead><tr>${cabeceras.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
@@ -2311,6 +2693,10 @@ $("#b-help").onclick = () => $("#ov-help").classList.add("show");
 // las ventanas se cierran con un clic afuera
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("show"); }));
+/* «Cerrar» de cada ventana: data-cerrar="id" en vez de un onclick escrito en el HTML (así no
+   hace falta permitir manejadores en línea, y está en un solo lugar) */
+document.querySelectorAll("[data-cerrar]").forEach(b =>
+  b.addEventListener("click", () => document.getElementById(b.dataset.cerrar).classList.remove("show")));
 // los grupos de la barra se pliegan y despliegan con un clic en su nombre
 document.querySelectorAll(".glab").forEach(g =>
   g.addEventListener("click", () => g.parentElement.classList.toggle("collapsed")));

@@ -1,9 +1,9 @@
 # Spec 35 — LGR: Paridad con las Otras Herramientas (Comunes, Autoguardado, Ayuda, Exportación)
 
 - **ID:** `SPEC-35`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03 al integrar `simulador-lgr.html` del proyecto original
-- **Prioridad:** Media / Baja (35 / 39)
+- **Prioridad:** Media / Baja (35 / 46)
 - **Esfuerzo estimado:** Alto (~2 horas, conviene partirla)
 - **Archivos afectados:** `src/lgr/*`, `src/comun/*`, `index.html`, `tests/specs/lgr.spec.js`
 
@@ -39,6 +39,17 @@ Partirla en tres pasos, cada uno con su commit y sus pruebas:
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+- De `src/comun/`: `lienzo.js` (`$`, `svg`, `el`, `esc`, `toast`), `inicio.html` y `avisos.css` (se separó de `base.css` lo de avisos, ventanas y teclas; las otras páginas lo siguen incluyendo a través de `base.css`).
+- `src/lgr/documento.js` (nuevo): `docDatos()` con `version` y `herramienta: "lgr"`, autoguardado en `uni-tools-autoguardado-lgr` como `{ guardado, doc }` (migra la clave vieja `uni-tools-lgr` una vez), Abrir JSON/SVG (rechaza documentos de otra herramienta), Guardar JSON, Inicio, ayuda `?` y atajos (`F`, `+`, `−`, `D`, `Ctrl+S`, `Ctrl+O`, `Esc`).
+- SVG exportado con `<metadata id="uni-tools-datos">` y la leyenda; PNG al triple; archivos `lugar-de-raices.*`.
+- La portada avisa «Tenés un ejercicio guardado» (`data-auto="lgr"`); el LGR guarda recién cuando el usuario cambia algo, así que entrar y salir no deja nada.
+
+**Lo que no se tomó de `comun/`:** `autoguardado.js`, `documento.js`, `barra.js` y `teclado.js` suponen un diagrama con nodos, historial y `cargarDoc()`; adaptarlos al LGR costaba más que replicar estas pocas funciones con el mismo formato.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/specs/lgr.spec.js`: Inicio vuelve a la portada; `?` abre la ayuda y `Esc` la cierra; el SVG exportado se vuelve a abrir y deja los mismos campos; la portada avisa que hay un LGR guardado; un estado guardado con la clave vieja se migra.
@@ -48,5 +59,5 @@ Partirla en tres pasos, cada uno con su commit y sus pruebas:
 
 ## 5. Criterios de Aceptación
 
-- [ ] El LGR comparte con las demás la barra, la ayuda, el autoguardado y el formato de exportación.
-- [ ] La matemática (`src/lgr/calculo.js`) no cambia: `tests/unidades/lgr.test.js` pasa igual.
+- [x] El LGR comparte con las demás el botón Inicio, los avisos, la ayuda con `?`, el formato del autoguardado y el de exportación (SVG con datos y leyenda, PNG 3×).
+- [x] La matemática (los módulos sin DOM de `src/lgr/`) no cambia: `tests/unidades/lgr.test.js` pasa igual.

@@ -65,6 +65,7 @@ function buildExportSVG() {
   fondoExportado(s, b, m, W, H, temaDe("fondo"));
   const [ga, gw, gn] = capasSinSeleccion([gAtras, gWires, gNodes]);
   gw.querySelectorAll(".wire-hit").forEach(x => x.remove());
+  [ga, gn].forEach(g => g.querySelectorAll(".m-hit").forEach(x => x.remove()));   // el borde para agarrar recuadros
   inlinarEstilos(ga); inlinarEstilos(gw); inlinarEstilos(gn);   // el SVG queda autosuficiente
   s.appendChild(ga); s.appendChild(gw); s.appendChild(gn);
   return { svg: s, W, H };

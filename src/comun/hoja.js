@@ -53,7 +53,7 @@ function renderHoja() {
   el("rect", { class: "hoja-borde", x: H.x, y: H.y, width: H.w, height: H.h }, g);
   const t = el("text", { class: "hoja-nombre", x: H.x, y: H.y - 9,
     "font-size": Math.max(11, Math.round(11 / S.zoom)) }, g);
-  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${H.w} × ${H.h}`;
+  t.textContent = `${(HOJAS[H.preset] || {}).nombre || "Área"} · ${esc(H.w)} × ${esc(H.h)}`;
 }
 function seccionHoja() {
   const H = hojaActiva();
@@ -66,8 +66,8 @@ function seccionHoja() {
     haya dibujado. Elegí un tamaño para acomodar ${HERRAMIENTA.textos.losElementos} dentro del recuadro y que el SVG y el
     PNG salgan con esas proporciones.</div></div>`;
   h += `<div class="grid4">
-      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${H.w}"></div></div>
-      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${H.h}"></div></div>
+      <div class="row"><label style="width:22px">An</label><div class="fill"><input type="number" id="h-w" step="10" min="60" value="${esc(H.w)}"></div></div>
+      <div class="row"><label style="width:22px">Al</label><div class="fill"><input type="number" id="h-h" step="10" min="60" value="${esc(H.h)}"></div></div>
       <div class="row"><label style="width:22px">X</label><div class="fill"><input type="number" id="h-x" step="${S.grid}" value="${Math.round(H.x)}"></div></div>
       <div class="row"><label style="width:22px">Y</label><div class="fill"><input type="number" id="h-y" step="${S.grid}" value="${Math.round(H.y)}"></div></div>
     </div>
