@@ -8,8 +8,8 @@ Chromium y en Firefox, las maneja como un usuario (teclas, clicks, arrastres) y 
 
 Las herramientas son HTML autocontenidos, sin build ni dependencias (regla de `CLAUDE.md`). Para no
 tocar eso, **todo lo de npm vive sólo en `tests/`**: es herramienta de desarrollo, no se despliega ni
-cambia cómo se usa el sitio. (`static.yml` publica la raíz entera, así que `tests/` viaja a Pages,
-pero `node_modules/` no se versiona —ver `.gitignore`— y nada del sitio lo referencia.)
+cambia cómo se usa el sitio. (`static.yml` publica sólo lo que arma `src/sitio.js`: los HTML de la
+raíz y sus imágenes; `tests/` no viaja a Pages.)
 
 ## Correrlas
 
@@ -95,7 +95,8 @@ pruebas fallan: es la señal de que dejó de ser puro y hay que probarlo desde `
 (`node --test`, sin navegador), instala
 dependencias (`npm ci`, usa `package-lock.json`), instala Chromium y Firefox y corre la suite en los dos. Si algo falla,
 sube el reporte y las trazas como artefacto (`reporte-playwright`, 14 días). **No despliega**: eso
-sigue siendo `static.yml`, que publica al pushear a `main`.
+sigue siendo `static.yml`, que al pushear a `main` comprueba que las páginas coincidan con `src/`,
+corre las pruebas unitarias y publica sólo el sitio (`node src/sitio.js _sitio`).
 
 Para impedir que se mezcle a `main` algo que no pasa: *Settings → Branches → Branch protection rule*
 sobre `main` → *Require status checks to pass* → elegir «pruebas».

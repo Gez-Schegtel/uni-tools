@@ -1,7 +1,7 @@
 # Spec 37 — Publicar en GitHub Pages Sólo lo Necesario y con las Pruebas en Verde
 
 - **ID:** `SPEC-37`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Auditoría del 2026-11-03
 - **Prioridad:** Media (37 / 46)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
@@ -42,5 +42,5 @@
 
 ## 5. Criterios de Aceptación
 
-- [ ] Pages publica sólo las páginas y sus imágenes.
-- [ ] No se despliega si las páginas no coinciden con `src/` (o si fallan las pruebas, según la opción elegida).
+- [x] Pages publica sólo las páginas y sus imágenes (las arma `src/sitio.js`, que falla si una página pide un archivo que no existe).
+- [x] No se despliega si las páginas no coinciden con `src/` o si fallan las pruebas unitarias (las de navegador las sigue corriendo `tests.yml`).

@@ -30,3 +30,11 @@ test("index.html tampoco tiene <script src> ni hojas de estilo externas", () => 
   expect(html).not.toMatch(/<script[^>]+\bsrc\s*=/i);
   expect(html).not.toMatch(/<link[^>]+rel=["']stylesheet["']/i);
 });
+
+test("src/sitio.js publica las páginas y sus imágenes, y nada de src/, tests/ ni backlog/", () => {
+  const lista = execFileSync(process.execPath, [path.join(RAIZ, "src", "sitio.js")], { encoding: "utf8" }).trim().split("\n");
+  const paginas = fs.readdirSync(RAIZ).filter((f) => f.endsWith(".html"));
+  for (const p of paginas) expect(lista).toContain(p);
+  expect(lista).toContain("uni-tools-marca.png");
+  expect(lista.filter((a) => /^(src|tests|backlog|\.github|\.claude)\//.test(a) || /\.md$/.test(a))).toEqual([]);
+});

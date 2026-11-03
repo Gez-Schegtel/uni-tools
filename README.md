@@ -40,6 +40,7 @@ diagrama-señales.html       │
 simulador-lgr.html          ┘
 src/
   construir.js              arma los cuatro HTML de arriba (Node pelado, sin npm)
+  sitio.js                  junta lo que se publica en GitHub Pages
   comun/                    lo compartido: historial, ids, copiar/pegar, teclado, zoom,
                             gestos táctiles, abrir/exportar, autoguardado, colores, área
                             de impresión, recuadros, ruteo ortogonal, CSS base, pedazos de HTML
@@ -50,7 +51,8 @@ src/
   lgr/                      el LGR: calculo.js (sin DOM) e interfaz.js; todavía no usa comun/
 tests/                      suite de Playwright (Chromium y Firefox) y unidades de los
                             cálculos puros; es lo único con npm
-.github/workflows/          tests.yml (pruebas) y static.yml (publica en GitHub Pages)
+.github/workflows/          tests.yml (pruebas) y static.yml (comprueba y publica en GitHub Pages
+                            sólo las páginas y sus imágenes, con src/sitio.js)
 ```
 
 Cada herramienta que se publica es **un solo archivo HTML autocontenido**: el CSS, el JavaScript y los íconos viven adentro. No hay frameworks, ni CDN, ni dependencias. Por eso funcionan sin internet y se pueden mandar por mail o llevar en un pendrive.

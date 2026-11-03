@@ -42,7 +42,10 @@ dependencias. El script pega los pedazos en un solo HTML; no transforma ni minif
 - **Nunca se editan a mano los HTML de la raíz**: se edita `src/` y se corre `node src/construir.js`.
   Las páginas armadas se commitean junto con sus fuentes (Pages publica la raíz tal cual).
 - `node src/construir.js --comprobar` falla si alguna página no coincide con sus fuentes; lo corren
-  el workflow y `tests/specs/fuentes.spec.js`.
+  los dos workflows y `tests/specs/fuentes.spec.js`.
+- GitHub Pages publica sólo lo que arma `node src/sitio.js _sitio`: los HTML de la raíz y los
+  archivos locales que piden (falla si falta alguno). `static.yml` no despliega si las páginas no
+  coinciden con `src/` o si fallan las pruebas unitarias.
 - Todo el JS de una página termina en un único `<script>` clásico, así que los módulos comparten el
   ámbito global como antes: importa el **orden** de inclusión en `pagina.html` para las
   `const`/`let` que se usan al cargar.

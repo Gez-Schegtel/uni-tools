@@ -1,28 +1,25 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Publica en GitHub Pages lo que está en main.
+# Antes de publicar comprueba que las páginas armadas coincidan con src/ y que los cálculos
+# puros pasen sus pruebas (las de navegador las corre tests.yml). Se sube sólo el sitio:
+# los HTML de la raíz y sus imágenes, no src/, tests/, backlog/ ni la documentación.
+name: Publicar en GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Un solo despliegue a la vez; uno en curso no se cancela.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -31,13 +28,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Las páginas están al día con src/
+        run: node src/construir.js --comprobar
+
+      - name: Pruebas unitarias de los cálculos puros
+        run: node --test "tests/unidades/*.test.js"
+
+      - name: Armar la carpeta del sitio
+        run: node src/sitio.js _sitio
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
-      - name: Upload artifact
+
+      - name: Subir el sitio
         uses: actions/upload-pages-artifact@v5
         with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
+          path: _sitio
+
+      - name: Desplegar
         id: deployment
         uses: actions/deploy-pages@v5
