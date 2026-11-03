@@ -85,12 +85,16 @@ function equivalenteEnBloques() {
       }
       return el;
     };
-    let cadena;
+    let cadena, salida = null;                     // salida: de dónde parten sus ramas, si no es el último
     const autolazo = ent.some(r => r.de === n.id);
+    const punto = () => agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }));
     if (n.tipo === "entrada" || !ent.length) {     // la entrada, o un nodo sin nada que le entre
       cadena = [io()];
     } else if (n.tipo === "salida" && ent.length === 1 && !autolazo) {
-      cadena = [io()];                             // la salida con una sola rama: el rótulo y listo
+      /* la salida con una sola rama: el rótulo. Si además salen ramas (una realimentación),
+         salen de un punto antes del rótulo, no del texto */
+      if (sal.length) { const p = punto(); cadena = [p, io()]; unir(p, "r", cadena[1], "l"); salida = p; }
+      else cadena = [io()];
     } else if (ent.length >= 2 || n.tipo === "salida") {
       /* Varias ramas entrando (o la salida con un autolazo): sumador. Entran tres por
          sumador; si son más, se encadenan, y cada uno recibe al anterior por la izquierda. */
@@ -103,16 +107,23 @@ function equivalenteEnBloques() {
       }
       const ultimo = cadena[cadena.length - 1];
       if (n.tipo === "salida") {                   // el rótulo de la salida va después de la suma
-        cadena.push(io()); unir(ultimo, "r", cadena[cadena.length - 1], "l");
+        if (sal.length) {                          // y lo que vuelve sale de un punto antes del rótulo
+          salida = punto(); cadena.push(salida); unir(ultimo, "r", salida, "l");
+        }
+        cadena.push(io()); unir(cadena[cadena.length - 2], "r", cadena[cadena.length - 1], "l");
       } else if (sal.length >= 2) {                // y si además reparte, va un punto de bifurcación
-        cadena.push(agregar(Object.assign(base(), { type: "node", w: 10, h: 10 })));
+        cadena.push(punto());
         unir(ultimo, "r", cadena[cadena.length - 1], "l");
       }
-    } else {                                       // una sola entrada: un punto sobre la línea
-      cadena = [agregar(Object.assign(base(), { type: "node", w: 10, h: 10 }))];
+    } else if (sal.length >= 2) {                  // una sola entrada que se reparte: bifurcación
+      cadena = [punto()];
+    } else {
+      /* una entrada y una salida (o ninguna): no hay nada que se bifurque, así que en vez de
+         un punto va el nombre de la variable, como se la rotula sobre la línea */
+      cadena = [io()];
     }
     cadenaDe.set(n.id, cadena);
-    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, cadena[cadena.length - 1]);
+    entraEn.set(n.id, cadena[0]); saleDe.set(n.id, salida || cadena[cadena.length - 1]);
   }
 
   /* Acomodo de izquierda a derecha: cada cosa se apoya contra la anterior dejando

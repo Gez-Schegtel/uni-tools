@@ -392,3 +392,26 @@ test("si el grafo supera el tope de Mason, la ventana avisa y no da una transfer
   await expect(page.locator("#ov-mason .resultado")).toHaveCount(0);
   await expect(page.locator("#insp")).toContainText("≥");
 });
+
+test("en el equivalente, lo que vuelve desde la salida sale de un punto antes del rótulo y un nodo 1→1 se rotula sin punto", async ({ page }) => {
+  await grafo(page, 4, [[0, 1, "2"], [1, 2, "0.5"], [2, 3, "3"], [3, 1, "-0.1"]]);
+  const r = await page.evaluate(() => {
+    const d = equivalenteEnBloques(), porId = new Map(d.nodes.map((n) => [n.id, n]));
+    const salida = S.nodos.find((n) => n.tipo === "salida");
+    const rotulo = d.nodes.find((n) => n.type === "io" && n.label === salida.nombre);
+    const interno = S.nodos[2];                      // una rama entra y una sale
+    return {
+      desdeElRotulo: d.edges.filter((e) => e.from.id === rotulo.id).length,
+      internoEsRotulo: d.nodes.some((n) => n.type === "io" && n.label === interno.nombre),
+      puntos: d.nodes.filter((n) => n.type === "node").length,
+      haciaElRotulo: d.edges.filter((e) => e.to.id === rotulo.id).map((e) => porId.get(e.from.id).type),
+    };
+  });
+  expect(r.desdeElRotulo).toBe(0);
+  expect(r.haciaElRotulo).toEqual(["node"]);        // el punto de donde parte la realimentación
+  expect(r.internoEsRotulo).toBe(true);
+  expect(r.puntos).toBe(1);
+  const b = await transferenciaDeBloques(page);
+  expect(b.problemas).toEqual([]);
+  expect(b.T).toBeCloseTo(await transferenciaDeMason(page), 10);
+});

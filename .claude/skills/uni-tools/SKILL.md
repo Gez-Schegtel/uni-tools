@@ -230,7 +230,10 @@ elemento suelto va por `style`, que sí le gana a la clase.
   `correccion.spec.js` evalúa lo dibujado contra lo escrito: si se toca el tipógrafo, tiene que pasar.
 - **Equivalente en bloques del diagrama de señales:** a un sumador entran a lo sumo tres ramas (la
   pata derecha es la salida); si son más, se encadenan sumadores. La salida con varias ramas o con
-  un autolazo lleva un sumador antes del rótulo. Antes, la salida recibía varias flechas sin sumar y
+  un autolazo lleva un sumador antes del rótulo; si además de la salida parten ramas (una
+  realimentación), salen de un punto de bifurcación antes del rótulo, nunca del texto. Un nodo
+  interno con una sola rama entrando y una saliendo no lleva punto (no se bifurca nada): lleva el
+  rótulo con el nombre de la variable. Antes, la salida recibía varias flechas sin sumar y
   con cinco ramas dos compartían pata y signo. `correccion.spec.js` resuelve el sistema del
   equivalente y lo compara con el grafo.
 - **Mason supone que la entrada es una fuente.** Si al nodo de entrada le llegan ramas, la ventana
