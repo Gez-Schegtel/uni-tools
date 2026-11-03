@@ -47,7 +47,7 @@ Puerto del servidor de prueba: `PUERTO=9000 npm test` (por defecto 8780).
 
 `lienzo.spec.js` repite, en las tres herramientas, el flujo copiar → pegar → mover → deseleccionar → Ctrl+clic / banda, y comprueba que el navegador no pueda seleccionar ni arrastrar el lienzo (causa de un bloqueo que sólo se veía en Firefox). Desde 2026-10 la suite entera corre también en Firefox (`--project=firefox`).
 
-`ayudas.js` tiene las utilidades comunes (`abrir`, `aPantalla`, `arrastrar`, `abrirTexto`).
+`ayudas.js` tiene las utilidades comunes (`abrir`, `aPantalla`, `arrastrar`, `abrirTexto`). Una prueba que corre en las tres herramientas lee el modelo con los accesos de la página (`nodosDe()`, `conexionesDe()`, `etiquetaDe(n)`, `tipoDe(n)`), no con `S.edges || S.wires || S.ramas`.
 Cada test que usa `abrir()` falla además si la página tiró algún error de consola.
 
 La suite corre en **Chromium y en Firefox** (los dos proyectos de `playwright.config.js`; `npx playwright test --project=firefox` corre uno solo). `CHROMIUM_PATH` sólo vale para Chromium.

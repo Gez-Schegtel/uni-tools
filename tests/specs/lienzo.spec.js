@@ -62,8 +62,8 @@ for (const [archivo, clave] of HERRAMIENTAS) {
       const aPantalla = (x, y) => page.evaluate(([x, y]) => { const r = document.getElementById("canvas").getBoundingClientRect(); return { x: r.left + S.pan.x + x * S.zoom, y: r.top + S.pan.y + y * S.zoom }; }, [x, y]);
       // un único elemento, a la vista y lejos de los paneles
       await page.evaluate((k) => {
-        const n = S[k].find((n) => n.type === "block" || n.type === "and" || n.tipo === "normal") || S[k][0];
-        S[k] = [n]; (S.edges || S.wires || S.ramas).length = 0; n.x = 400; n.y = 300; S.sel = [];
+        const n = nodosDe().find((n) => ["block", "and", "normal"].includes(tipoDe(n))) || nodosDe()[0];
+        S[k] = [n]; conexionesDe().length = 0; n.x = 400; n.y = 300; S.sel = [];
         S.zoom = 1; S.pan = { x: 100, y: 60 }; commit(); render();
       }, clave);
       const id = await page.evaluate((k) => S[k][0].id, clave);

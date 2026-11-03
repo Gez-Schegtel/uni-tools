@@ -5,7 +5,7 @@ const HERRAMIENTA = {
   titulo: "Simulador de circuitos lógicos",        // título de la pestaña, después del nombre del archivo
   clave: "simulador",                              // autoguardado: uni-tools-autoguardado-simulador
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodes", conexiones: "wires", selConexiones: "selW",
+  nodos: "nodes", conexiones: "wires", selConexiones: "selW", etiqueta: "label", tipo: "type",
   extremos: (w) => [w.from.id, w.to.id],           // las dos compuertas que une un cable
   fondoPNG: () => temaDe("fondo"),
   textos: {

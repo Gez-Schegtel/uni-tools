@@ -44,9 +44,14 @@ El código común no sabe cómo se llaman las cosas en cada herramienta: lo lee 
 (en `herramienta.js`) y de funciones globales que cada una define.
 
 - `HERRAMIENTA`: `nombre`, `titulo`, `clave` (autoguardado), `nodos`/`conexiones`/`selConexiones`
-  (los nombres de las colecciones en `S`), `extremos(c)` (los dos ids que une una conexión),
-  `fondoPNG()`, `cancelarArrastre(drag)` opcional, y `textos` (las frases que cambian: «diagrama» o
-  «circuito», mensajes de abrir/guardar…).
+  (los nombres de las colecciones en `S`), `etiqueta`/`tipo` (`label`/`type` o `nombre`/`tipo`),
+  `extremos(c)` (los dos ids que une una conexión), `fondoPNG()`, `cancelarArrastre(drag)` y
+  `actualizarDerivados()` opcionales, y `textos` (las frases que cambian: «diagrama» o «circuito»,
+  mensajes de abrir/guardar…).
+- Para leer el modelo sin preguntar qué herramienta es, `comun/ids.js` tiene `nodosDe()`,
+  `conexionesDe()`, `seleccionDeConexiones()`, `etiquetaDe(n)` y `tipoDe(n)`. Las pruebas que valen
+  para las tres los usan también (en vez de `S.edges || S.wires || S.ramas`). Los archivos siguen
+  guardando cada clave con su nombre de siempre.
 - Funciones que tiene que definir cada una: `render`, `renderInspector`, `docDatos`, `restore`,
   `cargarDoc`, `insertar`, `fit`, `buildExportSVG`, `teclaPropia(k, ev)` (devuelve `true` si usó la
   tecla), `alEscape`, y la constante `NOMBRE_DEF`. Bloques y simulador además `rectOf`, `rutaAuto`,

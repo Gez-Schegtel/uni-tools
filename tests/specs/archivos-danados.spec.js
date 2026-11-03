@@ -117,7 +117,7 @@ for (const [archivo, doc] of Object.entries(DOCS)) {
     expect(await page.evaluate(() => window.__ejecutado === true)).toBe(false);
     // y lo válido se conserva
     if (doc.tema) expect(await page.evaluate(() => Object.values(S.tema).every((c) => /^#[0-9a-f]{3,8}$/i.test(c)))).toBe(true);
-    expect(await page.evaluate(() => (S.nodes || S.nodos).every((n) => /^[A-Za-z0-9_-]+$/.test(n.id)))).toBe(true);
+    expect(await page.evaluate(() => nodosDe().every((n) => /^[A-Za-z0-9_-]+$/.test(n.id)))).toBe(true);
     expect(errores).toEqual([]);
   });
 }

@@ -5,7 +5,7 @@ const HERRAMIENTA = {
   titulo: "Diagramas de flujo de señales",         // título de la pestaña, después del nombre del archivo
   clave: "senales",                                // autoguardado: uni-tools-autoguardado-senales
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodos", conexiones: "ramas", selConexiones: "selR",
+  nodos: "nodos", conexiones: "ramas", selConexiones: "selR", etiqueta: "nombre", tipo: "tipo",
   extremos: (r) => [r.de, r.a],                    // los dos nodos que une una rama
   fondoPNG: () => "#fff",
   textos: {

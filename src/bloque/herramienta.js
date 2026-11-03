@@ -5,7 +5,7 @@ const HERRAMIENTA = {
   titulo: "Editor de diagramas de bloques",        // título de la pestaña, después del nombre del archivo
   clave: "bloque",                                 // autoguardado: uni-tools-autoguardado-bloque
   // cómo se llaman las colecciones en S (y en el JSON)
-  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges",
+  nodos: "nodes", conexiones: "edges", selConexiones: "selEdges", etiqueta: "label", tipo: "type",
   extremos: (e) => [e.from.id, e.to.id],           // los dos elementos que une una flecha
   fondoPNG: () => temaDe("fondo"),
   cancelarArrastre: (d) => cancelarArrastrePropio(d),

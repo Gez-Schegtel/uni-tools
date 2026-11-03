@@ -10,7 +10,7 @@ const HERRAMIENTAS = [
   { archivo: "diagrama-señales.html", lista: "nodos", clave: "senales",
     agregar: () => { S.nodos.push(nuevoNodo(900, 600, { nombre: "Nuevo" })); commit(); render(); } },
 ];
-const etiquetas = (page, lista) => page.evaluate((k) => S[k].map((n) => n.label !== undefined ? n.label : n.nombre), lista);
+const etiquetas = (page) => page.evaluate(() => nodosDe().map(etiquetaDe));
 
 for (const h of HERRAMIENTAS) {
   test.describe(h.archivo, () => {
@@ -41,7 +41,7 @@ for (const h of HERRAMIENTAS) {
     test("al aceptar va al inicio, y al volver recupera el diagrama tal como quedó", async ({ page }) => {
       await abrir(page, h.archivo);
       await page.evaluate(h.agregar);
-      const antes = await etiquetas(page, h.lista);
+      const antes = await etiquetas(page);
       page.once("dialog", (d) => d.accept());
       await page.click("#b-inicio");
       await page.waitForURL(/index\.html$/);
@@ -49,13 +49,13 @@ for (const h of HERRAMIENTAS) {
       await expect(page.locator(`[data-auto="${h.clave}"] .guardado`)).toBeVisible();
       await page.click(`[data-auto="${h.clave}"]`);
       await page.waitForFunction(() => typeof S !== "undefined" && typeof autoActivo !== "undefined" && autoActivo);
-      expect(await etiquetas(page, h.lista)).toEqual(antes);
+      expect(await etiquetas(page)).toEqual(antes);
       await expect(page.locator("#toast")).toContainText("Se recuperó");
     });
 
     test("con la hoja vacía va directo, sin preguntar", async ({ page }) => {
       await abrir(page, h.archivo);
-      await page.evaluate((k) => { S[k] = []; (S.edges || S.wires || S.ramas).length = 0; commit(); render(); }, h.lista);
+      await page.evaluate(() => { nodosDe().length = 0; conexionesDe().length = 0; commit(); render(); });
       let pregunto = false;
       page.on("dialog", (d) => { pregunto = true; d.accept(); });
       await page.click("#b-inicio");
@@ -69,15 +69,15 @@ for (const h of HERRAMIENTAS) {
       await page.evaluate(h.agregar);
       await page.evaluate(() => guardarAhora());
       await page.evaluate(() => undo());                 // queda un solo "Nuevo"
-      const antes = await etiquetas(page, h.lista);
+      const antes = await etiquetas(page);
       await expect.poll(() => page.evaluate(({ c, k }) => {
         const g = JSON.parse(localStorage.getItem("uni-tools-autoguardado-" + c) || "{}");
-        return ((g.doc && g.doc[k]) || []).filter((n) => (n.label !== undefined ? n.label : n.nombre) === "Nuevo").length;
+        return ((g.doc && g.doc[HERRAMIENTA.nodos]) || []).filter((n) => etiquetaDe(n) === "Nuevo").length;
       }, { c: h.clave, k: h.lista })).toBe(1);
       await page.reload();
       await page.waitForFunction(() => typeof autoActivo !== "undefined" && autoActivo);
-      expect(await etiquetas(page, h.lista)).toEqual(antes);
-      expect((await etiquetas(page, h.lista)).filter((e) => e === "Nuevo")).toHaveLength(1);
+      expect(await etiquetas(page)).toEqual(antes);
+      expect((await etiquetas(page)).filter((e) => e === "Nuevo")).toHaveLength(1);
     });
 
     test("un autoguardado roto no rompe nada: arranca con el ejemplo", async ({ page }) => {

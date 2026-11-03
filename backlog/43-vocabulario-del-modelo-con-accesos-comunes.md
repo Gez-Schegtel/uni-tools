@@ -1,7 +1,7 @@
 # Spec 43 — Vocabulario del Modelo: Accesos Comunes sin Tocar el Formato de los Archivos
 
 - **ID:** `SPEC-43`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Revisión de estructura del 2026-11-03 (informe, sección `2.2.C`)
 - **Prioridad:** Baja (43 / 46)
 - **Esfuerzo estimado:** Bajo / Medio (~40 minutos)
@@ -43,6 +43,12 @@ Cada herramienta nombra distinto lo mismo:
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+Los accesos quedaron en `src/comun/ids.js` (que incluyen las tres herramientas de diagramas) y cada `herramienta.js` declara `etiqueta` y `tipo`. En `src/comun/` ya no había condicionales por herramienta (todo usaba `HERRAMIENTA`); los que quedaban estaban en `inicio.spec.js`, `lienzo.spec.js` y `archivos-danados.spec.js`, y ahora usan los accesos. `docDatos()` no cambió: los archivos son idénticos.
+
+---
+
 ## 4. Plan de Pruebas
 
 - La suite entera pasa igual; `grep` de `S.edges || S.wires` y `label !== undefined` en `src/comun/` y `tests/` no encuentra nada.
@@ -51,5 +57,5 @@ Cada herramienta nombra distinto lo mismo:
 
 ## 5. Criterios de Aceptación
 
-- [ ] El código común y las pruebas comunes no preguntan qué herramienta es para leer el modelo.
-- [ ] Los archivos guardados antes y después del cambio son idénticos.
+- [x] El código común y las pruebas comunes no preguntan qué herramienta es para leer el modelo.
+- [x] Los archivos guardados antes y después del cambio son idénticos.
