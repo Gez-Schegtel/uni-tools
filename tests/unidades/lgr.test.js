@@ -133,3 +133,17 @@ test("las ramas trazadas cumplen la condición de ángulo (K real y positivo)", 
     }
   }
 });
+
+test("coeficientes de escalas muy distintas no pierden un polo, y se acepta notación científica", () => {
+  // con la tolerancia de 1e-12, el 0,001s³ se tomaba como cero y quedaba grado 2
+  const m = lgr();
+  for (const D of ["0.001s^3+s^2+1000000000", "0.001s^3+s^2+1e9"]) {
+    const r = m.construirModelo({ modo: "ec", N: "1", D });
+    assert.equal(r.D.length - 1, 3, D);
+    assert.equal(r.polosL.length, 3, D);
+    const prod = r.polosL.reduce((p, z) => mul(p, z), C(1));
+    casi(prod.re, -1e12, 1e-9);                                 // −D(0)/a₃ con D mónico
+  }
+  assert.deepEqual(Array.from(m.parsearPoli("2e-3s+1")), [0.002, 1]);
+  assert.throws(() => m.construirModelo({ modo: "ec", N: "1", D: "(s+0.1)^2-s^2-0.2s+1" }), /grado 1/);   // lo que se cancela sí se saca
+});

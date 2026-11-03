@@ -14,7 +14,9 @@ const cDiv = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b
    (s^300 tardaba 7 s). Las guías no pasan de grado 5. */
 const GRADO_MAX = 20;
 
-function pTrim(p, tol = 1e-12) {
+/* Saca los coeficientes principales nulos. La tolerancia es la del redondeo de la máquina:
+   con 1e-12, en 0,001s³ + s² + 1e9 el s³ se tomaba como cero y se perdía un polo. */
+function pTrim(p, tol = 1e-15) {
   const mx = Math.max(...p.map(Math.abs));
   if (!(mx > 0)) return [0];
   let i = 0;
@@ -166,7 +168,7 @@ function parsearPoli(txt) {
     if (!v.length || v.some(isNaN)) throw new Error('El vector de coeficientes no es válido');
     return pTrim(v);
   }
-  const tok = [], re = /(\d+\.?\d*|\.\d+|[sSkK]|[()+\-*\/^])/y;
+  const tok = [], re = /((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|[sSkK]|[()+\-*\/^])/y;
   let i = 0;
   while (i < t.length) {
     if (/\s/.test(t[i])) { i++; continue; }
