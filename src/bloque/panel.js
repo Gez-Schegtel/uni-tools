@@ -168,7 +168,15 @@ function wireInspector(nsel, esel) {
   if (ar) { ar.value = esel[0].arrow === false ? "0" : "1"; ar.onchange = () => { esel.forEach(e => e.arrow = ar.value === "1"); commit(); render(); }; }
   const flip = document.getElementById("e-flip");
   if (flip) flip.onclick = () => {
-    const inv = esel.find(e => !admiteEntrada(e.from.id, e.id));
+    /* se cuenta cómo queda todo junto: invertir de a una, dos flechas que salen del mismo
+       bloque pasaban cada una el control y el bloque terminaba con dos entradas */
+    const ids = new Set(esel.map(e => e.id));
+    const entradas = (id) => S.edges.filter(e => !ids.has(e.id) && e.to.id === id).length
+                             + esel.filter(e => e.from.id === id).length;
+    const inv = esel.find(e => {
+      const d = getNode(e.from.id);
+      return !admiteEntrada(e.from.id, e.id) || (d && /^(block|node|io)$/.test(d.type) && entradas(d.id) > 1);
+    });
     if (inv) {
       const d = getNode(inv.from.id);
       const cosa = d && d.type === "node" ? "Una bifurcación" : d && d.type === "io" ? "Una salida" : "Un bloque";
