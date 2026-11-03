@@ -61,3 +61,15 @@ test("los enlaces del backlog y de la documentación apuntan a archivos que exis
   }
   expect(rotos).toEqual([]);
 });
+
+test("los workflows declaran permisos, tienen tope de tiempo y no dejan el token en el checkout", () => {
+  const dir = path.join(RAIZ, ".github", "workflows");
+  for (const f of fs.readdirSync(dir).filter((x) => /\.ya?ml$/.test(x))) {
+    const y = fs.readFileSync(path.join(dir, f), "utf8");
+    expect(y, f).toMatch(/^permissions:/m);
+    expect(y, f).toMatch(/timeout-minutes:/);
+    expect(y, f).not.toMatch(/pull_request_target/);                 // correría código de forks con permisos
+    const checkouts = y.split("uses: actions/checkout@").length - 1;
+    expect(y.split("persist-credentials: false").length - 1, f).toBe(checkouts);
+  }
+});

@@ -25,9 +25,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false   # ningún paso empuja nada: el token no queda en .git/config
 
       - name: Node
         uses: actions/setup-node@v6
