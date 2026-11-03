@@ -442,12 +442,14 @@ test("con 16 lazos que no se tocan, la ventana resume Δ, no se traba y da la tr
     // referencia: cada autolazo divide por (1 − Lᵢ)
     let ref = 1; for (let i = 0; i < n; i++) ref /= 1 - 0.1 * (1 + i % 3);
     return { ms, tam: document.getElementById("ov-mason").innerHTML.length, ref,
-             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta") };
+             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta"),
+             recortes: [...document.querySelectorAll("#ov-mason .nada")].filter((x) => /y \d+ más/.test(x.textContent)).length };
   });
   expect(r.ms).toBeLessThan(1500);                     // antes: 3,4 s y 31 MB de HTML
   expect(r.tam).toBeLessThan(1e6);
   expect(r.boton).toBe(true);
   expect(r.texto).toContain("Σ[");
+  expect(r.recortes).toBeGreaterThan(0);              // las tablas de lazos disjuntos muestran los primeros 100
   expect(Number(r.texto.split("=").pop().trim().replace(",", "."))).toBeCloseTo(r.ref, 3);
 });
 

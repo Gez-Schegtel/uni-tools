@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **51 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **52 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, las `40` a `46` de la revisión de estructura y estilo del mismo día, y las `47` en adelante de la auditoría de seguridad y de la suite de pruebas) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -115,7 +115,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **45** | ✅ Hecho | [`45-lgr-trazado-sin-trabar-la-pagina.md`](./45-lgr-trazado-sin-trabar-la-pagina.md) | Auditoría LGR | Rendimiento / UX | Medio (45 min) | Trazado incremental y cancelable: hoy un grado 20 traba la página 1,5 s con cada tecla. |
 | **46** | ✅ Hecho | [`46-lgr-tolerancias-de-ruptura-y-cruce.md`](./46-lgr-tolerancias-de-ruptura-y-cruce.md) | Auditoría LGR | Exactitud numérica | Medio (40 min) | Escalar el problema antes de analizarlo para que las tolerancias fijas de ruptura, cruce y raíces nulas no fallen con escalas extremas. |
 
-**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `40` (barato y previene) → `34` → `19` → `18` → `20` → `36` → `45` → `35` + `44` (juntas) → `21` → `41` → `22` + `42` → `43` → `46` → `38` → `39`.
+**Estado:** todo lo de los bloques 1 a 8 está hecho; lo único pendiente es la parte de `SPEC-49` que necesita al dueño (fijar las acciones por SHA).
 
 ### Bloque 9 — Auditoría de seguridad, robustez y de la suite de pruebas (2026-11-03, segunda parte)
 
@@ -126,6 +126,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **49** | 🟡 Parcial | [`49-endurecer-los-workflows-de-github-actions.md`](./49-endurecer-los-workflows-de-github-actions.md) | Auditoría de seguridad | Seguridad / CI | Bajo (20 min) | persist-credentials: false en los checkout, tope de tiempo en el despliegue y una prueba que lo vigila. Fijar las acciones por SHA queda pendiente para el dueño (no se pudo consultar desde la sesión). |
 | **50** | ✅ Hecho | [`50-sitio-js-no-borra-lo-que-no-debe.md`](./50-sitio-js-no-borra-lo-que-no-debe.md) | Auditoría de seguridad | Bug / Seguridad | Muy bajo (15 min) | src/sitio.js borra la carpeta destino antes de copiar y sólo se negaba con la raíz del repo: «node src/sitio.js ..» o «/» borraba todo. Ahora rechaza cualquier carpeta que contenga el repo, y el caso del archivo faltante tiene su prueba. |
 | **51** | ✅ Hecho | [`51-lgr-entrar-y-salir-no-deja-autoguardado.md`](./51-lgr-entrar-y-salir-no-deja-autoguardado.md) | Auditoría de seguridad | Bug | Muy bajo (10 min) | Al salir de la página, el LGR guardaba aunque no se hubiera tocado nada, y la portada mostraba «Tenés un ejercicio guardado» a quien sólo entró a mirar. Lo encontró una prueba nueva de la auditoría de pruebas. |
+| **52** | ✅ Hecho | [`52-auditoria-de-la-suite-de-pruebas.md`](./52-auditoria-de-la-suite-de-pruebas.md) | Auditoría de seguridad | Pruebas | Medio (1 h) | Pruebas significativas (10 mutaciones del código, todas detectadas), dos redundancias quitadas y las que faltaban agregadas (ruteo de bloques, atajos del LGR, recorte de tablas de Mason, sitio.js). Encontró el bug de SPEC-51. |
 
 ---
 
