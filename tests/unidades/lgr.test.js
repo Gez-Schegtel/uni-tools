@@ -8,7 +8,8 @@ const vm = require("node:vm");
 const { cargar, clonar } = require("./cargar");
 
 function lgr() {
-  const m = cargar("src/lgr/calculo.js");
+  // los módulos sin DOM del LGR, en el orden de src/lgr/pagina.html
+  const m = cargar(...["polinomios", "entrada", "formato", "analisis", "trazado", "modelo"].map(x => `src/lgr/${x}.js`));
   m.performance = performance;                 // trazarLGR mide el tiempo
   return m;
 }

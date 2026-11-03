@@ -5,7 +5,7 @@
 - **Origen:** Auditoría del 2026-11-03
 - **Prioridad:** Baja (36 / 46)
 - **Esfuerzo estimado:** Bajo (~20 minutos)
-- **Archivos afectados:** `src/lgr/calculo.js`, `src/lgr/interfaz.js`, `tests/unidades/lgr.test.js`
+- **Archivos afectados:** `src/lgr/entrada.js`, `src/lgr/modelo.js` (antes `calculo.js`), `tests/unidades/lgr.test.js`
 
 ---
 

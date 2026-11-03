@@ -5,7 +5,7 @@
 - **Origen:** Auditoría del 2026-11-03
 - **Prioridad:** Media / Baja (45 / 46)
 - **Esfuerzo estimado:** Medio (~45 minutos)
-- **Archivos afectados:** `src/lgr/calculo.js` (`trazarLGR`), `src/lgr/interfaz.js` (`calcular`, `diferir`)
+- **Archivos afectados:** `src/lgr/trazado.js` (`trazarLGR`), `src/lgr/estado.js` (`calcular`) y `src/lgr/barra.js` (`diferir`); antes `calculo.js` e `interfaz.js`
 
 ---
 
@@ -35,7 +35,7 @@ Mientras tanto la página no responde: no se puede tipear, ni hacer zoom, ni cer
 1. Hacer `trazarLGR()` incremental: que avance por tandas de ~16 ms (con `requestAnimationFrame` o `setTimeout(0)`) y dibuje lo que lleva.
 2. Si cambia la entrada, cancelar el trazado en curso y empezar el nuevo.
 3. Calcular primero los pasos del panel (que son rápidos) y mostrarlos enseguida; el gráfico se completa después.
-4. Sin Web Workers en archivo aparte (romperían el HTML único). Si hiciera falta un worker, armarlo desde un `Blob` con el código de `calculo.js`, conversándolo antes.
+4. Sin Web Workers en archivo aparte (romperían el HTML único). Si hiciera falta un worker, armarlo desde un `Blob` con el código de los módulos sin DOM, conversándolo antes.
 
 ---
 

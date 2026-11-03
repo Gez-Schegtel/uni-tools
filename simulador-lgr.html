@@ -213,11 +213,11 @@ pre.cod{background:#12181f;color:#e6edf3;border-radius:6px;padding:9px 11px;font
    descendentes (como en MatLab): [1, 6, 45] es s² + 6s + 45.
    Los complejos son objetos {re, im}.
    ===================================================================== */
-const C = (re, im = 0) => ({ re, im });
+const complejo = (re, im = 0) => ({ re, im });
 const cAbs = z => Math.hypot(z.re, z.im);
-const cSub = (a, b) => C(a.re - b.re, a.im - b.im);
-const cMul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
-const cDiv = (a, b) => { const d = b.re * b.re + b.im * b.im; return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
+const cSub = (a, b) => complejo(a.re - b.re, a.im - b.im);
+const cMul = (a, b) => complejo(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const cDiv = (a, b) => { const d = b.re * b.re + b.im * b.im; return complejo((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
 
 /* Más allá de esto el trazado no termina a tiempo y la página se traba con cada tecla
    (s^300 tardaba 7 s). Las guías no pasan de grado 5. */
@@ -249,14 +249,14 @@ function pDer(p) {
   return g < 1 ? [0] : p.slice(0, g).map((c, i) => c * (g - i));
 }
 function pEval(p, z) {
-  let r = C(0, 0);
+  let r = complejo(0, 0);
   for (const c of p) { r = cMul(r, z); r.re += c; }
   return r;
 }
 function pDesdeRaices(rs) {
-  let p = [C(1, 0)];
+  let p = [complejo(1, 0)];
   for (const r of rs) {
-    const q = new Array(p.length + 1).fill(0).map(() => C(0, 0));
+    const q = new Array(p.length + 1).fill(0).map(() => complejo(0, 0));
     p.forEach((c, i) => {
       q[i].re += c.re; q[i].im += c.im;
       const t = cMul(c, r);
@@ -276,7 +276,7 @@ function raicesPoli(p, ini) {
   let ceros = 0;
   while (ceros < d && Math.abs(p[d - ceros]) <= 1e-14 * mx) ceros++;
   const out = [];
-  for (let i = 0; i < ceros; i++) out.push(C(0, 0));
+  for (let i = 0; i < ceros; i++) out.push(complejo(0, 0));
   const q = p.slice(0, d + 1 - ceros), g = q.length - 1;
   if (g < 1) return out;
   const a = q.map(c => c / q[0]);
@@ -319,12 +319,12 @@ function raicesPoli(p, ini) {
     }
     if (maxd < 1e-13) break;
   }
-  return out.concat(z.map(c => C(c.re, c.im)));
+  return out.concat(z.map(c => complejo(c.re, c.im)));
 }
 function limpiar(rs) {
   return rs.map(z => {
     const t = 1e-7 * Math.max(1, cAbs(z));
-    return C(Math.abs(z.re) < t ? 0 : z.re, Math.abs(z.im) < t ? 0 : z.im);
+    return complejo(Math.abs(z.re) < t ? 0 : z.re, Math.abs(z.im) < t ? 0 : z.im);
   }).sort((a, b) => b.re - a.re || b.im - a.im);
 }
 /* Junta raíces repetidas: [{z, mult}] */
@@ -332,13 +332,12 @@ function agrupar(rs, tolRel = 5e-5) {
   const gs = [];
   for (const z of rs) {
     const g = gs.find(g => cAbs(cSub(g.z, z)) <= tolRel * (1 + cAbs(z)));
-    if (g) { g.sum = C(g.sum.re + z.re, g.sum.im + z.im); g.mult++; g.z = C(g.sum.re / g.mult, g.sum.im / g.mult); }
-    else gs.push({ z: C(z.re, z.im), mult: 1, sum: C(z.re, z.im) });
+    if (g) { g.sum = complejo(g.sum.re + z.re, g.sum.im + z.im); g.mult++; g.z = complejo(g.sum.re / g.mult, g.sum.im / g.mult); }
+    else gs.push({ z: complejo(z.re, z.im), mult: 1, sum: complejo(z.re, z.im) });
   }
   return gs.map(g => ({ z: limpiar([g.z])[0], mult: g.mult })).sort((a, b) => b.z.re - a.z.re || b.z.im - a.z.im);
 }
 const expandir = gs => gs.flatMap(g => Array.from({ length: g.mult }, () => g.z));
-
 /* ---------- lectura de lo que escribe el usuario ---------- */
 function parsearComplejo(t) {
   t = t.replace(/[−–]/g, '-').replace(/\s+/g, '');
@@ -355,7 +354,7 @@ function parsearComplejo(t) {
       re += parseFloat(x);
     }
   }
-  return C(re, im);
+  return complejo(re, im);
 }
 /* La coma es decimal (−3,5): «1,2» es un número, no dos. Como se puede querer decir lo
    otro, si aparece y no hay «;» en la lista, se deja una nota (lista.notaComa). */
@@ -455,7 +454,6 @@ function parsearPoli(txt, conK) {
   if (p < tok.length) throw new Error('Sobra «' + tok[p] + '» en la expresión');
   return pTrim(r);
 }
-
 /* ---------- formato ---------- */
 function fnum(x, d = 4) {
   if (!isFinite(x)) return x > 0 ? '∞' : x < 0 ? '−∞' : 'NaN';
@@ -488,7 +486,7 @@ function polyHTML(p, v = 's') {
   });
   return out || '0';
 }
-const fr = (a, b) => '<span class="fr"><span>' + a + '</span><span>' + b + '</span></span>';
+const fraccion = (a, b) => '<span class="fr"><span>' + a + '</span><span>' + b + '</span></span>';
 function factorHTML(r, v = 's') {
   if (Math.abs(r.im) < 1e-12) {
     if (Math.abs(r.re) < 1e-12) return v;
@@ -511,7 +509,6 @@ function factoresAgrupados(gs) {
 const mod360 = a => { a = ((a % 360) + 360) % 360; return (360 - a < 1e-9) ? 0 : a; };
 const angDe = z => Math.atan2(z.im, z.re) * 180 / Math.PI;
 const fang = a => fnum(a, 2) + '°';
-
 /* ---------- análisis completo (los pasos de la teoría) ----------
    analizar() prepara el problema y analizarDirecto() hace los pasos:
    1) un polo y un cero en el mismo punto se cancelan: se analiza la función reducida y el
@@ -565,7 +562,7 @@ function analizar(e) {
   let R;
   if (a === 1) R = analizarDirecto(base);
   else {
-    const div = z => C(z.re / a, z.im / a);
+    const div = z => complejo(z.re / a, z.im / a);
     const Rs = analizarDirecto({ ...base, N: pEscalar(base.N, a), D: pEscalar(base.D, a), cerosL: base.cerosL.map(div), polosL: base.polosL.map(div) });
     R = volverDeEscala(Rs, a, base);
     R.sigma = Rs;                                    // para trazar en la escala cómoda
@@ -584,7 +581,7 @@ function analizar(e) {
    α^(n−m) (D(s) + K·N(s) = α^n·[D(σ) + K·α^(m−n)·N(σ)]). Los polinomios que se muestran
    se vuelven a calcular en s, que es lo que escribió el estudiante. */
 function volverDeEscala(Rs, a, base) {
-  const mul = z => C(z.re * a, z.im * a), kf = Math.pow(a, Rs.n - Rs.m);
+  const mul = z => complejo(z.re * a, z.im * a), kf = Math.pow(a, Rs.n - Rs.m);
   const grupos = new Map();
   const g = x => { if (!grupos.has(x)) grupos.set(x, { z: mul(x.z), mult: x.mult }); return grupos.get(x); };
   const { N, D } = base;
@@ -594,7 +591,7 @@ function volverDeEscala(Rs, a, base) {
   R.asint = { ...Rs.asint };
   if (Rs.asint.d !== 0) { R.asint.sumP = Rs.asint.sumP * a; R.asint.sumZ = Rs.asint.sumZ * a; R.asint.sigma = Rs.asint.sigma * a; }
   const Dp = pDer(D), Np = pDer(N), t1 = pMul(Dp, N), t2 = pMul(D, Np);
-  R.rup = { Dp, Np, t1, t2, P: pTrim(pAdd(t1, pScale(t2, -1))), filas: Rs.rup.filas.map(f => ({ ...f, z: mul(f.z), K: f.K && C(f.K.re * kf, f.K.im * kf) })) };
+  R.rup = { Dp, Np, t1, t2, P: pTrim(pAdd(t1, pScale(t2, -1))), filas: Rs.rup.filas.map(f => ({ ...f, z: mul(f.z), K: f.K && complejo(f.K.re * kf, f.K.im * kf) })) };
   const pz = partesEnJw(N, D);
   R.cruce = { ...pz, identico: Rs.cruce.identico, filas: Rs.cruce.filas.map(f => ({ ...f, w: f.w * a, K: f.K * kf })) };
   R.angulos = Rs.angulos.map(x => ({ ...x, g: g(x.g), terminos: x.terminos.map(t => ({ ...t, de: g(t.de), v: mul(t.v) })) }));
@@ -650,7 +647,7 @@ function analizarDirecto(e) {
         const r = real ? R.eje.some(f => f.ok && s.re <= f.b + 1e-9 && s.re >= f.a - 1e-9) : false;
         ok = r; nota = 'es un cero múltiple (K → ∞)';
       } else {
-        K = cDiv(C(-Dv.re, -Dv.im), Nv);
+        K = cDiv(complejo(-Dv.re, -Dv.im), Nv);
         const kreal = Math.abs(K.im) <= 1e-6 * Math.max(1, Math.abs(K.re));
         if (kreal && K.re > 1e-9) ok = true;
         else if (kreal && Math.abs(K.re) <= 1e-9) { ok = true; nota = 'es un polo múltiple (K = 0)'; }
@@ -659,7 +656,7 @@ function analizarDirecto(e) {
       let tipo = '';
       if (ok && real && K && K.re > 1e-9) {
         const h = 1e-3 * (1 + Math.abs(s.re));
-        const kf = x => { const c = cDiv(C(-pEval(D, C(x, 0)).re, 0), pEval(N, C(x, 0))); return c.re; };
+        const kf = x => { const c = cDiv(complejo(-pEval(D, complejo(x, 0)).re, 0), pEval(N, complejo(x, 0))); return c.re; };
         const k0 = K.re, k1 = kf(s.re - h), k2 = kf(s.re + h);
         tipo = (k0 > k1 && k0 > k2) ? 'salida del eje real' : (k0 < k1 && k0 < k2) ? 'ingreso al eje real' : '';
       }
@@ -681,17 +678,17 @@ function analizarDirecto(e) {
       if (!ws.some(x => Math.abs(x - w) < 1e-6 * (1 + w))) ws.push(w);
     });
     ws.sort((a, b) => a - b).forEach(w => {
-      const j = C(0, w);
+      const j = complejo(0, w);
       let Dk = D, Nk = N, Dv = pEval(D, j), Nv = pEval(N, j), cancelado = false;
       /* Si N y D se anulan los dos en jω, hay un polo y un cero cancelados sobre el eje:
          ese punto es polo de lazo cerrado para todo K, y otra rama lo cruza cuando la
          raíz se vuelve doble. Ese K sale de las derivadas (L'Hôpital: K = −D′/N′). */
-      while (cAbs(Nv) < 1e-9 && cAbs(Dv) < 1e-9 * (1 + cAbs(pEval(D, C(0, 1 + w)))) && Nk.length > 1) {
+      while (cAbs(Nv) < 1e-9 && cAbs(Dv) < 1e-9 * (1 + cAbs(pEval(D, complejo(0, 1 + w)))) && Nk.length > 1) {
         Dk = pDer(Dk); Nk = pDer(Nk); Dv = pEval(Dk, j); Nv = pEval(Nk, j); cancelado = true;
       }
       if (cAbs(Nv) < 1e-9) return;                 // un cero sobre el eje: se llega con K → ∞
       const K = Math.abs(Nv.re) >= Math.abs(Nv.im) ? -Dv.re / Nv.re : -Dv.im / Nv.im;
-      const res = cAbs(C(Dv.re + K * Nv.re, Dv.im + K * Nv.im));
+      const res = cAbs(complejo(Dv.re + K * Nv.re, Dv.im + K * Nv.im));
       if (res > 1e-6 * (1 + cAbs(Dv))) return;
       const valido = K > 1e-9;
       cruce.filas.push({ w, K, valido, cancelado, nota: valido ? (cancelado ? 'pasa por un polo y un cero cancelados' : '') : (Math.abs(K) <= 1e-9 ? 'K = 0: es un polo sobre el eje imaginario' : 'K < 0: no pertenece al LGR') });
@@ -738,13 +735,12 @@ function analizarDirecto(e) {
   // puntos de interés y escala
   const clave = expandir(polos).concat(expandir(ceros));
   rup.filas.forEach(f => f.ok && clave.push(f.z));
-  cruce.filas.forEach(f => { if (f.valido) { clave.push(C(0, f.w)); clave.push(C(0, -f.w)); } });
-  if (R.asint.sigma !== undefined) clave.push(C(R.asint.sigma, 0));
+  cruce.filas.forEach(f => { if (f.valido) { clave.push(complejo(0, f.w)); clave.push(complejo(0, -f.w)); } });
+  if (R.asint.sigma !== undefined) clave.push(complejo(R.asint.sigma, 0));
   R.clave = clave;
   R.escala = Math.max(1e-3, ...clave.map(cAbs));
   return R;
 }
-
 /* ---------- trazado numérico de las ramas ---------- */
 function trazarLGR(R) {
   if (!R.sigma) return trazarDirecto(R);
@@ -762,7 +758,7 @@ function trazarDirecto(R) {
   const dist = z => Math.min(...sing.map(s => cAbs(cSub(z, s))));
   const P = K => pAdd(D, pScale(N, K));
   let K = 0, prev;
-  if (n >= m) prev = expandir(R.polos).map(z => C(z.re, z.im));
+  if (n >= m) prev = expandir(R.polos).map(z => complejo(z.re, z.im));
   else { K = 1e-9; prev = limpiar(raicesPoli(P(K))); }
   const ramas = prev.map(z => ({ x: [z.re], y: [z.im], K: [K] }));
   const hecha = prev.map(() => false);
@@ -774,7 +770,7 @@ function trazarDirecto(R) {
     const ini = prev.map((z, i) => {
       for (let j = 0; j < i; j++) if (cAbs(cSub(z, prev[j])) < 1e-7 * (1 + cAbs(z))) {
         const a = 2 * Math.PI * i / prev.length + 0.3;
-        return C(z.re + 1e-6 * esc * Math.cos(a), z.im + 1e-6 * esc * Math.sin(a));
+        return complejo(z.re + 1e-6 * esc * Math.cos(a), z.im + 1e-6 * esc * Math.sin(a));
       }
       return z;
     });
@@ -813,7 +809,6 @@ function trazarDirecto(R) {
   if (!hecha.every(Boolean) && K <= 1e15) ramas.incompleto = true;   // se cortó por tiempo o por iteraciones
   return ramas;
 }
-
 /* =====================================================================
    ENTRADA → MODELO
    ===================================================================== */
@@ -886,7 +881,7 @@ function construirModelo(S) {
       if (i >= 0) { libres.splice(i, 1); return; }
       const yaMarcado = libres.findIndex(w => w === z);
       if (yaMarcado >= 0) libres.splice(yaMarcado, 1);
-      faltan[k].push(C(z.re, -z.im));
+      faltan[k].push(complejo(z.re, -z.im));
     });
   });
   if (faltan.Z.length || faltan.P.length) {
@@ -896,17 +891,15 @@ function construirModelo(S) {
   const N = pDesdeRaices(cerosL), D = pDesdeRaices(polosL);
   return { modo: 'zp', N, D, cerosL: limpiar(cerosL), polosL: limpiar(polosL), notas };
 }
-
 /* =====================================================================
    ESTADO Y DIBUJO
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const svg = $('canvas'), stage = $('stage');
 let S = { modo: 'ec', N: 's+4,5', D: 's(s^2+6s+45)', Z: '', P: '', ver: { asint: true, vals: true, flechas: true, grid: true } };
-let Rg = null;           // resultado del análisis
+let resultado = null;           // resultado del análisis
 let ramas = [];          // ramas del LGR
-let V = { cx: -2, cy: 0, k: 40 };
-let aviso = null;
+let vista = { cx: -2, cy: 0, k: 40 };
 const COLORES = ['#0d5bd6', '#e07a10', '#1a9a4b', '#8e44ad', '#c0392b', '#12a3a3', '#8d6e3f', '#d6459c', '#5c6bc0', '#7f8c8d'];
 
 function guardar() { try { localStorage.setItem('uni-tools-lgr', JSON.stringify(S)); } catch (e) {} }
@@ -928,10 +921,9 @@ function calcular() {
   guardar();
   try {
     const modelo = construirModelo(S);
-    Rg = analizar(modelo);
-    ramas = trazarLGR(Rg);
-    aviso = null;
-    const info = Rg.notas.length ? '<span class="nota-info">' + Rg.notas.map(esc).join(' ') + '</span>' : '';
+    resultado = analizar(modelo);
+    ramas = trazarLGR(resultado);
+    const info = resultado.notas.length ? '<span class="nota-info">' + resultado.notas.map(esc).join(' ') + '</span>' : '';
     if (info) { msj.className = 'on'; msj.style.color = 'var(--ink-2)'; msj.innerHTML = info; }
     cancelaciones(modelo);
     if (ramas.incompleto) {
@@ -939,7 +931,7 @@ function calcular() {
       msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'El trazado de las ramas quedó incompleto (tardaba demasiado): los cálculos del panel siguen siendo exactos.';
     }
   } catch (err) {
-    Rg = null; ramas = [];
+    resultado = null; ramas = [];
     if (err instanceof ErrorEntrada || err.extra !== undefined) {
       if (err.extra && err.extra.campo) $('i-' + err.extra.campo).classList.add('mal');
       msj.className = 'on'; msj.style.color = '';
@@ -959,7 +951,7 @@ function calcular() {
   dibujarResumen(); dibujarDetalles(); ajustarVista(); dibujar();
 }
 function cancelaciones(modelo) {
-  const msj = $('msj'), c = Rg.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : ''));
+  const msj = $('msj'), c = resultado.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : ''));
   if (c.length) {
     msj.className = 'on'; msj.style.color = 'var(--warn)';
     msj.innerHTML = (msj.innerHTML ? msj.innerHTML + '<br>' : '') + 'Hay un polo y un cero en el mismo punto (' + c.map(esc).join('; ') +
@@ -969,26 +961,25 @@ function cancelaciones(modelo) {
 
 function dibujarResumen() {
   const el = $('resumen');
-  if (!Rg) { el.innerHTML = ''; return; }
+  if (!resultado) { el.innerHTML = ''; return; }
   const lista = gs => gs.length ? gs.map(g => '<b>' + fcomp(g.z) + '</b>' + (g.mult > 1 ? ' (×' + g.mult + ')' : '')).join(' ; ') : '<i>no hay</i>';
-  if (Rg.modo === 'ec')
-    el.innerHTML = 'Ceros (<b>m = ' + Rg.m + '</b>): ' + lista(Rg.ceros) + '<br>Polos (<b>n = ' + Rg.n + '</b>): ' + lista(Rg.polos);
+  if (resultado.modo === 'ec')
+    el.innerHTML = 'Ceros (<b>m = ' + resultado.m + '</b>): ' + lista(resultado.ceros) + '<br>Polos (<b>n = ' + resultado.n + '</b>): ' + lista(resultado.polos);
   else
-    el.innerHTML = 'Ecuación característica: <b>1 + K · ' + fr(polyHTML(Rg.Nsin), polyHTML(Rg.Dsin)) + ' = 0</b>';
+    el.innerHTML = 'Ecuación característica: <b>1 + K · ' + fraccion(polyHTML(resultado.Nsin), polyHTML(resultado.Dsin)) + ' = 0</b>';
 }
-
 /* ---------- vista ---------- */
 function ajustarVista() {
   const W = stage.clientWidth || 800, H = stage.clientHeight || 500;
-  const pts = Rg ? Rg.clave : [C(-1, 0), C(1, 0)];
+  const pts = resultado ? resultado.clave : [complejo(-1, 0), complejo(1, 0)];
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   pts.forEach(z => { x0 = Math.min(x0, z.re); x1 = Math.max(x1, z.re); y0 = Math.min(y0, z.im); y1 = Math.max(y1, z.im); });
   let bw = x1 - x0, bh = y1 - y0;
   const ref = Math.max(bw, bh);
   if (!(ref > 1e-9)) { bw = bh = 4; } else { bw = Math.max(bw, ref * 0.25); bh = Math.max(bh, ref * 0.25); }
-  V.cx = (x0 + x1) / 2; V.cy = (y0 + y1) / 2;
-  V.k = Math.min(W / (bw * 1.5), H / (bh * 1.5));
-  if (Rg && Rg.asint.d > 0 && Rg.asint.sigma !== undefined) { /* las asíntotas salen de la vista: ya se ve su dirección */ }
+  vista.cx = (x0 + x1) / 2; vista.cy = (y0 + y1) / 2;
+  vista.k = Math.min(W / (bw * 1.5), H / (bh * 1.5));
+  if (resultado && resultado.asint.d > 0 && resultado.asint.sigma !== undefined) { /* las asíntotas salen de la vista: ya se ve su dirección */ }
 }
 const nice = r => {
   const p = Math.pow(10, Math.floor(Math.log10(r))), f = r / p;
@@ -999,11 +990,11 @@ function dibujar() {
   const W = stage.clientWidth, H = stage.clientHeight;
   if (!W || !H) return;
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-  const X = x => W / 2 + (x - V.cx) * V.k, Y = y => H / 2 - (y - V.cy) * V.k;
+  const X = x => W / 2 + (x - vista.cx) * vista.k, Y = y => H / 2 - (y - vista.cy) * vista.k;
   const f1 = v => Math.round(v * 10) / 10;
   let o = '';
-  const xmin = V.cx - W / 2 / V.k, xmax = V.cx + W / 2 / V.k, ymin = V.cy - H / 2 / V.k, ymax = V.cy + H / 2 / V.k;
-  const paso = nice(70 / V.k);
+  const xmin = vista.cx - W / 2 / vista.k, xmax = vista.cx + W / 2 / vista.k, ymin = vista.cy - H / 2 / vista.k, ymax = vista.cy + H / 2 / vista.k;
+  const paso = nice(70 / vista.k);
   const dec = Math.max(0, -Math.floor(Math.log10(paso)));
   // cuadrícula y ejes
   if (S.ver.grid) {
@@ -1025,17 +1016,17 @@ function dibujar() {
   o += '<text x="' + (W - 8) + '" y="' + f1(Math.min(Math.max(Y(0) - 6, 12), H - 22)) + '" text-anchor="end" font-family="Arial" font-size="11" font-style="italic" fill="#5b6875">Re</text>';
   o += '<text x="' + f1(Math.min(X(0) + 6, W - 24)) + '" y="12" font-family="Arial" font-size="11" font-style="italic" fill="#5b6875">Im</text>';
 
-  if (Rg) {
+  if (resultado) {
     const halo = 'paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round"';
     const txt = (x, y, s, col = '#12181f', anc = 'start', ex = '') => '<text x="' + f1(x) + '" y="' + f1(y) + '" font-family="Arial" font-size="11.5" fill="' + col + '" text-anchor="' + anc + '" ' + halo + ' ' + ex + '>' + s + '</text>';
     // asíntotas
-    if (S.ver.asint && Rg.asint.sigma !== undefined) {
-      const sg = Rg.asint.sigma, L = (W + H) / V.k;
-      Rg.asint.angs.forEach(a => {
+    if (S.ver.asint && resultado.asint.sigma !== undefined) {
+      const sg = resultado.asint.sigma, L = (W + H) / vista.k;
+      resultado.asint.angs.forEach(a => {
         const r = a.ang * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
         o += '<line x1="' + f1(X(sg)) + '" y1="' + f1(Y(0)) + '" x2="' + f1(X(sg + L * c)) + '" y2="' + f1(Y(L * s)) + '" stroke="#7b8896" stroke-width="1.2" stroke-dasharray="6 4"/>';
         if (S.ver.vals) {
-          const dpx = 70 / V.k;
+          const dpx = 70 / vista.k;
           o += txt(X(sg + dpx * c) + (c >= 0 ? 4 : -4), Y(dpx * s) + (s >= 0 ? -6 : 14), fnum(a.ang, 2) + '°', '#5b6875', c >= 0 ? 'start' : 'end');
         }
       });
@@ -1067,12 +1058,12 @@ function dibujar() {
     });
     // puntos de ruptura y cruces
     if (S.ver.vals) {
-      Rg.rup.filas.filter(f => f.ok).forEach(f => {
+      resultado.rup.filas.filter(f => f.ok).forEach(f => {
         const px = X(f.z.re), py = Y(f.z.im);
         o += '<rect x="' + f1(px - 4.5) + '" y="' + f1(py - 4.5) + '" width="9" height="9" fill="#fff" stroke="#c2410c" stroke-width="2"/>';
         o += txt(px, py + (f.z.im > 0 ? -10 : 20), 'σb = ' + fcomp(f.z, 3) + (f.K ? '  (K = ' + fnum(f.K.re, 3) + ')' : ''), '#c2410c', 'middle');
       });
-      Rg.cruce.filas.filter(f => f.valido).forEach(f => (f.w < 1e-9 ? [1] : [1, -1]).forEach(sg => {
+      resultado.cruce.filas.filter(f => f.valido).forEach(f => (f.w < 1e-9 ? [1] : [1, -1]).forEach(sg => {
         const px = X(0), py = Y(sg * f.w);
         o += '<path d="M' + f1(px) + ' ' + f1(py - 6) + ' l6 6 l-6 6 l-6 -6z" fill="#fff" stroke="#8e44ad" stroke-width="2"/>';
         const nombre = f.w < 1e-9 ? 'ωc = 0' : (sg > 0 ? '+' : '−') + 'jωc = ' + (sg > 0 ? '' : '−') + 'j' + fnum(f.w, 3);
@@ -1081,50 +1072,49 @@ function dibujar() {
     }
     // polos y ceros (con ángulos)
     const angulos = [];
-    Rg.angulos.forEach(a => a.vals.forEach(v => angulos.push({ a, v })));
+    resultado.angulos.forEach(a => a.vals.forEach(v => angulos.push({ a, v })));
     if (S.ver.vals) angulos.forEach(({ a, v }) => {
       const px = X(a.g.z.re), py = Y(a.g.z.im), r = v * Math.PI / 180;
       const cx = Math.cos(r), cy = -Math.sin(r), ex = px + 40 * cx, ey = py + 40 * cy, col = a.tipo === 'salida' ? '#c0392b' : '#0d5bd6';
       o += '<line x1="' + f1(px) + '" y1="' + f1(py) + '" x2="' + f1(ex) + '" y2="' + f1(ey) + '" stroke="' + col + '" stroke-width="1.4" stroke-dasharray="3 2"/>';
       o += txt(ex + (cx >= 0 ? 4 : -4), ey + (cy >= 0 ? 12 : -4), (a.tipo === 'salida' ? 'θ = ' : 'φ = ') + fnum(v, 2) + '°', col, cx >= 0 ? 'start' : 'end');
     });
-    Rg.ceros.forEach(g => {
+    resultado.ceros.forEach(g => {
       const px = X(g.z.re), py = Y(g.z.im);
       o += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="6" fill="#fff" stroke="#12181f" stroke-width="2"/>';
       if (g.mult > 1) o += txt(px + 8, py - 8, '×' + g.mult, '#12181f');
     });
     // un polo y un cero cancelados: la cruz dentro del círculo, sin ángulos ni ramas
-    Rg.cancelados.forEach(g => {
+    resultado.cancelados.forEach(g => {
       const px = X(g.z.re), py = Y(g.z.im);
       o += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="7" fill="#fff" stroke="#8a97a5" stroke-width="1.6"/>';
       o += '<path d="M' + f1(px - 4) + ' ' + f1(py - 4) + ' l8 8 M' + f1(px - 4) + ' ' + f1(py + 4) + ' l8 -8" stroke="#8a97a5" stroke-width="1.8" stroke-linecap="round"/>';
     });
-    Rg.polos.forEach(g => {
+    resultado.polos.forEach(g => {
       const px = X(g.z.re), py = Y(g.z.im);
       o += '<path d="M' + f1(px - 5.5) + ' ' + f1(py - 5.5) + ' l11 11 M' + f1(px - 5.5) + ' ' + f1(py + 5.5) + ' l11 -11" stroke="#12181f" stroke-width="2.4" stroke-linecap="round"/>';
       if (g.mult > 1) o += txt(px + 8, py - 8, '×' + g.mult, '#12181f');
     });
   }
   svg.innerHTML = o;
-  $('vacio').style.display = Rg ? 'none' : 'flex';
-  $('leyenda').style.display = Rg ? '' : 'none';
-  if (Rg) {
+  $('vacio').style.display = resultado ? 'none' : 'flex';
+  $('leyenda').style.display = resultado ? '' : 'none';
+  if (resultado) {
     $('leyenda').innerHTML =
       '<div><svg viewBox="0 0 16 12"><path d="M3 1 l10 10 M3 11 l10 -10" stroke="#12181f" stroke-width="2.2"/></svg>polos</div>' +
       '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="4.5" fill="#fff" stroke="#12181f" stroke-width="2"/></svg>ceros</div>' +
       '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#0d5bd6" stroke-width="2.2"/></svg>LGR (K &gt; 0)</div>' +
       '<div><svg viewBox="0 0 16 12"><path d="M1 6h14" stroke="#7b8896" stroke-width="1.4" stroke-dasharray="4 3"/></svg>asíntotas</div>' +
-      (Rg.cancelados.length ? '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="5" fill="#fff" stroke="#8a97a5" stroke-width="1.4"/><path d="M5 3 l6 6 M5 9 l6 -6" stroke="#8a97a5" stroke-width="1.4"/></svg>polo y cero cancelados</div>' : '');
+      (resultado.cancelados.length ? '<div><svg viewBox="0 0 16 12"><circle cx="8" cy="6" r="5" fill="#fff" stroke="#8a97a5" stroke-width="1.4"/><path d="M5 3 l6 6 M5 9 l6 -6" stroke="#8a97a5" stroke-width="1.4"/></svg>polo y cero cancelados</div>' : '');
   }
 }
-
 /* ---------- interacción con el gráfico ---------- */
 const punteros = new Map();
 let arrastre = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId);
   punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  arrastre = { cx: V.cx, cy: V.cy, k: V.k, x: e.clientX, y: e.clientY, dist: distancia(), mx: media().x, my: media().y };
+  arrastre = { cx: vista.cx, cy: vista.cy, k: vista.k, x: e.clientX, y: e.clientY, dist: distancia(), mx: media().x, my: media().y };
   svg.classList.add('arrastrando');
   $('tip').style.display = 'none';
 });
@@ -1136,12 +1126,12 @@ svg.addEventListener('pointermove', e => {
     if (!arrastre) return;
     if (punteros.size >= 2 && arrastre.dist > 0) {
       const f = distancia() / arrastre.dist, m = media();
-      V.k = arrastre.k * f;
-      V.cx = arrastre.cx - (m.x - arrastre.mx) / V.k;
-      V.cy = arrastre.cy + (m.y - arrastre.my) / V.k;
+      vista.k = arrastre.k * f;
+      vista.cx = arrastre.cx - (m.x - arrastre.mx) / vista.k;
+      vista.cy = arrastre.cy + (m.y - arrastre.my) / vista.k;
     } else if (punteros.size === 1) {
-      V.cx = arrastre.cx - (e.clientX - arrastre.x) / V.k;
-      V.cy = arrastre.cy + (e.clientY - arrastre.y) / V.k;
+      vista.cx = arrastre.cx - (e.clientX - arrastre.x) / vista.k;
+      vista.cy = arrastre.cy + (e.clientY - arrastre.y) / vista.k;
     }
     dibujar();
     return;
@@ -1150,7 +1140,7 @@ svg.addEventListener('pointermove', e => {
 });
 function soltar(e) {
   punteros.delete(e.pointerId);
-  arrastre = punteros.size ? { cx: V.cx, cy: V.cy, k: V.k, x: media().x, y: media().y, dist: distancia(), mx: media().x, my: media().y } : null;
+  arrastre = punteros.size ? { cx: vista.cx, cy: vista.cy, k: vista.k, x: media().x, y: media().y, dist: distancia(), mx: media().x, my: media().y } : null;
   if (!punteros.size) svg.classList.remove('arrastrando');
 }
 svg.addEventListener('pointerup', soltar);
@@ -1158,9 +1148,9 @@ svg.addEventListener('pointercancel', soltar);
 svg.addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
 function zoomEn(f, px, py) {
   const W = stage.clientWidth, H = stage.clientHeight;
-  const mx = V.cx + (px - W / 2) / V.k, my = V.cy - (py - H / 2) / V.k;
-  V.k *= f;
-  V.cx = mx - (px - W / 2) / V.k; V.cy = my + (py - H / 2) / V.k;
+  const mx = vista.cx + (px - W / 2) / vista.k, my = vista.cy - (py - H / 2) / vista.k;
+  vista.k *= f;
+  vista.cx = mx - (px - W / 2) / vista.k; vista.cy = my + (py - H / 2) / vista.k;
   dibujar();
 }
 svg.addEventListener('wheel', e => {
@@ -1176,7 +1166,7 @@ $('z-menos').onclick = () => zoomEn(1 / 1.3, stage.clientWidth / 2, stage.client
 /* Al pasar el mouse por una rama: el punto s y el K que le corresponde */
 let tipPend = false;
 function mostrarTip(e) {
-  if (tipPend || !Rg) return;
+  if (tipPend || !resultado) return;
   tipPend = true;
   requestAnimationFrame(() => {
     tipPend = false;
@@ -1185,28 +1175,27 @@ function mostrarTip(e) {
     let best = 14, hit = null;
     ramas.forEach(b => {
       for (let i = 0; i < b.x.length; i++) {
-        const px = W / 2 + (b.x[i] - V.cx) * V.k, py = H / 2 - (b.y[i] - V.cy) * V.k;
+        const px = W / 2 + (b.x[i] - vista.cx) * vista.k, py = H / 2 - (b.y[i] - vista.cy) * vista.k;
         const d = Math.hypot(px - mx, py - my);
         if (d < best) { best = d; hit = { x: b.x[i], y: b.y[i], K: b.K[i], px, py }; }
       }
     });
     const tip = $('tip');
     if (!hit) { tip.style.display = 'none'; return; }
-    tip.textContent = 's = ' + fcomp(C(hit.x, hit.y), 3) + '   K = ' + fnum(hit.K, 4);
+    tip.textContent = 's = ' + fcomp(complejo(hit.x, hit.y), 3) + '   K = ' + fnum(hit.K, 4);
     tip.style.display = 'block';
     tip.style.left = Math.min(hit.px + 12, W - tip.offsetWidth - 6) + 'px';
     tip.style.top = Math.max(hit.py - 30, 4) + 'px';
   });
 }
 new ResizeObserver(() => dibujar()).observe(stage);
-
 /* =====================================================================
    DETALLES PASO A PASO
    ===================================================================== */
 function dibujarDetalles() {
   const el = $('det-cuerpo');
-  if (!Rg) { el.innerHTML = '<div class="vacio-det">Cuando ingreses una función válida, acá aparecen todos los cálculos paso a paso.</div>'; return; }
-  const R = Rg;
+  if (!resultado) { el.innerHTML = '<div class="vacio-det">Cuando ingreses una función válida, acá aparecen todos los cálculos paso a paso.</div>'; return; }
+  const R = resultado;
   const abiertos = new Set([...el.querySelectorAll('details.paso[open]')].map(d => d.dataset.id));
   const primera = !el.querySelector('details.paso');
   const paso = (id, n, titulo, cuerpo) =>
@@ -1221,15 +1210,15 @@ function dibujarDetalles() {
     b += '<p>La ecuación característica es <b>1 + K · G(s)H(s) = 0</b>, con los factores de los ceros arriba y los de los polos abajo:</p>';
     // tal como se ingresaron: con los pares cancelados, si los hay (se simplifican más abajo)
     const todos = gs => gs.concat(R.cancelados).sort((a, b) => b.z.re - a.z.re || b.z.im - a.z.im);
-    b += ec('1 + K · ' + fr(factoresSimples(todos(R.ceros)), factoresSimples(todos(R.polos))) + ' = 0');
+    b += ec('1 + K · ' + fraccion(factoresSimples(todos(R.ceros)), factoresSimples(todos(R.polos))) + ' = 0');
     b += '<p>Agrupando cada par de complejos conjugados en un polinomio de segundo grado:</p>';
-    b += ec('1 + K · ' + fr(factoresAgrupados(todos(R.ceros)), factoresAgrupados(todos(R.polos))) + ' = 0');
+    b += ec('1 + K · ' + fraccion(factoresAgrupados(todos(R.ceros)), factoresAgrupados(todos(R.polos))) + ' = 0');
     b += '<p>Desarrollando los productos:</p>';
-    b += ec('1 + K · ' + fr(polyHTML(R.Nsin), polyHTML(R.Dsin)) + ' = 0');
+    b += ec('1 + K · ' + fraccion(polyHTML(R.Nsin), polyHTML(R.Dsin)) + ' = 0');
   } else {
     b += '<p>Dato: <b>1 + K · N(s)/D(s) = 0</b>.</p>';
-    b += ec('1 + K · ' + fr(polyHTML(R.N0), polyHTML(R.D0)) + ' = 0');
-    if (R.notas.length) b += '<p>' + R.notas.map(esc).join(' ') + '</p>' + ec('1 + K′ · ' + fr(polyHTML(R.N), polyHTML(R.D)) + ' = 0');
+    b += ec('1 + K · ' + fraccion(polyHTML(R.N0), polyHTML(R.D0)) + ' = 0');
+    if (R.notas.length) b += '<p>' + R.notas.map(esc).join(' ') + '</p>' + ec('1 + K′ · ' + fraccion(polyHTML(R.N), polyHTML(R.D)) + ' = 0');
     b += '<p>Los <b>ceros</b> son las raíces de N(s) = 0 y los <b>polos</b>, las de D(s) = 0:</p>';
     b += ec('N(s) = ' + factoresSimples(R.ceros) + (R.m ? '' : ' (constante)'), true);
     b += ec('D(s) = ' + factoresSimples(R.polos), true);
@@ -1237,7 +1226,7 @@ function dibujarDetalles() {
   if (R.cancelados.length) {
     b += '<p>Hay polos y ceros en el mismo punto: <b>' + R.cancelados.map(g => fcomp(g.z) + (g.mult > 1 ? ' (×' + g.mult + ')' : '')).join(' ; ') +
       '</b>. Se cancelan en G(s)H(s), así que el lugar de raíces se calcula con la función simplificada:</p>';
-    b += ec('1 + K · ' + fr(factoresSimples(R.ceros), factoresSimples(R.polos)) + ' = 0', true);
+    b += ec('1 + K · ' + fraccion(factoresSimples(R.ceros), factoresSimples(R.polos)) + ' = 0', true);
     b += '<p>Ojo: en D(s) + K·N(s) sin simplificar, ese punto sigue siendo raíz para todo K (un modo que la realimentación no mueve). Se tiene en cuenta en la conclusión.</p>';
   }
   b += '<p>Forma polinómica: <b>D(s) + K·N(s) = 0</b></p>';
@@ -1267,7 +1256,7 @@ function dibujarDetalles() {
   if (d === 0) {
     b += '<div class="res no-res">No hay asíntotas: n − m = ' + R.n + ' − ' + R.m + ' = 0, así que la expresión 180°(2k+1)/(n − m) divide por cero. Las ' + R.n + ' ramas terminan en los ' + R.m + ' ceros y ninguna se va al infinito.</div>';
   } else {
-    b += ec('θ<sub>k</sub> = ' + fr('180°·(2k + 1)', d > 0 ? 'n − m' : 'm − n') + ',&nbsp; k = 0, 1, …, ' + (Math.abs(d) - 1), true);
+    b += ec('θ<sub>k</sub> = ' + fraccion('180°·(2k + 1)', d > 0 ? 'n − m' : 'm − n') + ',&nbsp; k = 0, 1, …, ' + (Math.abs(d) - 1), true);
     b += '<table class="t"><tr><th>k</th><th>Cálculo</th><th>θ<sub>k</sub></th></tr>' + A.angs.map(a =>
       '<tr><td>' + a.k + '</td><td>180°·(2·' + a.k + ' + 1) / ' + Math.abs(d) + ' = ' + fnum(a.crudo, 2) + '°</td><td><b>' + fang(a.ang) + '</b></td></tr>').join('') + '</table>';
     if (A.angs.some(a => Math.abs(a.crudo - a.ang) > 1e-9)) b += '<p>Los ángulos mayores a 360° se reducen restando vueltas completas.</p>';
@@ -1280,9 +1269,9 @@ function dibujarDetalles() {
   if (d === 0) b = '<div class="res no-res">No existe punto de origen de las asíntotas porque no hay asíntotas (n − m = 0 haría que σ<sub>a</sub> = (Σp − Σz)/0 no esté definido).</div>';
   else {
     const sp = expandir(R.polos).map(z => '(' + fcomp(z) + ')').join(' + '), sz = expandir(R.ceros).map(z => '(' + fcomp(z) + ')').join(' + ');
-    b = ec('σ<sub>a</sub> = ' + fr('Σ polos − Σ ceros', 'n − m'), true);
-    b += ec('σ<sub>a</sub> = ' + fr('[' + sp + '] − [' + (sz || '0') + ']', R.n + ' − ' + R.m), true);
-    b += ec('σ<sub>a</sub> = ' + fr(fnum(A.sumP) + ' − (' + fnum(A.sumZ) + ')', fnum(d)) + ' = <b>' + fnum(A.sigma) + '</b>', true);
+    b = ec('σ<sub>a</sub> = ' + fraccion('Σ polos − Σ ceros', 'n − m'), true);
+    b += ec('σ<sub>a</sub> = ' + fraccion('[' + sp + '] − [' + (sz || '0') + ']', R.n + ' − ' + R.m), true);
+    b += ec('σ<sub>a</sub> = ' + fraccion(fnum(A.sumP) + ' − (' + fnum(A.sumZ) + ')', fnum(d)) + ' = <b>' + fnum(A.sigma) + '</b>', true);
     b += '<p>La parte imaginaria de las sumas es 0 porque los complejos vienen de a pares conjugados.</p><div class="res">Las asíntotas nacen en σ<sub>a</sub> = ' + fnum(A.sigma) + ' (sobre el eje real).</div>';
   }
   h += paso('cen', 4, 'Punto donde nacen las asíntotas', b);
@@ -1290,8 +1279,8 @@ function dibujarDetalles() {
   /* 5. Puntos de ruptura */
   const Rp = R.rup;
   b = '<p>Se despeja K de la ecuación característica y se deriva respecto de s:</p>';
-  b += ec('K = −' + fr('D(s)', 'N(s)') + ' = ' + fr('−(' + polyHTML(R.D) + ')', polyHTML(R.N)), true);
-  b += ec(fr('dK', 'ds') + ' = ' + fr("D′(s)·N(s) − D(s)·N′(s)", 'N(s)²') + ' = 0', true);
+  b += ec('K = −' + fraccion('D(s)', 'N(s)') + ' = ' + fraccion('−(' + polyHTML(R.D) + ')', polyHTML(R.N)), true);
+  b += ec(fraccion('dK', 'ds') + ' = ' + fraccion("D′(s)·N(s) − D(s)·N′(s)", 'N(s)²') + ' = 0', true);
   b += '<p>Como un cociente es 0 cuando su numerador es 0, alcanza con resolver <b>D′N − D·N′ = 0</b>:</p>';
   b += ec("D′(s) = " + polyHTML(Rp.Dp), true) + ec("N′(s) = " + (R.m ? polyHTML(Rp.Np) : '0 (N es constante)'), true);
   b += ec("D′·N = " + polyHTML(Rp.t1), true) + ec("D·N′ = " + polyHTML(Rp.t2), true);
@@ -1388,7 +1377,6 @@ function dibujarDetalles() {
 
   el.innerHTML = h;
 }
-
 /* =====================================================================
    BARRA, MODOS, EJEMPLOS, EXPORTACIÓN
    ===================================================================== */
@@ -1400,11 +1388,11 @@ function pasarAInputs() {
   $('f-zp').hidden = S.modo !== 'zp';
   [['asint', 'v-asint'], ['vals', 'v-vals'], ['flechas', 'v-flechas'], ['grid', 'v-grid']].forEach(([k, id]) => $(id).classList.toggle('on', !!S.ver[k]));
 }
-let t = null;
-function diferir() { clearTimeout(t); t = setTimeout(calcular, 250); }
+let temporizadorCalculo = null;
+function diferir() { clearTimeout(temporizadorCalculo); temporizadorCalculo = setTimeout(calcular, 250); }
 [['i-N', 'N'], ['i-D', 'D'], ['i-Z', 'Z'], ['i-P', 'P']].forEach(([id, k]) => {
   $(id).addEventListener('input', e => { S[k] = e.target.value; diferir(); });
-  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(t); calcular(); } });
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(temporizadorCalculo); calcular(); } });
 });
 function modo(m) { S.modo = m; pasarAInputs(); calcular(); }
 $('m-ec').onclick = () => modo('ec');
@@ -1448,9 +1436,9 @@ function svgExportado() {
   return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' +
     '<rect width="' + W + '" height="' + H + '" fill="#ffffff"/>' + svg.innerHTML + '</svg>';
 }
-$('e-svg').onclick = () => { if (Rg) descargar('lgr.svg', new Blob([svgExportado()], { type: 'image/svg+xml' })); };
+$('e-svg').onclick = () => { if (resultado) descargar('lgr.svg', new Blob([svgExportado()], { type: 'image/svg+xml' })); };
 $('e-png').onclick = () => {
-  if (!Rg) return;
+  if (!resultado) return;
   const W = stage.clientWidth, H = stage.clientHeight, img = new Image();
   img.onload = () => {
     const c = document.createElement('canvas'); c.width = W * 2; c.height = H * 2;
@@ -1459,7 +1447,6 @@ $('e-png').onclick = () => {
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgExportado());
 };
-
 /* ---------- arranque ---------- */
 cargar();
 pasarAInputs();

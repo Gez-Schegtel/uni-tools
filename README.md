@@ -48,7 +48,8 @@ src/
                             lo propio de cada una: pagina.html (plantilla), estilos.css,
                             herramienta.js (lo que el código común necesita saber de ella)
                             y sus módulos (modelo, dibujo, panel, interacción, exportar…)
-  lgr/                      el LGR: calculo.js (sin DOM) e interfaz.js; todavía no usa comun/
+  lgr/                      el LGR: polinomios, entrada, formato, análisis, trazado y modelo
+                            (sin DOM) + estado, dibujo, puntero, detalles, barra y arranque
 tests/                      suite de Playwright (Chromium y Firefox) y unidades de los
                             cálculos puros; es lo único con npm
 .github/workflows/          tests.yml (pruebas) y static.yml (comprueba y publica en GitHub Pages

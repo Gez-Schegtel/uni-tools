@@ -5,7 +5,7 @@
 - **Origen:** Auditoría del 2026-11-03 (después del arreglo de `pTrim`)
 - **Prioridad:** Baja (46 / 46)
 - **Esfuerzo estimado:** Medio (~40 minutos)
-- **Archivos afectados:** `src/lgr/calculo.js`, `tests/unidades/lgr.test.js`
+- **Archivos afectados:** `src/lgr/analisis.js` y `src/lgr/trazado.js` (antes `calculo.js`), `tests/unidades/lgr.test.js`
 
 ---
 

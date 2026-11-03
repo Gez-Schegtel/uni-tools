@@ -1,7 +1,7 @@
 # Spec 44 — LGR: Organización y Estilo del Código como en las Otras Herramientas
 
 - **ID:** `SPEC-44`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Revisión de estructura del 2026-11-03
 - **Prioridad:** Media / Baja (44 / 46)
 - **Esfuerzo estimado:** Medio (~1 hora)
@@ -38,6 +38,17 @@ El LGR llegó del proyecto original como un único archivo. Al integrarlo sólo 
 
 ---
 
+### 3.1. Lo que se hizo (2026-11-03)
+
+- `calculo.js` se partió en `polinomios.js`, `entrada.js`, `formato.js`, `analisis.js`, `trazado.js` y `modelo.js` (sin DOM), e `interfaz.js` en `estado.js`, `dibujo.js`, `puntero.js`, `detalles.js`, `barra.js` y `arranque.js`, sin cambiar el contenido.
+- Renombres: `V` → `vista`, `Rg` → `resultado`, `t` → `temporizadorCalculo`, `C` → `complejo`, `fr` → `fraccion`; se borró `aviso`.
+- **Comillas: se dejaron simples, a propósito.** El LGR arma su HTML con cadenas que llevan atributos entre comillas dobles (`'<td class="si">'`); pasarlas a dobles obligaría a escapar cada atributo y no gana nada. Cuando se pase a armar el DOM con `el()` (o similar), se unifican.
+- Los `innerHTML` siguen: lo escrito por el usuario pasa siempre por `esc()`.
+
+Comprobación: el gráfico y el panel de los 27 ejemplos se compararon contra la versión anterior y son idénticos.
+
+---
+
 ## 4. Plan de Pruebas
 
 - `tests/unidades/lgr.test.js` y `tests/specs/lgr.spec.js` pasan sin cambios, salvo las rutas que carga `cargar()`.
@@ -47,6 +58,6 @@ El LGR llegó del proyecto original como un único archivo. Al integrarlo sólo 
 
 ## 5. Criterios de Aceptación
 
-- [ ] Ningún módulo del LGR pasa de ~250 líneas.
-- [ ] No quedan globales de una o dos letras salvo `S`.
-- [ ] Los SVG exportados de los 27 ejemplos son idénticos antes y después.
+- [x] Ningún módulo del LGR pasa de ~250 líneas (el más largo, `analisis.js`, tiene 232).
+- [x] No quedan globales de una o dos letras salvo `S` y `$` (que es el mismo de las otras herramientas).
+- [x] El gráfico y el panel de pasos de los 27 ejemplos son idénticos antes y después.
