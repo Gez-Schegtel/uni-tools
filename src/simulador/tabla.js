@@ -13,7 +13,7 @@ function mostrarTabla() {
     const mts = tt.rows.filter(r => r.out[i]).map(r => r.m);
     // las etiquetas se escapan acá: el apóstrofo que sigue es el de negación, no el de la etiqueta
     const expr = simplify(mts, tt.ins.length, nombres.map(esc)).replace(/'/g, "&#8242;");
-    h += `<div class="expr"><b>${esc(o.label)}</b> = ${expr || "0"} &nbsp;&nbsp;<span style="color:#93a0ae">Σm(${mts.join(",") || "—"})</span></div>`;
+    h += `<div class="expr"><b>${esc(o.label)}</b> = ${expr || "0"} &nbsp;&nbsp;<span style="color:var(--muted-2)">Σm(${mts.join(",") || "—"})</span></div>`;
   });
   h += `<table style="margin-top:12px"><thead><tr>` +
     nombres.map(n => `<th>${esc(n)}</th>`).join("") +

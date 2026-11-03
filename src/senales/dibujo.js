@@ -34,8 +34,13 @@ function render() {
   for (const r of S.ramas) renderRama(r);
   for (const n of S.nodos) renderNodo(n);
   if (drag && drag.kind === "connect" && drag.cur) {
-    const A = getNodo(drag.fromId);
-    el("path", { class: "ghostline", d: `M ${A.x} ${A.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    // sale del borde del nodo (no de su centro) y, sobre otro nodo, termina en su borde
+    const A = getNodo(drag.fromId), T = drag.dstId && drag.dstId !== drag.fromId ? getNodo(drag.dstId) : null;
+    const B = T || drag.cur, L = Math.hypot(B.x - A.x, B.y - A.y);
+    if (L > R_NODO * 2) {
+      const ux = (B.x - A.x) / L, uy = (B.y - A.y) / L, fin = T ? R_NODO : 0;
+      el("path", { class: "ghostline", d: `M ${A.x + ux * R_NODO} ${A.y + uy * R_NODO} L ${B.x - ux * fin} ${B.y - uy * fin}` }, gOv);
+    }
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;

@@ -8,7 +8,7 @@
 /* paleta: un tirito de colores a mano, más el selector libre al final */
 .paleta{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
 .pcol{width:19px;height:19px;padding:0;border-radius:50%;cursor:pointer;flex:none;
-  border:1px solid rgba(18,24,31,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  border:1px solid var(--borde-color);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
 .pcol:hover{transform:scale(1.12)}
 .pcol.sel{box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px var(--accent)}
 .pcol.grande{width:24px;height:24px}

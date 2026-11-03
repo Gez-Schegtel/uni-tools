@@ -24,6 +24,7 @@ Lo que tienen en común las tres primeras (el LGR es una calculadora: no tiene e
 - Ejemplos para arrancar.
 - Botón **Inicio** para volver a la portada, y **autoguardado**: lo que vas haciendo queda guardado en el navegador y al volver a abrir la herramienta seguís donde lo dejaste (no reemplaza a «Guardar»: no viaja a otra compu).
 - Exportación a **SVG, PNG y JSON**; se puede volver a abrir un **JSON** o un **SVG** exportado desde acá (el SVG lleva los datos adentro).
+- **Modo oscuro** con el botón de la luna (en oscuro, el sol vuelve a claro), también en el LGR y en la portada. Se recuerda en el navegador para todas las páginas. El dibujo se ve invertido sólo en pantalla: lo que se guarda y se exporta sale igual que en claro.
 
 ## Cómo usarlo
 
@@ -43,7 +44,8 @@ src/
   sitio.js                  junta lo que se publica en GitHub Pages
   comun/                    lo compartido: historial, ids, copiar/pegar, teclado, zoom,
                             gestos táctiles, abrir/exportar, autoguardado, colores, área
-                            de impresión, recuadros, ruteo ortogonal, CSS base, pedazos de HTML
+                            de impresión, recuadros, ruteo ortogonal, CSS base, modo oscuro,
+                            pedazos de HTML
   bloque/ simulador/ senales/
                             lo propio de cada una: pagina.html (plantilla), estilos.css,
                             herramienta.js (lo que el código común necesita saber de ella)

@@ -326,16 +326,20 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "move") {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 1) drag.moved = true;
+    // por dónde estaban antes de este paso: las flechas que pasaban por ahí se vuelven a rutear
+    drag.movidos = drag.movidos || new Set(drag.orig.map(o => o.id));
+    drag.cajasAntes = drag.orig.map(o => getNode(o.id)).filter(Boolean).map(n => agrandar(rectOf(n), 12));
     for (const o of drag.orig) {
       const n = getNode(o.id); if (!n) continue;
       n.x = snapV(o.x + dx); n.y = snapV(o.y + dy);
     }
-    render("lienzo"); return;                     // el panel se rehace al soltar
+    render("arrastre"); return;                   // el panel y el ruteo completo, al soltar
   }
   if (drag.kind === "connect") {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
     drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
+    drag.dst = dst;
     render("superpuesto"); return;
   }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }

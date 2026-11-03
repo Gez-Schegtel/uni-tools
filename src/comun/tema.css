@@ -1,0 +1,64 @@
+/* ======================= modo oscuro =======================
+   comun/tema.js pone data-tema="oscuro" o "claro" en <html> (botón de la luna y el sol).
+   En oscuro cambian los tokens de la interfaz; el dibujo NO cambia: svg#canvas vuelve a
+   declarar los tokens claros (en base.css y lgr/estilos.css) y se muestra invertido con un
+   filtro. Así el documento, los colores elegidos y lo que se exporta son los mismos en los
+   dos temas. Va después de los estilos de cada herramienta. */
+
+/* ---------- el botón: una luna en claro, un sol en oscuro ---------- */
+#b-tema{padding:4px 6px}                             /* 24 px de alto, como un botón de texto */
+#b-tema svg{animation:tema-giro .35s ease}           /* 14 px, como los demás íconos: la barra no crece */
+#b-tema .ico-sol{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-luna{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-sol{display:block}
+@keyframes tema-giro{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#b-tema svg{animation:none}}
+
+/* ---------- los tokens oscuros ---------- */
+:root[data-tema="oscuro"]{
+  color-scheme:dark;
+  --ink:#e6ebf1;
+  --ink-2:#b6c2ce;
+  --line:#3a4450;
+  --line-2:#29313b;
+  --paper:#1b2027;
+  --shell:#12161b;
+  --accent:#5b9bff;
+  --accent-soft:#1e3354;
+  --accent-line:#34609f;
+  --on-accent:#0b1424;
+  --warn:#ff9a5c;
+  --muted:#97a3b1;
+  --muted-2:#97a3b1;
+  --muted-3:#97a3b1;
+  --sombra:0,0,0;
+  --aviso-fondo:#2e3846;
+  --aviso-texto:#f1f5f9;
+  --borde-color:rgba(255,255,255,.3);
+  --ok:#5ad08a;
+  --on:#3ccf7e;
+  --on-soft:#173a26;
+  --off:#8b97a3;
+  --warn-soft:#3b2417;
+  --warn-line:#7c3c1d;
+  --suave:#232a33;
+  --leyenda-fondo:rgba(27,32,39,.94);
+}
+:root[data-tema="oscuro"] textarea{background:var(--paper);color:var(--ink)}
+:root[data-tema="oscuro"] .overlay{background:rgba(0,0,0,.6)}
+:root[data-tema="oscuro"] #toast{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.5)}
+:root[data-tema="oscuro"] .modal{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.6)}
+/* la marca de la barra tiene partes oscuras: un halo apenas claro la despega del fondo */
+:root[data-tema="oscuro"] .marca-navbar{filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
+
+/* ---------- el dibujo: los colores de siempre, invertidos sólo en pantalla ---------- */
+:root[data-tema="oscuro"] svg#canvas{background:#fff;filter:invert(.9) hue-rotate(180deg)}
+/* la leyenda del LGR y la vista previa del equivalente en bloques son dibujos como el lienzo */
+:root[data-tema="oscuro"] #leyenda svg,
+:root[data-tema="oscuro"] .previo svg{filter:invert(.9) hue-rotate(180deg)}
+:root[data-tema="oscuro"] .previo{background:#1a1a1a}
+
+/* ---------- detalles de cada herramienta ---------- */
+/* simulador: la perilla de los interruptores y las lámparas apagadas tienen que verse */
+:root[data-tema="oscuro"] .sw::after{background:#d3dbe4}
+:root[data-tema="oscuro"] .lamp{border-color:var(--muted)}

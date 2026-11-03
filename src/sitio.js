@@ -12,15 +12,15 @@ const fs = require("fs"), path = require("path");
 
 const RAIZ = path.resolve(__dirname, "..");
 
-function archivosDelSitio() {
-  const paginas = fs.readdirSync(RAIZ).filter(f => f.endsWith(".html")).sort();
+function archivosDelSitio(raiz = RAIZ) {
+  const paginas = fs.readdirSync(raiz).filter(f => f.endsWith(".html")).sort();
   const pedidos = new Set();
   const faltan = [];
   for (const p of paginas) {
-    const html = fs.readFileSync(path.join(RAIZ, p), "utf8");
+    const html = fs.readFileSync(path.join(raiz, p), "utf8");
     for (const [, url] of html.matchAll(/\b(?:src|href)="([^"#?]+)"/g)) {
       if (/^[a-z]+:|^\/\//i.test(url) || url.endsWith(".html")) continue;   // externos y enlaces entre páginas
-      if (!fs.existsSync(path.join(RAIZ, url))) faltan.push(`${p} pide ${url}`);
+      if (!fs.existsSync(path.join(raiz, url))) faltan.push(`${p} pide ${url}`);
       else pedidos.add(url);
     }
   }
@@ -28,14 +28,22 @@ function archivosDelSitio() {
   return paginas.concat([...pedidos].sort());
 }
 
-const archivos = archivosDelSitio();
-const destino = process.argv[2];
-if (!destino) { archivos.forEach(a => console.log(a)); process.exit(0); }
-const dir = path.resolve(destino);
-if (dir === RAIZ) throw new Error("el destino no puede ser la raíz del repo");
-fs.rmSync(dir, { recursive: true, force: true });
-for (const a of archivos) {
-  fs.mkdirSync(path.dirname(path.join(dir, a)), { recursive: true });
-  fs.copyFileSync(path.join(RAIZ, a), path.join(dir, a));
+module.exports = { archivosDelSitio };
+if (require.main === module) principal();
+
+function principal() {
+  const archivos = archivosDelSitio();
+  const destino = process.argv[2];
+  if (!destino) { archivos.forEach(a => console.log(a)); return; }
+  const dir = path.resolve(destino);
+  // se borra antes de copiar: nunca la raíz del repo ni una carpeta que la contenga (con «..» se iba todo)
+  const desdeDestino = path.relative(dir, RAIZ);      // "" si es la raíz; sin «..» si la contiene
+  if (!desdeDestino.startsWith("..") && !path.isAbsolute(desdeDestino))
+    throw new Error("el destino no puede ser la raíz del repo ni una carpeta que la contenga");
+  fs.rmSync(dir, { recursive: true, force: true });
+  for (const a of archivos) {
+    fs.mkdirSync(path.dirname(path.join(dir, a)), { recursive: true });
+    fs.copyFileSync(path.join(RAIZ, a), path.join(dir, a));
+  }
+  console.log(`Sitio armado en ${path.relative(process.cwd(), dir) || "."}: ${archivos.length} archivos`);
 }
-console.log(`Sitio armado en ${path.relative(process.cwd(), dir) || "."}: ${archivos.length} archivos`);

@@ -33,7 +33,8 @@ mano (ver `CLAUDE.md`). Lo que comparten las tres herramientas está una sola ve
 | `ortogonal.js` | bloques, simulador y señales: ruteo ortogonal que no lee `S` (`scorePath`, `rutasPorPuntaje`, `pathD`, `puntosDeUnion`, `segsOf`) |
 | `ruteo-bloques.js` | bloques y señales: `rectOf`, las rutas candidatas, las rutas a mano y `rutearFlechas(nodes, edges)`; `routeAll()` es eso con `S`. La vista previa del equivalente en bloques usa el mismo ruteo que el editor |
 | `puertos.js` | sólo bloques y señales: `DIRS` y `portPoint()` (el editor de bloques y el equivalente de señales usan los mismos) |
-| `base.css` (incluye `avisos.css`), `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos; el LGR usa `avisos.css`, `inicio.html` y `lienzo.js` |
+| `base.css` (incluye `avisos.css`), `colores.css`, `hoja.css`, `recuadros.css` y los `*.html` | estilos y pedazos de marcado compartidos; el LGR usa `avisos.css`, `inicio.html`, `lienzo.js` y el modo oscuro |
+| `tema.css`, `tema.html`, `tema.js` | modo oscuro de las cuatro herramientas (el botón va en `marca-y-panel.html` y en la barra del LGR; `tema.js` es el primer módulo). La portada tiene su copia, vigilada por `fuentes.spec.js` |
 
 Cada herramienta (`src/bloque/`, `src/simulador/`, `src/senales/`) tiene su `pagina.html` (marcado y
 **el orden** en que se pegan CSS y JS), `estilos.css` (después de `base.css`, así que manda),
@@ -107,6 +108,33 @@ Dos consecuencias que importan:
   empieza a depender de otra cosa (el zoom, el modo, otro elemento), esa cosa tiene que entrar en la
   firma o el elemento queda viejo. En el simulador no se reusan: cada compuerta muestra los valores
   de la simulación.
+- **Ruteo de bloques sin trabajo de más** (`comun/ruteo-bloques.js`): `routeAll()` no hace nada si
+  no cambió `firmaDeRuteo()` (posición, tamaño y tipo de cada elemento; puertos, variante y ruta a
+  mano de cada flecha) y todas las flechas tienen `pts`. Si se agrega algo que cambie las rutas,
+  tiene que entrar en esa firma. Al arrastrar, `render("arrastre")` usa `rutearAfectadas()` (sólo
+  las flechas de lo que se mueve y las que pasan cerca); al soltar, el `render()` completo deja las
+  rutas exactamente como antes. Además, cada flecha descarta los obstáculos fuera de la caja de sus
+  candidatos (no cambia el resultado: `segRect` es una prueba de cajas).
+- **Modo oscuro** (`comun/tema.*`): `data-tema="oscuro"` en `<html>` cambia los tokens de la
+  interfaz (`--paper`, `--ink`, `--muted`, `--aviso-fondo`…). Los colores de la interfaz van
+  siempre por tokens, nunca fijos: un `color:#93a0ae` nuevo queda ilegible en oscuro (lo atrapa
+  `tema.spec.js`, que mide el contraste de todo texto visible). El **dibujo no cambia**: los tokens
+  se declaran en `:root,svg#canvas`, así que el lienzo conserva los claros y en oscuro se muestra
+  con `filter:invert(.9) hue-rotate(180deg)`; lo exportado y el documento son idénticos en los dos
+  temas. Un dibujo nuevo fuera del lienzo (como la leyenda del LGR o la vista previa del
+  equivalente) necesita el mismo filtro en `tema.css`.
+- **Vista previa de la conexión** (`ptsDeLaPrevia` en `bloque/dibujo.js` y `simulador/dibujo.js`):
+  sobre un destino que vale, es la ruta real (`rutearFlechas` con la flecha nueva sola, o
+  `rutaDeCable` del simulador, con las demás como ya puestas), calculada una vez por destino y
+  guardada en `drag.previa`; el destino sale de lo mismo que usa soltar (`destinoBajoPuntero`,
+  `destinoDelCable`). Si no hay destino, `ptsPrevia(A, dA, cursor, cajaDelOrigen)` de
+  `comun/ortogonal.js`: sale de frente y, con el cursor detrás del puerto, rodea el origen. En
+  señales la línea va del borde del nodo al cursor o al borde del nodo destino.
+- **Rodeo cuando el menú fijo choca** (`rodeo()` en `comun/ruteo-bloques.js`): si el mejor de los
+  candidatos de `candidates()` atraviesa un obstáculo o entra en el origen/destino, un A* sobre los
+  bordes de los obstáculos cercanos (costo en las unidades de `scorePath`, tope de 30 000 pasos)
+  busca otra ruta; se usa sólo si no choca. Las flechas que no chocan no lo corren, así que no
+  cambian. Si se toca `scorePath`, mantener los mismos pesos en `rodeo` (largo, quiebre, superposición).
 
 ### Historial
 

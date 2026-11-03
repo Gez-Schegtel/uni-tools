@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { abrir, abrirTexto } = require("./ayudas");
+const { abrir, abrirTexto, aPantalla } = require("./ayudas");
 
 test.beforeEach(async ({ page }, info) => { info.errores = await abrir(page, "simulador-logico.html"); });
 test.afterEach(async ({}, info) => { expect(info.errores).toEqual([]); });
@@ -354,4 +354,55 @@ test("los recuadros se dibujan arrastrando, se estiran con los tiradores y se ag
   expect(await page.evaluate(() => S.nodes[0].x)).toBeGreaterThan(x0 + 20);   // 40 px, ajustado a la grilla
   // el borde para agarrarlo no viaja al SVG exportado
   expect(await page.evaluate(() => buildExportSVG().svg.querySelectorAll(".m-hit").length)).toBe(0);
+});
+
+test.describe("la vista previa del cable que se está tirando", () => {
+  const doc = () => ({
+    nodes: [{ id: "i0", type: "in", x: 0, y: 40, label: "A", on: false },
+            { id: "x", type: "not", x: 150, y: 40, label: "" },
+            { id: "g", type: "and", x: 300, y: 60, label: "", pins: 2 }],
+    wires: [],
+  });
+  const centro = async (page, sel) => {
+    const r = await page.locator(sel).first().boundingBox();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  };
+  const tirar = async (page, pid, pin) => {
+    const n = await centro(page, `[data-id="${pid}"]`);
+    await page.mouse.move(n.x, n.y);                               // al pasar se ven sus pines
+    const p = await centro(page, `.pin-hit[data-pid="${pid}"][data-pin="${pin}"]`);
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+  };
+  test("sobre una entrada, la vista previa es la ruta que va a tener el cable (esquiva lo del medio)", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await tirar(page, "i0", "o0");
+    const g = await aPantalla(page, 300, 60);
+    await page.mouse.move(g.x - 10, g.y - 8, { steps: 8 });        // sobre el cuerpo de la AND
+    const previa = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag);
+      return { pts, cruzaX: segsOf(pts).some((s) => segRect(s, rectOf(getNode("x")))) };
+    });
+    await page.mouse.up();
+    const final = await page.evaluate(() => S.wires.map((w) => [w.from.id, w.to.id, w.pts]));
+    expect(final.length).toBe(1);
+    expect(final[0].slice(0, 2)).toEqual(["i0", "g"]);
+    expect(previa.pts).toEqual(final[0][2]);
+    expect(previa.cruzaX).toBe(false);
+  });
+  test("con el cursor detrás de la salida, rodea la compuerta en vez de volver por encima", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await tirar(page, "g", "o0");
+    const atras = await aPantalla(page, 220, 62);                  // a la izquierda de la AND, a su altura
+    await page.mouse.move(atras.x, atras.y, { steps: 8 });
+    const r = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag), R = rectOf(getNode("g"));
+      return { pts, cursor: { x: drag.cur.x, y: drag.cur.y }, cruza: segsOf(pts).some((s) => entraEn(s, R)) };
+    });
+    await page.mouse.up();
+    expect(r.cruza).toBe(false);
+    expect(r.cursor.x).toBeCloseTo(220, 0);                       // (Firefox redondea el mouse a píxeles de pantalla)
+    expect(Math.abs(r.pts.at(-1).x - r.cursor.x)).toBeLessThan(0.11);   // y termina en el cursor
+    expect(Math.abs(r.pts.at(-1).y - r.cursor.y)).toBeLessThan(0.11);   // (los puntos van redondeados a 0,1)
+  });
 });

@@ -442,12 +442,14 @@ test("con 16 lazos que no se tocan, la ventana resume Δ, no se traba y da la tr
     // referencia: cada autolazo divide por (1 − Lᵢ)
     let ref = 1; for (let i = 0; i < n; i++) ref /= 1 - 0.1 * (1 + i % 3);
     return { ms, tam: document.getElementById("ov-mason").innerHTML.length, ref,
-             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta") };
+             texto: document.querySelector("#ov-mason .resultado").textContent, boton: !!document.getElementById("b-copiar-delta"),
+             recortes: [...document.querySelectorAll("#ov-mason .nada")].filter((x) => /y \d+ más/.test(x.textContent)).length };
   });
   expect(r.ms).toBeLessThan(1500);                     // antes: 3,4 s y 31 MB de HTML
   expect(r.tam).toBeLessThan(1e6);
   expect(r.boton).toBe(true);
   expect(r.texto).toContain("Σ[");
+  expect(r.recortes).toBeGreaterThan(0);              // las tablas de lazos disjuntos muestran los primeros 100
   expect(Number(r.texto.split("=").pop().trim().replace(",", "."))).toBeCloseTo(r.ref, 3);
 });
 
@@ -470,4 +472,23 @@ test("la vista previa del equivalente usa el ruteo del editor de bloques: ningun
     }, ej);
     expect(malas, ej).toEqual([]);
   }
+});
+
+test("la vista previa de la rama sale del borde del nodo y, sobre otro nodo, termina en su borde", async ({ page }) => {
+  await grafo(page, 2, []);
+  await page.keyboard.press("c");                                  // modo Conectar
+  const [a, b] = await page.evaluate(() => S.nodos.map((n) => n.id));
+  const pos = (id) => page.locator(`[data-id="${id}"] .n-hit`).boundingBox().then((r) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 }));
+  const pa = await pos(a), pb = await pos(b);
+  await page.mouse.move(pa.x, pa.y);
+  await page.mouse.down();
+  await page.mouse.move((pa.x + pb.x) / 2, pa.y + 40, { steps: 6 });
+  const libre = await page.evaluate(() => document.querySelector(".ghostline").getAttribute("d"));
+  await page.mouse.move(pb.x + 3, pb.y + 2, { steps: 6 });
+  const sobre = await page.evaluate(() => document.querySelector(".ghostline").getAttribute("d"));
+  await page.mouse.up();
+  const nums = (d) => d.match(/-?[\d.]+(e-?\d+)?/g).map(Number);
+  const [x0, y0] = nums(libre), [, , x1, y1] = nums(sobre);
+  expect(Math.hypot(x0 - 0, y0 - 0)).toBeCloseTo(6, 3);           // del borde de la entrada (radio 6), no del centro
+  expect(Math.hypot(x1 - 160, y1 - 0)).toBeCloseTo(6, 3);         // y se engancha al borde del otro nodo
 });

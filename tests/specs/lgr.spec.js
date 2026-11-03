@@ -57,13 +57,6 @@ test("la rueda en líneas (Firefox) hace el mismo zoom que en píxeles", async (
   expect(enLineas).toBeGreaterThan(1.05);
 });
 
-test("exporta un SVG válido", async ({ page }) => {
-  await page.goto(URL);
-  const [descarga] = await Promise.all([page.waitForEvent("download"), page.click("#e-svg")]);
-  const txt = require("fs").readFileSync(await descarga.path(), "utf8");
-  expect(await page.evaluate((t) => !new DOMParser().parseFromString(t, "image/svg+xml").querySelector("parsererror"), txt)).toBe(true);
-});
-
 test("trazar un grado alto no traba la página, y un cálculo nuevo abandona el trazado anterior", async ({ page }) => {
   await page.goto(URL);
   await page.click("#m-ec");
@@ -107,6 +100,7 @@ test("el SVG exportado trae la leyenda y el ejercicio, y se vuelve a abrir igual
   const txt = require("fs").readFileSync(await descarga.path(), "utf8");
   expect(txt).toContain('<metadata id="uni-tools-datos">');
   expect(txt).toContain(">asíntotas</text>");
+  expect(await page.evaluate((t) => !new DOMParser().parseFromString(t, "image/svg+xml").querySelector("parsererror"), txt)).toBe(true);
   await page.evaluate(() => { S.modo = "ec"; S.N = "1"; S.D = "s+1"; pasarAInputs(); calcular(); });
   await page.locator("#a-archivo").setInputFiles({ name: "x.svg", mimeType: "image/svg+xml", buffer: Buffer.from(txt) });
   await expect(page.locator("#toast")).toContainText("Abierto");
@@ -131,4 +125,27 @@ test("el autoguardado usa la clave común (y migra la vieja) y la portada avisa 
   expect(claves).toEqual([null, "lgr"]);
   await page.goto("/index.html");
   await expect(page.locator('a[data-auto="lgr"] .guardado')).toContainText("ejercicio guardado");
+});
+
+test("atajos del LGR: F encuadra, + y − hacen zoom, D pliega los pasos", async ({ page }) => {
+  await page.goto(URL);
+  const k0 = await page.evaluate(() => vista.k);
+  await page.keyboard.press("+");
+  expect(await page.evaluate(() => vista.k)).toBeCloseTo(k0 * 1.3, 6);
+  await page.keyboard.press("-");
+  await page.keyboard.press("-");
+  expect(await page.evaluate(() => vista.k)).toBeCloseTo(k0 / 1.3, 6);
+  await page.keyboard.press("f");
+  expect(await page.evaluate(() => vista.k)).toBeCloseTo(k0, 6);
+  await page.keyboard.press("d");
+  await expect(page.locator("#detalles")).toHaveClass(/collapsed/);
+});
+
+test("entrar y salir del LGR sin tocar nada no deja nada guardado", async ({ page }) => {
+  await page.addInitScript(() => { if (!sessionStorage.getItem("ya")) { sessionStorage.setItem("ya", "1"); localStorage.clear(); } });
+  await page.goto(URL);
+  await page.evaluate(() => dispatchEvent(new Event("pagehide")));
+  expect(await page.evaluate(() => localStorage.getItem("uni-tools-autoguardado-lgr"))).toBeNull();
+  await page.fill("#i-N", "2");                        // un cambio sí se guarda
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("uni-tools-autoguardado-lgr"))).not.toBeNull();
 });

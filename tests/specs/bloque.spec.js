@@ -727,3 +727,103 @@ test("commit() guarda el tamaño nuevo del bloque y el documento no lleva las ru
   expect(r.manual).toEqual({ c: [340] });
   expect(r.mismaRuta).toBe(true);                     // la ruta a mano se rehace igual al abrir
 });
+
+test("con 160 bloques: seleccionar no rerutea, arrastrar es rápido y al soltar las rutas son las de un ruteo completo", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    S.nodes = []; S.edges = []; S.sel = []; S.selEdges = [];
+    for (let i = 0; i < 160; i++) S.nodes.push(makeNode("block", 120 + (i % 10) * 160, 100 + Math.floor(i / 10) * 140, { id: "n" + i, label: "G" + i }));
+    for (let i = 1; i < 160; i++) S.edges.push({ id: "e" + i, from: { id: "n" + (i - 1), port: "r" }, to: { id: "n" + i, port: "l" }, variant: 0 });
+    commit(); render();
+    let ruteos = 0; const orig = rutearFlechas;
+    rutearFlechas = (...a) => { ruteos++; return orig(...a); };
+    S.sel = ["n3"]; render();                              // seleccionar: nada de lo que define las rutas cambió
+    const ruteosAlSeleccionar = ruteos;
+    rutearFlechas = orig;
+    drag = { kind: "move", movidos: new Set(["n15"]), orig: [{ id: "n15" }] };
+    const t0 = performance.now();
+    for (let k = 0; k < 10; k++) { drag.cajasAntes = [agrandar(rectOf(getNode("n15")), 12)]; getNode("n15").y += 20; render("arrastre"); }
+    const porPaso = (performance.now() - t0) / 10;
+    drag = null; render();                                 // soltar
+    const finales = JSON.stringify(S.edges.map((e) => e.pts));
+    const copia = JSON.parse(JSON.stringify(S.edges));
+    rutearFlechas(S.nodes, copia);                         // un ruteo completo desde cero
+    return { ruteosAlSeleccionar, porPaso, iguales: finales === JSON.stringify(copia.map((e) => e.pts)) };
+  });
+  expect(r.ruteosAlSeleccionar).toBe(0);
+  expect(r.porPaso).toBeLessThan(40);                      // antes ~80 ms por paso
+  expect(r.iguales).toBe(true);
+});
+
+test("en 25 diagramas armados en grilla, ninguna flecha atraviesa un bloque ni pasa por encima del suyo", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    let semilla = 11; const azar = () => (semilla = (semilla * 16807) % 2147483647) / 2147483647;
+    let flechas = 0; const malas = [];
+    for (let caso = 0; caso < 25; caso++) {
+      const N = 6 + Math.floor(azar() * 20); S.nodes = []; S.edges = []; const usados = new Set();
+      for (let i = 0; i < N; i++) { let cx, cy; do { cx = Math.floor(azar() * 8); cy = Math.floor(azar() * 5); } while (usados.has(cx + "," + cy)); usados.add(cx + "," + cy);
+        S.nodes.push(makeNode(azar() < .25 ? "sum" : "block", 100 + cx * 160, 80 + cy * 130, { id: "n" + i, label: "G" + i })); }
+      S.nodes.forEach((n) => { if (n.type === "sum") n.signs = { l: "+", t: "+", b: "−", r: "" }; });
+      const P = ["l", "r", "t", "b"];
+      for (let i = 0; i < N * 1.2; i++) { const a = S.nodes[Math.floor(azar() * N)], c = S.nodes[Math.floor(azar() * N)]; if (a === c) continue;
+        S.edges.push({ id: "e" + i, from: { id: a.id, port: a.type === "sum" ? "r" : P[Math.floor(azar() * 4)] }, to: { id: c.id, port: c.type === "sum" ? ["l", "t", "b"][Math.floor(azar() * 3)] : P[Math.floor(azar() * 4)] }, variant: 0 }); }
+      render();
+      for (const e of S.edges) { flechas++; const segs = segsOf(e.pts);
+        for (const n of S.nodes) { const R = rectOf(n), propio = n.id === e.from.id || n.id === e.to.id;
+          if (propio ? segs.some((s) => entraEn(s, R)) : segs.some((s) => segRect(s, { l: R.l + 1, r: R.r - 1, t: R.t + 1, b: R.b - 1 }))) { malas.push(caso + ":" + e.id + "→" + n.id); break; } } }
+    }
+    return { flechas, malas };
+  });
+  expect(r.flechas).toBeGreaterThan(300);
+  expect(r.malas).toEqual([]);                             // antes, 2,9 % de las flechas
+});
+
+test.describe("la vista previa de la flecha que se está tirando", () => {
+  const doc = () => ({
+    nodes: [{ id: "g1", type: "block", x: 300, y: 200, w: 72, h: 42, label: "G1", font: 15 },
+            { id: "x", type: "block", x: 480, y: 200, w: 72, h: 42, label: "X", font: 15 },
+            { id: "g2", type: "block", x: 660, y: 200, w: 72, h: 42, label: "G2", font: 15 }],
+    edges: [],
+  });
+  const centro = async (page, sel) => {
+    const r = await page.locator(sel).boundingBox();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  };
+  test("con el cursor detrás del puerto, rodea el bloque de origen en vez de volver por encima", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await page.keyboard.press("c");
+    const desde = await centro(page, '.port[data-pid="g1"][data-port="r"]');
+    const atras = await aPantalla(page, 200, 205);                 // a la izquierda de G1, a su altura
+    await page.mouse.move(desde.x, desde.y);
+    await page.mouse.down();
+    await page.mouse.move(atras.x, atras.y, { steps: 8 });
+    const r = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag), R = rectOf(getNode("g1"));
+      return { pts, cursor: { x: drag.cur.x, y: drag.cur.y }, cruza: segsOf(pts).some((s) => entraEn(s, R)) };
+    });
+    await page.mouse.up();
+    expect(r.cruza).toBe(false);
+    expect(r.pts[1].x).toBeGreaterThan(336);                      // sale de frente, hacia la derecha
+    expect(r.cursor.x).toBeCloseTo(200, 0);                       // (Firefox redondea el mouse a píxeles de pantalla)
+    expect(Math.abs(r.pts.at(-1).x - r.cursor.x)).toBeLessThan(0.11);   // y termina en el cursor
+    expect(Math.abs(r.pts.at(-1).y - r.cursor.y)).toBeLessThan(0.11);   // (los puntos van redondeados a 0,1)
+  });
+  test("sobre un destino, la vista previa es la ruta que va a tener la flecha (esquiva lo del medio)", async ({ page }) => {
+    await abrirTexto(page, JSON.stringify(doc()));
+    await page.keyboard.press("c");
+    const desde = await centro(page, '.port[data-pid="g1"][data-port="r"]');
+    const hasta = await centro(page, '.node[data-id="g2"]');
+    await page.mouse.move(desde.x, desde.y);
+    await page.mouse.down();
+    await page.mouse.move(hasta.x - 20, hasta.y, { steps: 8 });
+    const previa = await page.evaluate(() => {
+      const pts = ptsDeLaPrevia(drag);
+      return { pts, cruzaX: segsOf(pts).some((s) => segRect(s, rectOf(getNode("x")))) };
+    });
+    await page.mouse.up();
+    const final = await page.evaluate(() => S.edges.map((e) => [e.to.id, e.to.port, e.pts]));
+    expect(final.length).toBe(1);
+    expect(final[0].slice(0, 2)).toEqual(["g2", "l"]);
+    expect(previa.pts).toEqual(final[0][2]);
+    expect(previa.cruzaX).toBe(false);
+  });
+});

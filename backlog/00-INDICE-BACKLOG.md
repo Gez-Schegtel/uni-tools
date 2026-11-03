@@ -1,6 +1,6 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **48 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **56 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, las `40` a `46` de la revisión de estructura y estilo del mismo día, las `47` a `52` de la auditoría de seguridad y de la suite de pruebas, y las `53` en adelante del pedido del dueño sobre rendimiento, flechas, vista previa de conexión y modo oscuro) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
@@ -115,7 +115,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | **45** | ✅ Hecho | [`45-lgr-trazado-sin-trabar-la-pagina.md`](./45-lgr-trazado-sin-trabar-la-pagina.md) | Auditoría LGR | Rendimiento / UX | Medio (45 min) | Trazado incremental y cancelable: hoy un grado 20 traba la página 1,5 s con cada tecla. |
 | **46** | ✅ Hecho | [`46-lgr-tolerancias-de-ruptura-y-cruce.md`](./46-lgr-tolerancias-de-ruptura-y-cruce.md) | Auditoría LGR | Exactitud numérica | Medio (40 min) | Escalar el problema antes de analizarlo para que las tolerancias fijas de ruptura, cruce y raíces nulas no fallen con escalas extremas. |
 
-**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `40` (barato y previene) → `34` → `19` → `18` → `20` → `36` → `45` → `35` + `44` (juntas) → `21` → `41` → `22` + `42` → `43` → `46` → `38` → `39`.
+**Estado:** todo lo de los bloques 1 a 8 está hecho; lo único pendiente es la parte de `SPEC-49` que necesita al dueño (fijar las acciones por SHA).
 
 ### Bloque 9 — Auditoría de seguridad, robustez y de la suite de pruebas (2026-11-03, segunda parte)
 
@@ -123,6 +123,19 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **47** | ✅ Hecho | [`47-etiquetas-absurdas-no-rompen-la-herramienta.md`](./47-etiquetas-absurdas-no-rompen-la-herramienta.md) | Auditoría de seguridad | Bug / Robustez | Bajo (30 min) | Una etiqueta con miles de paréntesis o de un megabyte (de un archivo armado a propósito) desbordaba la pila en cada dibujo y, por el autoguardado, la herramienta quedaba en blanco también al recargar. |
 | **48** | ✅ Hecho | [`48-defensa-en-profundidad-contra-html-inyectado.md`](./48-defensa-en-profundidad-contra-html-inyectado.md) | Auditoría de seguridad | Seguridad | Medio (45 min) | La auditoría no encontró agujeros, pero la seguridad dependía de que cada número llegara saneado. Ahora todo lo interpolado pasa por esc(), no hay onclick en el HTML y cada página tiene una CSP que no deja cargar ni mandar nada afuera. |
+| **49** | 🟡 Parcial | [`49-endurecer-los-workflows-de-github-actions.md`](./49-endurecer-los-workflows-de-github-actions.md) | Auditoría de seguridad | Seguridad / CI | Bajo (20 min) | persist-credentials: false en los checkout, tope de tiempo en el despliegue y una prueba que lo vigila. Fijar las acciones por SHA queda pendiente para el dueño (no se pudo consultar desde la sesión). |
+| **50** | ✅ Hecho | [`50-sitio-js-no-borra-lo-que-no-debe.md`](./50-sitio-js-no-borra-lo-que-no-debe.md) | Auditoría de seguridad | Bug / Seguridad | Muy bajo (15 min) | src/sitio.js borra la carpeta destino antes de copiar y sólo se negaba con la raíz del repo: «node src/sitio.js ..» o «/» borraba todo. Ahora rechaza cualquier carpeta que contenga el repo, y el caso del archivo faltante tiene su prueba. |
+| **51** | ✅ Hecho | [`51-lgr-entrar-y-salir-no-deja-autoguardado.md`](./51-lgr-entrar-y-salir-no-deja-autoguardado.md) | Auditoría de seguridad | Bug | Muy bajo (10 min) | Al salir de la página, el LGR guardaba aunque no se hubiera tocado nada, y la portada mostraba «Tenés un ejercicio guardado» a quien sólo entró a mirar. Lo encontró una prueba nueva de la auditoría de pruebas. |
+| **52** | ✅ Hecho | [`52-auditoria-de-la-suite-de-pruebas.md`](./52-auditoria-de-la-suite-de-pruebas.md) | Auditoría de seguridad | Pruebas | Medio (1 h) | Pruebas significativas (10 mutaciones del código, todas detectadas), dos redundancias quitadas y las que faltaban agregadas (ruteo de bloques, atajos del LGR, recorte de tablas de Mason, sitio.js). Encontró el bug de SPEC-51. |
+
+### Bloque 10 — Rendimiento, flechas, vista previa de conexión y modo oscuro (pedido del dueño, 2026-11-03)
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **53** | ✅ Hecho | [`53-rendimiento-con-muchos-bloques.md`](./53-rendimiento-con-muchos-bloques.md) | Pedido del dueño | Rendimiento | Medio (1 h) | Con 160 bloques cada paso de arrastre tardaba 80 ms y seleccionar algo, 101 ms (el ruteo de todas las flechas). Ahora 5 ms y 4 ms, con las rutas finales idénticas a las de antes. |
+| **54** | ✅ Hecho | [`54-flechas-que-esquivan-cuando-el-menu-fijo-choca.md`](./54-flechas-que-esquivan-cuando-el-menu-fijo-choca.md) | Pedido del dueño | Bug / Ruteo | Medio (1,5 h) | Las flechas se elegían de un menú fijo de rutas; si todas atravesaban algún bloque, quedaba la menos mala y la flecha pasaba por encima. Ahora, en ese caso, un A* sobre los bordes de los obstáculos busca un rodeo: en 25 diagramas en grilla, 0 flechas atraviesan un bloque (antes, el 2,9 %). |
+| **55** | ✅ Hecho | [`55-vista-previa-de-conexion-que-sigue-al-cursor.md`](./55-vista-previa-de-conexion-que-sigue-al-cursor.md) | Pedido del dueño | Mejora de UX | Medio (1 h) | La línea de trazos al tirar una conexión volvía por encima del elemento de origen con el cursor detrás del puerto, y no mostraba por dónde iba a ir la flecha. Ahora rodea el origen, sobre un destino muestra la ruta real (bloques y simulador) y en señales se engancha al borde de los nodos. |
+| **56** | ✅ Hecho | [`56-modo-oscuro.md`](./56-modo-oscuro.md) | Pedido del dueño | Funcionalidad / UX | Alto (2 h) | Modo oscuro en las cinco páginas con un botón que pasa de la luna al sol; se recuerda para todas. La interfaz cambia por tokens (el claro quedó idéntico píxel por píxel salvo el ícono nuevo) y el dibujo se ve invertido sólo en pantalla: lo exportado no cambia. Una prueba mide el contraste de todo texto visible. |
 
 ---
 

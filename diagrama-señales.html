@@ -16,7 +16,9 @@
    La carcasa de las tres herramientas: barra de arriba, hoja, paleta flotante, panel,
    barra de estado, avisos y ventanas. Lo que cambia de una a otra (anchos, colores
    del dibujo) va en el estilos.css de cada una, que viene después y manda. */
-:root{
+/* Los tokens se declaran también en svg#canvas: con el tema oscuro (comun/tema.css) la
+   interfaz cambia, pero el dibujo conserva los valores claros y se muestra invertido. */
+:root,svg#canvas{
   --ink:#12181f;
   --ink-2:#3d4b5a;
   --line:#d7dee6;
@@ -26,6 +28,14 @@
   --accent:#0d5bd6;
   --accent-soft:#e3edff;
   --warn:#c2410c;
+  --muted:#8a97a5;
+  --muted-2:#93a0ae;
+  --accent-line:#b9d2ff;
+  --on-accent:#ffffff;
+  --sombra:18,24,31;
+  --aviso-fondo:#12181f;
+  --aviso-texto:#ffffff;
+  --borde-color:rgba(18,24,31,.22);
   --ui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
   --draw:Arial,Helvetica,sans-serif;
@@ -41,11 +51,11 @@ header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;
 a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
 #b-inicio{flex:none}
 .brand b{font-size:14px;letter-spacing:-.01em}
-.brand span{font-family:var(--mono);font-size:10px;color:#8a97a5;letter-spacing:.08em;text-transform:uppercase}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .group{display:flex;align-items:center;gap:4px;padding-right:12px;border-right:1px solid var(--line-2)}
 .group:last-child{border-right:0}
 /* los grupos se pliegan con un clic en su nombre */
-.glab{font-family:var(--mono);font-size:9px;color:#93a0ae;letter-spacing:.1em;text-transform:uppercase;
+.glab{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase;
   margin-right:2px;cursor:pointer;user-select:none;transition:color .15s}
 .glab:hover{color:var(--ink)}
 .glab::after{content:" \25BC";font-size:8px;opacity:.6;display:inline-block;
@@ -56,8 +66,8 @@ a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
   display:inline-flex;align-items:center;gap:5px;line-height:1;white-space:nowrap;
   transition:background .12s,border-color .12s}
 .btn:hover{background:var(--line-2)}
-.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.on svg{stroke:#fff}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.on svg{stroke:var(--on-accent)}
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.ghost:hover{background:var(--line-2)}
 .btn svg{width:14px;height:14px;stroke:var(--ink-2);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -68,12 +78,12 @@ a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
 .editor-hoja{position:absolute;z-index:8;transform:translate(-50%,-50%);
   border:1.5px solid var(--accent);border-radius:6px;padding:5px 7px;
   font-family:var(--draw);font-size:13px;text-align:center;background:var(--paper);
-  box-shadow:0 8px 24px rgba(18,24,31,.2);outline:none}
+  box-shadow:0 8px 24px rgba(var(--sombra),.2);outline:none}
 /* En pantallas angostas el panel flota sobre la hoja en vez de comerle el ancho */
 @media (max-width:720px){
   main{position:relative}
   #inspector{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(300px,86vw);
-    box-shadow:-8px 0 24px rgba(18,24,31,.14)}
+    box-shadow:-8px 0 24px rgba(var(--sombra),.14)}
 }
 /* ---------- estructura ---------- */
 main{flex:1;display:flex;min-height:0}
@@ -83,14 +93,14 @@ svg#canvas.panning{cursor:grabbing}
 /* paleta flotante para insertar */
 #palette{position:absolute;top:12px;left:12px;background:var(--paper);border:1px solid var(--line);
   border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;
-  box-shadow:0 6px 24px rgba(18,24,31,.08)}
-#palette .ptitle{font-family:var(--mono);font-size:9px;color:#93a0ae;letter-spacing:.1em;padding:2px 4px 4px}
+  box-shadow:0 6px 24px rgba(var(--sombra),.08)}
+#palette .ptitle{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.1em;padding:2px 4px 4px}
 .ptool{display:flex;align-items:center;border:1px solid transparent;background:transparent;
   border-radius:7px;cursor:pointer;text-align:left}
 .ptool:hover{background:var(--line-2)}
-.ptool.on{background:var(--accent-soft);border-color:#b9d2ff}
+.ptool.on{background:var(--accent-soft);border-color:var(--accent-line)}
 .ptool span{font-size:12px}
-.ptool kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:#93a0ae}
+.ptool kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted-2)}
 /* panel derecho */
 #inspector{flex:none;background:var(--paper);border-left:1px solid var(--line);
   display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
@@ -98,25 +108,25 @@ svg#canvas.panning{cursor:grabbing}
 #inspector.collapsed{width:0;min-width:0;border-left-color:transparent}
 .sec{padding:12px 14px;border-bottom:1px solid var(--line-2)}
 .sec h3{margin:0 0 10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:#93a0ae;font-weight:600}
+  text-transform:uppercase;color:var(--muted-2);font-weight:600}
 .row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .row:last-child{margin-bottom:0}
 .row label{font-size:11.5px;color:var(--ink-2);flex:none}
 .row .fill{flex:1;min-width:0}
 input[type=text],input[type=number],select{width:100%;border:1px solid var(--line);border-radius:6px;
   padding:5px 7px;background:var(--paper)}
-.hint{font-size:11px;color:#8a97a5;line-height:1.5}
-.empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
+.hint{font-size:11px;color:var(--muted);line-height:1.5}
+.empty{padding:26px 16px;text-align:center;color:var(--muted-2);font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
-  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 #status .k{color:var(--ink-2)}
 /* Avisos (toast), ventanas y teclas: lo usan las cuatro herramientas (el LGR sin base.css) */
 kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line);
   border-bottom-width:2px;border-radius:4px;padding:1px 4px;font-size:10px}
 #toast{position:absolute;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
+  background:var(--aviso-fondo);color:var(--aviso-texto);font-size:12px;padding:8px 10px 8px 14px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -125,20 +135,20 @@ kbd{font-family:var(--mono);background:var(--line-2);border:1px solid var(--line
   color:rgba(255,255,255,.75);font:inherit;line-height:1;cursor:pointer;pointer-events:none}
 #toast .x::before{content:"✕";font-size:11px}
 #toast.show .x{pointer-events:auto}
-#toast .x:hover{background:rgba(255,255,255,.16);color:#fff}
+#toast .x:hover{background:rgba(255,255,255,.16);color:var(--aviso-texto)}
 /* ---------- ventanas ---------- */
-.overlay{position:fixed;inset:0;background:rgba(18,24,31,.45);display:none;align-items:center;
+.overlay{position:fixed;inset:0;background:rgba(var(--sombra),.45);display:none;align-items:center;
   justify-content:center;z-index:40;padding:20px}
 .overlay.show{display:flex}
 .modal{background:var(--paper);border-radius:12px;width:100%;
-  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(18,24,31,.3)}
+  overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(var(--sombra),.3)}
 .modal h2{margin:0 0 4px;font-size:16px}
-.modal p.sub{margin:0 0 16px;color:#8a97a5;font-size:12px}
+.modal p.sub{margin:0 0 16px;color:var(--muted);font-size:12px}
 textarea{width:100%;height:190px;font-family:var(--mono);font-size:11px;border:1px solid var(--line);
   border-radius:8px;padding:8px;resize:vertical}
 /* elegir archivo para abrir */
 .filebox{display:flex;align-items:center;gap:12px;border:1px dashed var(--line);border-radius:10px;padding:16px}
-.filebox .nom{font-family:var(--mono);font-size:11.5px;color:#8a97a5;min-width:0;
+.filebox .nom{font-family:var(--mono);font-size:11.5px;color:var(--muted);min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .modal details{margin-top:16px}
 .modal summary{cursor:pointer;font-size:12px;color:var(--ink-2);user-select:none;padding:4px 0}
@@ -148,7 +158,7 @@ textarea{width:100%;height:190px;font-family:var(--mono);font-size:11px;border:1
 .band{fill:rgba(13,91,214,.08);stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3;pointer-events:none}
 .ghostline{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4;fill:none;pointer-events:none}
 /* ======================= flujo de señales ======================= */
-:root{--ok:#166534}
+:root,svg#canvas{--ok:#166534;--warn-soft:#fff4ec;--warn-line:#f3c7ad}
 button,select,input[type=text],input[type=number]{font-family:var(--ui);font-size:12px;color:var(--ink)}
 svg#canvas.mode-connect{cursor:crosshair}
 .ptool{width:172px;gap:10px;padding:6px 8px}
@@ -162,23 +172,23 @@ input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .modal{max-width:820px;max-height:86vh}
 #ov-io .modal{max-width:560px}
 .modal h4{margin:20px 0 8px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:#93a0ae}
+  text-transform:uppercase;color:var(--muted-2)}
 .modal h4:first-of-type{margin-top:6px}
 .modal table{width:100%;border-collapse:collapse;font-size:12.5px}
 .modal td,.modal th{padding:5px 8px;border-bottom:1px solid var(--line-2);text-align:left;vertical-align:top}
 .modal th{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
-  color:#93a0ae;font-weight:600}
+  color:var(--muted-2);font-weight:600}
 .modal td.simb{width:56px;font-family:var(--mono);color:var(--accent);white-space:nowrap}
 .modal td.exp{font-family:var(--mono);font-size:12px}
 /* los subíndices no tienen que estirar el renglón */
 .modal sub,.caja sub{font-size:.72em;line-height:0;vertical-align:baseline;position:relative;bottom:-.28em}
-.modal td.ruta{color:#8a97a5;font-size:11.5px;font-family:var(--mono);width:38%}
+.modal td.ruta{color:var(--muted);font-size:11.5px;font-family:var(--mono);width:38%}
 .eq{font-family:var(--mono);font-size:12.5px;line-height:1.9}
 .caja{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--shell);
   font-family:var(--mono);font-size:13px;overflow-x:auto}
-.caja.resultado{border-color:#b9d2ff;background:var(--accent-soft)}
-.nada{color:#8a97a5;font-size:12px;padding:4px 0}
-.aviso{color:var(--warn);font-size:12px;line-height:1.5;border:1px solid #f3c7ad;background:#fff4ec;
+.caja.resultado{border-color:var(--accent-line);background:var(--accent-soft)}
+.nada{color:var(--muted);font-size:12px;padding:4px 0}
+.aviso{color:var(--warn);font-size:12px;line-height:1.5;border:1px solid var(--warn-line);background:var(--warn-soft);
   border-radius:8px;padding:8px 11px;margin-bottom:10px}
 /* vista previa del diagrama de bloques equivalente */
 .previo{border:1px solid var(--line);border-radius:10px;background:var(--paper);
@@ -205,6 +215,70 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
 .sel .r-punta{fill:var(--accent)}
 .resalte .r-linea{stroke:var(--accent);stroke-width:3}
 .resalte .r-punta{fill:var(--accent)}
+/* ======================= modo oscuro =======================
+   comun/tema.js pone data-tema="oscuro" o "claro" en <html> (botón de la luna y el sol).
+   En oscuro cambian los tokens de la interfaz; el dibujo NO cambia: svg#canvas vuelve a
+   declarar los tokens claros (en base.css y lgr/estilos.css) y se muestra invertido con un
+   filtro. Así el documento, los colores elegidos y lo que se exporta son los mismos en los
+   dos temas. Va después de los estilos de cada herramienta. */
+
+/* ---------- el botón: una luna en claro, un sol en oscuro ---------- */
+#b-tema{padding:4px 6px}                             /* 24 px de alto, como un botón de texto */
+#b-tema svg{animation:tema-giro .35s ease}           /* 14 px, como los demás íconos: la barra no crece */
+#b-tema .ico-sol{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-luna{display:none}
+:root[data-tema="oscuro"] #b-tema .ico-sol{display:block}
+@keyframes tema-giro{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#b-tema svg{animation:none}}
+
+/* ---------- los tokens oscuros ---------- */
+:root[data-tema="oscuro"]{
+  color-scheme:dark;
+  --ink:#e6ebf1;
+  --ink-2:#b6c2ce;
+  --line:#3a4450;
+  --line-2:#29313b;
+  --paper:#1b2027;
+  --shell:#12161b;
+  --accent:#5b9bff;
+  --accent-soft:#1e3354;
+  --accent-line:#34609f;
+  --on-accent:#0b1424;
+  --warn:#ff9a5c;
+  --muted:#97a3b1;
+  --muted-2:#97a3b1;
+  --muted-3:#97a3b1;
+  --sombra:0,0,0;
+  --aviso-fondo:#2e3846;
+  --aviso-texto:#f1f5f9;
+  --borde-color:rgba(255,255,255,.3);
+  --ok:#5ad08a;
+  --on:#3ccf7e;
+  --on-soft:#173a26;
+  --off:#8b97a3;
+  --warn-soft:#3b2417;
+  --warn-line:#7c3c1d;
+  --suave:#232a33;
+  --leyenda-fondo:rgba(27,32,39,.94);
+}
+:root[data-tema="oscuro"] textarea{background:var(--paper);color:var(--ink)}
+:root[data-tema="oscuro"] .overlay{background:rgba(0,0,0,.6)}
+:root[data-tema="oscuro"] #toast{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.5)}
+:root[data-tema="oscuro"] .modal{box-shadow:0 0 0 1px var(--line),0 20px 60px rgba(0,0,0,.6)}
+/* la marca de la barra tiene partes oscuras: un halo apenas claro la despega del fondo */
+:root[data-tema="oscuro"] .marca-navbar{filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
+
+/* ---------- el dibujo: los colores de siempre, invertidos sólo en pantalla ---------- */
+:root[data-tema="oscuro"] svg#canvas{background:#fff;filter:invert(.9) hue-rotate(180deg)}
+/* la leyenda del LGR y la vista previa del equivalente en bloques son dibujos como el lienzo */
+:root[data-tema="oscuro"] #leyenda svg,
+:root[data-tema="oscuro"] .previo svg{filter:invert(.9) hue-rotate(180deg)}
+:root[data-tema="oscuro"] .previo{background:#1a1a1a}
+
+/* ---------- detalles de cada herramienta ---------- */
+/* simulador: la perilla de los interruptores y las lámparas apagadas tienen que verse */
+:root[data-tema="oscuro"] .sw::after{background:#d3dbe4}
+:root[data-tema="oscuro"] .lamp{border-color:var(--muted)}
 </style>
 </head>
 <body>
@@ -269,6 +343,10 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
   </div>
 
   <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
+<button class="btn ghost" id="b-tema" type="button" title="Pasar a modo oscuro" aria-label="Pasar a modo oscuro" aria-pressed="false">
+  <svg class="ico-luna" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+  <svg class="ico-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M5.3 18.7l1.5-1.5M17.2 6.8l1.5-1.5"/></svg>
+</button>
     <img class="marca-navbar" src="uni-tools-marca.png" alt="uni-tools" title="uni-tools">
     <button class="btn on" id="b-toggle-panel" title="Ocultar/Mostrar panel lateral">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="3" x2="16" y2="21"/></svg>Panel
@@ -382,6 +460,32 @@ svg#canvas{--c-nodo:#101418;--c-rama:#101418;--c-texto:#101418;--c-fondo:#ffffff
 </div></div>
 
 <script>
+/* ======================= modo oscuro =======================
+   El botón de la luna (en claro) o el sol (en oscuro) cambia el tema; la elección se
+   recuerda en este navegador (uni-tools-tema, la misma para todas las páginas, también la
+   portada) y se pasa a las otras pestañas abiertas. Sin elección guardada, claro.
+   Sólo cambia la interfaz: el dibujo se ve invertido por CSS (comun/tema.css), así que el
+   documento y lo que se exporta son iguales en los dos temas. Es el primer módulo del script
+   para que el tema se ponga antes de que se dibuje nada. */
+const CLAVE_TEMA = "uni-tools-tema";
+function temaGuardado() {
+  try { return localStorage.getItem(CLAVE_TEMA) === "oscuro" ? "oscuro" : "claro"; } catch (e) { return "claro"; }
+}
+function ponerTema(t) {
+  document.documentElement.dataset.tema = t;
+  const b = document.getElementById("b-tema");
+  if (!b) return;
+  b.title = t === "oscuro" ? "Pasar a modo claro" : "Pasar a modo oscuro";
+  b.setAttribute("aria-label", b.title);
+  b.setAttribute("aria-pressed", String(t === "oscuro"));
+}
+ponerTema(temaGuardado());
+document.getElementById("b-tema").addEventListener("click", () => {
+  const t = document.documentElement.dataset.tema === "oscuro" ? "claro" : "oscuro";
+  try { localStorage.setItem(CLAVE_TEMA, t); } catch (e) {}
+  ponerTema(t);
+});
+window.addEventListener("storage", ev => { if (ev.key === CLAVE_TEMA) ponerTema(temaGuardado()); });
 "use strict";
 /* ======================= lienzo =======================
    Lo primero de las tres herramientas: el <svg> de la hoja, la vista que se mueve
@@ -1214,8 +1318,13 @@ function render() {
   for (const r of S.ramas) renderRama(r);
   for (const n of S.nodos) renderNodo(n);
   if (drag && drag.kind === "connect" && drag.cur) {
-    const A = getNodo(drag.fromId);
-    el("path", { class: "ghostline", d: `M ${A.x} ${A.y} L ${drag.cur.x} ${drag.cur.y}` }, gOv);
+    // sale del borde del nodo (no de su centro) y, sobre otro nodo, termina en su borde
+    const A = getNodo(drag.fromId), T = drag.dstId && drag.dstId !== drag.fromId ? getNodo(drag.dstId) : null;
+    const B = T || drag.cur, L = Math.hypot(B.x - A.x, B.y - A.y);
+    if (L > R_NODO * 2) {
+      const ux = (B.x - A.x) / L, uy = (B.y - A.y) / L, fin = T ? R_NODO : 0;
+      el("path", { class: "ghostline", d: `M ${A.x + ux * R_NODO} ${A.y + uy * R_NODO} L ${B.x - ux * fin} ${B.y - uy * fin}` }, gOv);
+    }
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;
@@ -1553,9 +1662,12 @@ function pathD(pts, r) {
   d += ` L ${e.x} ${e.y}`;
   return d;
 }
-/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión */
-function ptsPrevia(A, dA, B) {
-  const stub = 20;
+/* Recorrido en ángulo recto para la línea de vista previa mientras se tira una conexión:
+   sale de frente por el puerto A (dirección dA) y termina en el cursor B. R, si viene, es la
+   caja del elemento de origen: con el cursor detrás del puerto y a la altura del elemento, la
+   línea lo rodea por el lado más cercano en vez de volver por encima (parecía salir de atrás). */
+function ptsPrevia(A, dA, B, R) {
+  const stub = 20, m = 12;
   const h = dA.x !== 0;
   const avanza = h ? (B.x - A.x) * dA.x >= stub : (B.y - A.y) * dA.y >= stub;
   if (avanza) {
@@ -1567,6 +1679,15 @@ function ptsPrevia(A, dA, B) {
     return cleanPts([A, { x: A.x, y: my }, { x: B.x, y: my }, B]);
   }
   const a1 = { x: A.x + dA.x * stub, y: A.y + dA.y * stub };
+  const detras = h ? (B.x - A.x) * dA.x < 0 : (B.y - A.y) * dA.y < 0;
+  if (R && detras && h && B.y > R.t - m && B.y < R.b + m) {
+    const y = B.y < (R.t + R.b) / 2 ? R.t - m : R.b + m;
+    return cleanPts([A, a1, { x: a1.x, y }, { x: B.x, y }, B]);
+  }
+  if (R && detras && !h && B.x > R.l - m && B.x < R.r + m) {
+    const x = B.x < (R.l + R.r) / 2 ? R.l - m : R.r + m;
+    return cleanPts([A, a1, { x, y: a1.y }, { x, y: B.y }, B]);
+  }
   return h
     ? cleanPts([A, a1, { x: a1.x, y: B.y }, B])
     : cleanPts([A, a1, { x: B.x, y: a1.y }, B]);
@@ -1715,8 +1836,80 @@ function aplicarManual(e, A, B) {
 }
 // vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
-function rutearFlechas(nodes, edges) {
+/* ---- plan B: un rodeo cuando todos los candidatos chocan ----
+   Los candidatos son un menú fijo de recorridos (en línea recta, en U, por arriba o por abajo de
+   todo). Con bloques en el medio puede pasar que todos atraviesen alguno. Entonces se busca un
+   camino en ángulo recto (A*) sobre una grilla armada con los bordes de los obstáculos: sale de la
+   punta del puerto de origen, llega a la del destino y no entra en ningún bloque (tampoco en los
+   propios). Sólo se usa cuando el mejor candidato choca, así que las flechas que no chocaban no
+   cambian. */
+function rodeo(a, dA, b, dB, cajasTodas, placed, keys) {
+  // sólo la zona: los obstáculos y las flechas cerca de las dos puntas (con un margen para rodear)
+  const M = 160, zona = { l: Math.min(a.x, b.x) - M, r: Math.max(a.x, b.x) + M, t: Math.min(a.y, b.y) - M, b: Math.max(a.y, b.y) + M };
+  const enZona = (R) => !(R.r < zona.l || R.l > zona.r || R.b < zona.t || R.t > zona.b);
+  const cajas = cajasTodas.filter(enZona);
+  // las líneas posibles: las de las puntas (y a los dos lados, para poder llegar desde cualquier
+  // lado), los bordes de cada obstáculo y un contorno por fuera de todo
+  const xs = new Set([a.x, b.x, a.x - 20, a.x + 20, b.x - 20, b.x + 20]), ys = new Set([a.y, b.y, a.y - 20, a.y + 20, b.y - 20, b.y + 20]);
+  let l = Math.min(a.x, b.x), r = Math.max(a.x, b.x), t = Math.min(a.y, b.y), bb = Math.max(a.y, b.y);
+  for (const R of cajas) { xs.add(R.l - 1); xs.add(R.r + 1); ys.add(R.t - 1); ys.add(R.b + 1); l = Math.min(l, R.l); r = Math.max(r, R.r); t = Math.min(t, R.t); bb = Math.max(bb, R.b); }
+  xs.add(l - 30); xs.add(r + 30); ys.add(t - 30); ys.add(bb + 30);
+  const X = [...xs].sort((p, q) => p - q), Y = [...ys].sort((p, q) => p - q), NY = Y.length;
+  if (X.length * NY > 40000) return null;              // zona enorme: mejor no buscar
+  // un punto está libre si no cae adentro de ningún obstáculo; como los bordes de los obstáculos
+  // son líneas de la grilla, un tramo entre dos líneas vecinas está libre si lo está su punto medio
+  const adentro = (x, y) => cajas.some(R => x > R.l && x < R.r && y > R.t && y < R.b);
+  const libreCache = new Map();
+  const libre = (x, y) => { const k = x + "," + y; let v = libreCache.get(k); if (v === undefined) libreCache.set(k, v = !adentro(x, y)); return v; };
+  /* estado: celda + dirección de llegada (0 der, 1 izq, 2 abajo, 3 arriba). El costo está en las
+     mismas unidades que scorePath: largo, quiebres y correr pegado a otra flecha (no hermana) */
+  const D = [[1, 0], [-1, 0], [0, 1], [0, -1]], DOBLAR = 16;
+  const ajenas = (placed || []).filter(o => !sonHermanas(keys, o.keys) && segRect(o.seg, zona));
+  const pegado = (seg) => { let c = 0; for (const o of ajenas) { const q = overlapInfo(seg, o.seg); if (q && q.kind === "col") c += 140 + q.ov * 0.6; } return c; };
+  const ix = new Map(X.map((v, i) => [v, i])), iy = new Map(Y.map((v, i) => [v, i]));
+  const ini = [ix.get(a.x), iy.get(a.y)], fin = [ix.get(b.x), iy.get(b.y)];
+  const dirIni = D.findIndex(d => d[0] === Math.sign(dA.x) && d[1] === Math.sign(dA.y));
+  const dirFin = D.findIndex(d => d[0] === -Math.sign(dB.x) && d[1] === -Math.sign(dB.y));
+  const clave = (i, j, d) => (i * NY + j) * 4 + d;
+  const h = (i, j) => (Math.abs(X[i] - b.x) + Math.abs(Y[j] - b.y)) * 0.012;
+  // cola de prioridad (montículo binario) por f = g + h
+  const monton = [];
+  const subir = (n) => { monton.push(n); let i = monton.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (monton[p].f <= monton[i].f) break; [monton[p], monton[i]] = [monton[i], monton[p]]; i = p; } };
+  const sacar = () => { const top = monton[0], ult = monton.pop(); if (monton.length) { monton[0] = ult; let i = 0; for (;;) { const a1 = 2 * i + 1, a2 = a1 + 1; let m = i;
+    if (a1 < monton.length && monton[a1].f < monton[m].f) m = a1; if (a2 < monton.length && monton[a2].f < monton[m].f) m = a2; if (m === i) break; [monton[m], monton[i]] = [monton[i], monton[m]]; i = m; } } return top; };
+  const dist = new Map(), previo = new Map();
+  const k0 = clave(ini[0], ini[1], dirIni); dist.set(k0, 0); subir({ k: k0, g: 0, f: h(ini[0], ini[1]), i: ini[0], j: ini[1], d: dirIni });
+  let llego = null, pasos = 0;
+  while (monton.length && pasos++ < 30000) {           // tope fijo (no de tiempo): siempre el mismo resultado
+    const c = sacar();
+    if (c.g > dist.get(c.k)) continue;
+    if (c.i === fin[0] && c.j === fin[1] && c.d === dirFin) { llego = c; break; }
+    for (let d = 0; d < 4; d++) {
+      if (d === (c.d ^ 1)) continue;                  // no se da la vuelta en el lugar
+      const ni = c.i + D[d][0], nj = c.j + D[d][1];
+      if (ni < 0 || nj < 0 || ni >= X.length || nj >= NY) continue;
+      if (!libre(X[ni], Y[nj]) || !libre((X[c.i] + X[ni]) / 2, (Y[c.j] + Y[nj]) / 2)) continue;
+      const seg = [{ x: X[c.i], y: Y[c.j] }, { x: X[ni], y: Y[nj] }];
+      const g = c.g + (Math.abs(X[ni] - X[c.i]) + Math.abs(Y[nj] - Y[c.j])) * 0.012 + (d === c.d ? 0 : DOBLAR) + pegado(seg);
+      const k = clave(ni, nj, d);
+      if (dist.has(k) && dist.get(k) <= g) continue;
+      dist.set(k, g); previo.set(k, c.k); subir({ k, g, f: g + h(ni, nj), i: ni, j: nj, d });
+    }
+  }
+  if (!llego) return null;
+  const camino = [];
+  for (let k = llego.k; k !== undefined; k = previo.get(k)) {
+    const celda = Math.floor(k / 4); camino.push({ x: X[Math.floor(celda / NY)], y: Y[celda % NY] });
+  }
+  return camino.reverse();
+}
+
+/* soloEstas (un Set de ids, opcional): rutea sólo esas flechas y deja las demás como están,
+   usándolas como ya puestas. Es lo que se hace mientras se arrastra (ver rutearAfectadas). */
+function rutearFlechas(nodes, edges, soloEstas) {
   const placed = [];
+  if (soloEstas) for (const e of edges)
+    if (!soloEstas.has(e.id) && e.pts) for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys: { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port } });
   const porId = new Map(nodes.map(n => [n.id, n]));
   let all = { l: 0, t: 0, r: 400, b: 300 };
   if (nodes.length) {
@@ -1724,23 +1917,77 @@ function rutearFlechas(nodes, edges) {
     for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
   }
   for (const e of edges) {
+    if (soloEstas && !soloEstas.has(e.id)) continue;
     const from = porId.get(e.from.id), to = porId.get(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
     const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
     const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
     const Rf = rectOf(from), Rt = rectOf(to);
     const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
-                                     n.type !== "node" && n.type !== "text" && n.type !== "marco")
-                             .map(n => agrandar(rectOf(n), 9));
     const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
     const cands = candidates(A, dA, B, dB, near, all);
+    /* Un obstáculo que no toca la caja de todos los candidatos no puede tocar ningún tramo
+       (segRect es una prueba de cajas), así que se descarta antes: mismo resultado, y con
+       muchos bloques cada flecha mira sólo los de su zona. */
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const c of cands) for (const q of c) { if (q.x < x1) x1 = q.x; if (q.x > x2) x2 = q.x; if (q.y < y1) y1 = q.y; if (q.y > y2) y2 = q.y; }
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+                                     n.type !== "node" && n.type !== "text" && n.type !== "marco")
+                             .map(n => agrandar(rectOf(n), 9))
+                             .filter(R => !(x2 < R.l || x1 > R.r || y2 < R.t || y1 > R.b));
     const propios = [from, to].filter(n => n.type !== "node").map(rectOf);
-    e.pts = aplicarManual(e, A, B) || variante(rutasPorPuntaje(cands, obstacles, placed, keys, 12, propios), e.variant);
+    let lista = null;
+    const manual = aplicarManual(e, A, B);
+    if (!manual) {
+      lista = rutasPorPuntaje(cands, obstacles, placed, keys, 12, propios);
+      // ¿el mejor candidato se mete en algún bloque? (se pregunta directo: el puntaje premia a las
+      // hermanas que van juntas y un candidato que choca puede quedar con poco puntaje)
+      const choca = (pts) => segsOf(pts).some(sg => obstacles.some(R => segRect(sg, R)) || propios.some(R => entraEn(sg, R)));
+      if (choca(lista[0])) {
+        // todos chocan: el rodeo esquiva los obstáculos de la zona y los propios (con menos margen)
+        const a = { x: A.x + dA.x * 20, y: A.y + dA.y * 20 }, b = { x: B.x + dB.x * 20, y: B.y + dB.y * 20 };
+        const todos = nodes.filter(n => n.id !== from.id && n.id !== to.id && n.type !== "node" && n.type !== "text" && n.type !== "marco")
+                           .map(n => agrandar(rectOf(n), 9)).concat(propios.map(R => agrandar(R, 6)));
+        const medio = rodeo(a, dA, b, dB, todos, placed, keys);
+        if (medio) {
+          const p = cleanPts([A].concat(medio, [B]));
+          if (!choca(p)) lista = [p].concat(lista);      // uno que no choca le gana a cualquiera que choque
+        }
+      }
+    }
+    e.pts = manual || variante(lista, e.variant);
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
-const routeAll = () => rutearFlechas(S.nodes, S.edges);
+/* routeAll() no vuelve a rutear si no cambió nada de lo que define las rutas: dónde está y
+   cuánto mide cada elemento, y de qué puerto a qué puerto va cada flecha (con su variante y
+   su ruta a mano). Seleccionar, escribir en el panel o abrir un menú ya no rehace todas las
+   rutas. Si alguna flecha perdió sus puntos (deshacer, pegar, abrir), se rutea igual. */
+let _firmaRuteo = null;
+function firmaDeRuteo() {
+  let f = "";
+  for (const n of S.nodes) f += n.id + "," + n.type + "," + n.x + "," + n.y + "," + n.w + "," + n.h + ";";
+  f += "|";
+  for (const e of S.edges) f += e.id + "," + e.from.id + "," + e.from.port + "," + e.to.id + "," + e.to.port + "," + (e.variant || 0) + "," + (e.manual ? JSON.stringify(e.manual) : "") + ";";
+  return f;
+}
+function routeAll() {
+  const f = firmaDeRuteo();
+  if (f === _firmaRuteo && S.edges.every(e => e.pts !== undefined)) return;
+  rutearFlechas(S.nodes, S.edges);
+  _firmaRuteo = f;
+}
+/* Mientras se arrastra: sólo las flechas de lo que se mueve y las que pasan cerca (por donde
+   estaba o por donde está ahora). Las demás quedan como estaban. Al soltar, el render()
+   completo rutea todo como siempre, así que el resultado final es el mismo. */
+function rutearAfectadas(idsMovidos, cajasAntes) {
+  const movidos = S.nodes.filter(n => idsMovidos.has(n.id));
+  const cajas = (cajasAntes || []).concat(movidos.map(n => agrandar(rectOf(n), 12)));
+  const afectadas = new Set(S.edges.filter(e => idsMovidos.has(e.from.id) || idsMovidos.has(e.to.id) ||
+    !e.pts || segsOf(e.pts).some(sg => cajas.some(R => segRect(sg, R)))).map(e => e.id));
+  rutearFlechas(S.nodes, S.edges, afectadas);
+  _firmaRuteo = null;                               // la próxima vez completo
+}
 // Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
 const junctionDots = () => puntosDeUnion(S.edges,
   (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas
@@ -2602,7 +2849,12 @@ svg.addEventListener("pointermove", ev => {
     r.curvaFija = true;
     render(); return;
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
+  if (drag.kind === "connect") {
+    drag.cur = w;
+    const t = document.elementFromPoint(ev.clientX, ev.clientY);
+    drag.dstId = t ? idDeNodo(t) : null;         // el mismo destino que toma soltar
+    render(); return;
+  }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
 });
 svg.addEventListener("pointerup", ev => {

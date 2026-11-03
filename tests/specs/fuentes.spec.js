@@ -61,3 +61,42 @@ test("los enlaces del backlog y de la documentación apuntan a archivos que exis
   }
   expect(rotos).toEqual([]);
 });
+
+test("los workflows declaran permisos, tienen tope de tiempo y no dejan el token en el checkout", () => {
+  const dir = path.join(RAIZ, ".github", "workflows");
+  for (const f of fs.readdirSync(dir).filter((x) => /\.ya?ml$/.test(x))) {
+    const y = fs.readFileSync(path.join(dir, f), "utf8");
+    expect(y, f).toMatch(/^permissions:/m);
+    expect(y, f).toMatch(/timeout-minutes:/);
+    expect(y, f).not.toMatch(/pull_request_target/);                 // correría código de forks con permisos
+    const checkouts = y.split("uses: actions/checkout@").length - 1;
+    expect(y.split("persist-credentials: false").length - 1, f).toBe(checkouts);
+  }
+});
+
+test("src/sitio.js falla si una página pide un archivo que no existe (un logo renombrado no llega roto a Pages)", () => {
+  const { archivosDelSitio } = require(path.join(RAIZ, "src", "sitio.js"));
+  const tmp = fs.mkdtempSync(path.join(require("os").tmpdir(), "sitio-"));
+  fs.writeFileSync(path.join(tmp, "index.html"), '<img src="logo.png"><a href="otra.html">x</a><img src="https://afuera/x.png">');
+  expect(() => archivosDelSitio(tmp)).toThrow(/index\.html pide logo\.png/);
+  fs.writeFileSync(path.join(tmp, "logo.png"), "");
+  expect(archivosDelSitio(tmp)).toEqual(["index.html", "logo.png"]);      // los enlaces y lo de afuera no se copian
+});
+
+test("src/sitio.js no borra la raíz del repo ni una carpeta que la contenga", () => {
+  for (const destino of [".", "..", "/", path.dirname(RAIZ)]) {
+    expect(() => execFileSync(process.execPath, [path.join(RAIZ, "src", "sitio.js"), destino], { cwd: RAIZ, stdio: "pipe" }), destino).toThrow(/el destino no puede/);
+  }
+  expect(fs.existsSync(path.join(RAIZ, "index.html"))).toBe(true);
+});
+
+test("la portada copia el modo oscuro de comun/tema.*: la misma clave, la misma lógica y los mismos íconos", () => {
+  const index = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+  const js = fs.readFileSync(path.join(RAIZ, "src", "comun", "tema.js"), "utf8");
+  const boton = fs.readFileSync(path.join(RAIZ, "src", "comun", "tema.html"), "utf8");
+  const sinEspacios = (s) => s.replace(/\s+/g, " ").trim();
+  // de tema.js, desde la clave hasta el final (sin el comentario de arriba)
+  const logica = js.slice(js.indexOf("const CLAVE_TEMA")).replace("  if (!b) return;\n", "");
+  expect(sinEspacios(index)).toContain(sinEspacios(logica));
+  for (const svg of boton.match(/<svg[^]*?<\/svg>/g)) expect(index).toContain(svg);
+});

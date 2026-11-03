@@ -22,6 +22,19 @@ function pinDestino(n, w, desdeSalida) {
   }
   return mejor;
 }
+/* A qué pata iría el cable que se está tirando si se soltara acá: justo sobre un pin, ese; sobre
+   el cuerpo de otro elemento (o cerca), la pata que tiene sentido para este cable (pin null si
+   ese elemento no tiene ninguna). null si no hay nada. Lo usan soltar y la vista previa. */
+function destinoDelCable(ev, w) {
+  const t = document.elementFromPoint(ev.clientX, ev.clientY);
+  if (t && t.getAttribute && t.getAttribute("data-pid")) {
+    const v = t.getAttribute("data-pin");
+    return { id: t.getAttribute("data-pid"), pin: esSalida(v) ? v : +v };
+  }
+  const nid = (t ? hitNode(t) : null) || nodoCerca(w, 16);
+  if (!nid || nid === drag.fromId) return null;
+  return { id: nid, pin: pinDestino(getNode(nid), w, esSalida(drag.fromPin)) };
+}
 function pinCercano(n, w) {
   let best = "o0", bd = 1e9;
   const cand = [];
@@ -139,7 +152,7 @@ svg.addEventListener("pointermove", ev => {
     for (const o of drag.orig) { const n = getNode(o.id); if (n) { n.x = snapV(o.x + dx); n.y = snapV(o.y + dy); } }
     render("lienzo"); return;                     // el panel se rehace al soltar
   }
-  if (drag.kind === "connect") { drag.cur = w; render("superpuesto"); return; }
+  if (drag.kind === "connect") { drag.cur = w; drag.dst = destinoDelCable(ev, w); render("superpuesto"); return; }
   if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
   if (drag.kind === "resize") {
     const n = getNode(drag.nodeId);
@@ -163,24 +176,10 @@ svg.addEventListener("pointerup", ev => {
     const n = c ? makeNode("marco", c.x, c.y, { w: c.w, h: c.h }) : makeNode("marco", snapV(w.x), snapV(w.y));
     S.nodes.push(n); S.sel = [n.id]; S.selW = []; setPendiente(null); commit();
   } else if (drag.kind === "connect") {
-    const t = document.elementFromPoint(ev.clientX, ev.clientY);
-    let id = null, pin = null;
-    if (t && t.getAttribute && t.getAttribute("data-pid")) {          // justo sobre un pin
-      id = t.getAttribute("data-pid");
-      const v = t.getAttribute("data-pin");
-      pin = esSalida(v) ? v : +v;
-    } else {
-      // sobre el cuerpo, o cerca: elijo la pata que tiene sentido para este cable
-      const nid = (t ? hitNode(t) : null) || nodoCerca(w, 16);
-      if (nid && nid !== drag.fromId) {
-        const n = getNode(nid);
-        pin = pinDestino(n, w, esSalida(drag.fromPin));
-        if (pin === null) toast(esSalida(drag.fromPin)
-          ? "Ese elemento no tiene entradas" : "Ese elemento no tiene salida");
-        else id = nid;
-      }
-    }
-    if (id && id !== drag.fromId) conectar(drag.fromId, drag.fromPin, id, pin);
+    const d = destinoDelCable(ev, w);
+    if (d && d.pin === null) toast(esSalida(drag.fromPin)
+      ? "Ese elemento no tiene entradas" : "Ese elemento no tiene salida");
+    else if (d && d.id !== drag.fromId) conectar(drag.fromId, drag.fromPin, d.id, d.pin);
   } else if (drag.kind === "band") {
     const b = drag.band;
     const R = { l: Math.min(b.x1, b.x2), r: Math.max(b.x1, b.x2), t: Math.min(b.y1, b.y2), b: Math.max(b.y1, b.y2) };

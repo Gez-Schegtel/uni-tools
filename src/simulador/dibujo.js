@@ -176,6 +176,31 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
+/* La vista previa del cable que se está tirando. Sobre una pata de destino que vale (de una
+   salida a una entrada) es la ruta que va a tener, con los demás cables como ya puestos; si no,
+   sale de frente por el pin, sigue al cursor y rodea el elemento si el cursor quedó detrás. */
+function ptsDeLaPrevia(d) {
+  const o = getNode(d.fromId), dst = d.dst;
+  if (dst && dst.pin !== null && dst.id !== d.fromId && getNode(dst.id)) {
+    let a = { id: d.fromId, pin: d.fromPin }, b = { id: dst.id, pin: dst.pin };
+    const alReves = !esSalida(a.pin) && esSalida(b.pin);
+    if (alReves) { const c = a; a = b; b = c; }
+    if (esSalida(a.pin) && Number.isInteger(b.pin)) {
+      const clave = a.id + ":" + a.pin + ">" + b.id + ":" + b.pin;
+      if (!d.previa || d.previa.clave !== clave) {
+        const placed = [];
+        for (const w of S.wires) if (w.pts) {
+          const keys = { from: w.from.id + ":" + (w.from.pin || "o"), to: w.to.id + ":" + w.to.pin };
+          for (const sg of segsOf(w.pts)) placed.push({ seg: sg, keys });
+        }
+        const pts = rutaDeCable({ from: a, to: b, variant: 0 }, getNode(a.id), getNode(b.id), placed, bboxNodos());
+        d.previa = { clave, pts: alReves ? pts.slice().reverse() : pts };
+      }
+      return d.previa.pts;
+    }
+  }
+  return ptsPrevia(d.start, pinDir(o, d.fromPin), d.cur, rectOf(o));
+}
 /* Lo de encima, que no se exporta: área de impresión, pines, tiradores del recuadro, vista
    previa del cable, banda y recuadro en dibujo. Es lo único que cambia al pasar el mouse. */
 function dibujarSuperpuesto() {
@@ -186,8 +211,7 @@ function dibujarSuperpuesto() {
   if (S.sel.length === 1 && esMarco(getNode(S.sel[0]))) dibujarTiradores(getNode(S.sel[0]), rectOf(getNode(S.sel[0])), true, 0);
   if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
   if (drag && drag.kind === "connect" && drag.cur) {
-    const pts = ptsPrevia(drag.start, pinDir(getNode(drag.fromId), drag.fromPin), drag.cur);
-    el("path", { class: "ghostline", d: pathD(pts, 5) }, gOv);
+    el("path", { class: "ghostline", d: pathD(ptsDeLaPrevia(drag), 5) }, gOv);
   }
   if (drag && drag.kind === "band") {
     const b = drag.band;

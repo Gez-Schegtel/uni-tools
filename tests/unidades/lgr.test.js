@@ -65,22 +65,6 @@ test("un grado desmesurado se rechaza en vez de trabar la página", () => {
   assert.throws(() => m.construirModelo({ modo: "zp", Z: "", P: Array.from({ length: 21 }, (_, i) => -i).join(";") }), /más de 20 polos/);
 });
 
-test("caso de libro: K / (s(s+1)(s+2))", () => {
-  const m = lgr();
-  const R = m.analizar(m.construirModelo({ modo: "ec", N: "1", D: "s(s+1)(s+2)" }));
-  casi(R.asint.sigma, -1);
-  assert.deepEqual(clonar(R.asint.angs.map(a => Math.round(a.ang))), [60, 180, 300]);
-  const rup = R.rup.filas.filter(f => f.ok);
-  assert.equal(rup.length, 1);
-  casi(rup[0].z.re, -1 + 1 / Math.sqrt(3));                     // −0,4226
-  casi(rup[0].K.re, 2 / (3 * Math.sqrt(3)));                    // 0,3849
-  const cr = R.cruce.filas.filter(f => f.valido);
-  assert.equal(cr.length, 1);
-  casi(cr[0].w, Math.sqrt(2));
-  casi(cr[0].K, 6);
-  assert.deepEqual(clonar(R.tramos.map(t => t.spd)), [0, 2]);           // estable hasta K = 6
-});
-
 test("los ejercicios de la Guía 3: K crítico, estabilidad por tramos y ángulos contra referencias", () => {
   const m = lgr();
   const EJ = vm.runInContext("EJEMPLOS", m);
@@ -181,12 +165,13 @@ test("la coma de una lista sin «;» deja una nota, y la K sólo se acepta adela
   assert.throws(() => m.construirModelo({ modo: "ec", N: "1", D: "s^2+Ks+1" }), /denominador/);
 });
 
-test("el mismo problema escalado por 10^±4 y 10^±6 da los mismos resultados, escalados", () => {
+test("caso de libro K/(s(s+α)(s+2α)), con α de 10^-6 a 10^6: los mismos resultados, escalados", () => {
   // K/(s(s+α)(s+2α)): σa = −α, ruptura en α(−1 + 1/√3), ωc = √2·α y Kc = 6α³
   const m = lgr();
   for (const a of [1e-6, 1e-4, 1, 1e4, 1e6]) {
     const R = m.analizar(m.construirModelo({ modo: "zp", Z: "", P: `0; ${-a}; ${-2 * a}` }));
     casi(R.asint.sigma, -a);
+    assert.deepEqual(clonar(R.asint.angs.map(x => Math.round(x.ang))), [60, 180, 300]);
     const rup = R.rup.filas.filter(f => f.ok), cr = R.cruce.filas.filter(f => f.valido);
     assert.equal(rup.length, 1, `α = ${a}`);
     casi(rup[0].z.re, a * (-1 + 1 / Math.sqrt(3)), 1e-6);

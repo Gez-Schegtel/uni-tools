@@ -2,7 +2,9 @@
    La carcasa de las tres herramientas: barra de arriba, hoja, paleta flotante, panel,
    barra de estado, avisos y ventanas. Lo que cambia de una a otra (anchos, colores
    del dibujo) va en el estilos.css de cada una, que viene después y manda. */
-:root{
+/* Los tokens se declaran también en svg#canvas: con el tema oscuro (comun/tema.css) la
+   interfaz cambia, pero el dibujo conserva los valores claros y se muestra invertido. */
+:root,svg#canvas{
   --ink:#12181f;
   --ink-2:#3d4b5a;
   --line:#d7dee6;
@@ -12,6 +14,14 @@
   --accent:#0d5bd6;
   --accent-soft:#e3edff;
   --warn:#c2410c;
+  --muted:#8a97a5;
+  --muted-2:#93a0ae;
+  --accent-line:#b9d2ff;
+  --on-accent:#ffffff;
+  --sombra:18,24,31;
+  --aviso-fondo:#12181f;
+  --aviso-texto:#ffffff;
+  --borde-color:rgba(18,24,31,.22);
   --ui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
   --draw:Arial,Helvetica,sans-serif;
@@ -27,11 +37,11 @@ header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;
 a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
 #b-inicio{flex:none}
 .brand b{font-size:14px;letter-spacing:-.01em}
-.brand span{font-family:var(--mono);font-size:10px;color:#8a97a5;letter-spacing:.08em;text-transform:uppercase}
+.brand span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .group{display:flex;align-items:center;gap:4px;padding-right:12px;border-right:1px solid var(--line-2)}
 .group:last-child{border-right:0}
 /* los grupos se pliegan con un clic en su nombre */
-.glab{font-family:var(--mono);font-size:9px;color:#93a0ae;letter-spacing:.1em;text-transform:uppercase;
+.glab{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.1em;text-transform:uppercase;
   margin-right:2px;cursor:pointer;user-select:none;transition:color .15s}
 .glab:hover{color:var(--ink)}
 .glab::after{content:" \25BC";font-size:8px;opacity:.6;display:inline-block;
@@ -42,8 +52,8 @@ a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
   display:inline-flex;align-items:center;gap:5px;line-height:1;white-space:nowrap;
   transition:background .12s,border-color .12s}
 .btn:hover{background:var(--line-2)}
-.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.on svg{stroke:#fff}
+.btn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.on svg{stroke:var(--on-accent)}
 .btn.ghost{border-color:transparent;background:transparent}
 .btn.ghost:hover{background:var(--line-2)}
 .btn svg{width:14px;height:14px;stroke:var(--ink-2);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -54,12 +64,12 @@ a.btn{text-decoration:none;color:inherit;font-size:12px;line-height:normal}
 .editor-hoja{position:absolute;z-index:8;transform:translate(-50%,-50%);
   border:1.5px solid var(--accent);border-radius:6px;padding:5px 7px;
   font-family:var(--draw);font-size:13px;text-align:center;background:var(--paper);
-  box-shadow:0 8px 24px rgba(18,24,31,.2);outline:none}
+  box-shadow:0 8px 24px rgba(var(--sombra),.2);outline:none}
 /* En pantallas angostas el panel flota sobre la hoja en vez de comerle el ancho */
 @media (max-width:720px){
   main{position:relative}
   #inspector{position:absolute;top:0;right:0;bottom:0;z-index:6;width:min(300px,86vw);
-    box-shadow:-8px 0 24px rgba(18,24,31,.14)}
+    box-shadow:-8px 0 24px rgba(var(--sombra),.14)}
 }
 /* ---------- estructura ---------- */
 main{flex:1;display:flex;min-height:0}
@@ -69,14 +79,14 @@ svg#canvas.panning{cursor:grabbing}
 /* paleta flotante para insertar */
 #palette{position:absolute;top:12px;left:12px;background:var(--paper);border:1px solid var(--line);
   border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;
-  box-shadow:0 6px 24px rgba(18,24,31,.08)}
-#palette .ptitle{font-family:var(--mono);font-size:9px;color:#93a0ae;letter-spacing:.1em;padding:2px 4px 4px}
+  box-shadow:0 6px 24px rgba(var(--sombra),.08)}
+#palette .ptitle{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.1em;padding:2px 4px 4px}
 .ptool{display:flex;align-items:center;border:1px solid transparent;background:transparent;
   border-radius:7px;cursor:pointer;text-align:left}
 .ptool:hover{background:var(--line-2)}
-.ptool.on{background:var(--accent-soft);border-color:#b9d2ff}
+.ptool.on{background:var(--accent-soft);border-color:var(--accent-line)}
 .ptool span{font-size:12px}
-.ptool kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:#93a0ae}
+.ptool kbd{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted-2)}
 /* panel derecho */
 #inspector{flex:none;background:var(--paper);border-left:1px solid var(--line);
   display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;
@@ -84,26 +94,26 @@ svg#canvas.panning{cursor:grabbing}
 #inspector.collapsed{width:0;min-width:0;border-left-color:transparent}
 .sec{padding:12px 14px;border-bottom:1px solid var(--line-2)}
 .sec h3{margin:0 0 10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:#93a0ae;font-weight:600}
+  text-transform:uppercase;color:var(--muted-2);font-weight:600}
 .row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .row:last-child{margin-bottom:0}
 .row label{font-size:11.5px;color:var(--ink-2);flex:none}
 .row .fill{flex:1;min-width:0}
 input[type=text],input[type=number],select{width:100%;border:1px solid var(--line);border-radius:6px;
   padding:5px 7px;background:var(--paper)}
-.hint{font-size:11px;color:#8a97a5;line-height:1.5}
-.empty{padding:26px 16px;text-align:center;color:#93a0ae;font-size:12px;line-height:1.6}
+.hint{font-size:11px;color:var(--muted);line-height:1.5}
+.empty{padding:26px 16px;text-align:center;color:var(--muted-2);font-size:12px;line-height:1.6}
 .iconbar{display:flex;flex-wrap:wrap;gap:4px}
 /* ---------- barra de estado y avisos ---------- */
 #status{display:flex;align-items:center;gap:16px;padding:5px 14px;background:var(--paper);
-  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:#8a97a5}
+  border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 #status .k{color:var(--ink-2)}
 /* @incluir comun/avisos.css */
 textarea{width:100%;height:190px;font-family:var(--mono);font-size:11px;border:1px solid var(--line);
   border-radius:8px;padding:8px;resize:vertical}
 /* elegir archivo para abrir */
 .filebox{display:flex;align-items:center;gap:12px;border:1px dashed var(--line);border-radius:10px;padding:16px}
-.filebox .nom{font-family:var(--mono);font-size:11.5px;color:#8a97a5;min-width:0;
+.filebox .nom{font-family:var(--mono);font-size:11.5px;color:var(--muted);min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .modal details{margin-top:16px}
 .modal summary{cursor:pointer;font-size:12px;color:var(--ink-2);user-select:none;padding:4px 0}
