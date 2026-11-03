@@ -107,6 +107,13 @@ Dos consecuencias que importan:
   empieza a depender de otra cosa (el zoom, el modo, otro elemento), esa cosa tiene que entrar en la
   firma o el elemento queda viejo. En el simulador no se reusan: cada compuerta muestra los valores
   de la simulación.
+- **Ruteo de bloques sin trabajo de más** (`comun/ruteo-bloques.js`): `routeAll()` no hace nada si
+  no cambió `firmaDeRuteo()` (posición, tamaño y tipo de cada elemento; puertos, variante y ruta a
+  mano de cada flecha) y todas las flechas tienen `pts`. Si se agrega algo que cambie las rutas,
+  tiene que entrar en esa firma. Al arrastrar, `render("arrastre")` usa `rutearAfectadas()` (sólo
+  las flechas de lo que se mueve y las que pasan cerca); al soltar, el `render()` completo deja las
+  rutas exactamente como antes. Además, cada flecha descarta los obstáculos fuera de la caja de sus
+  candidatos (no cambia el resultado: `segRect` es una prueba de cajas).
 
 ### Historial
 

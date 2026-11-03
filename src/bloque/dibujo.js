@@ -135,12 +135,14 @@ function dibujarSuperpuesto() {
 /* firma de un elemento: si no cambió, su <g> se reusa (ver dibujarReusando en comun/lienzo.js) */
 const firmaNodo = (n) => JSON.stringify(n) + (S.sel.includes(n.id) ? "|sel" : "");
 const nodoReusando = (n, capa) => dibujarReusando(capa, n.id, firmaNodo(n), c => renderNode(n, c));
-/* render() redibuja todo; render("lienzo"), todo menos el panel (mientras se arrastra);
-   render("superpuesto"), sólo lo de encima (al pasar el mouse) */
+/* render() redibuja todo; render("lienzo"), todo menos el panel; render("arrastre"), lo mismo
+   pero ruteando sólo las flechas afectadas por lo que se mueve (drag.movidos); render("superpuesto"),
+   sólo lo de encima (al pasar el mouse) */
 function render(que) {
   if (que === "superpuesto") return dibujarSuperpuesto();
   actualizarTamaños();
-  routeAll();
+  if (que === "arrastre" && drag && drag.movidos) rutearAfectadas(drag.movidos, drag.cajasAntes);
+  else routeAll();
   aplicarTema();
   gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
   marcadoresUsados.clear();
@@ -163,5 +165,5 @@ function render(que) {
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
   limpiarMarcadores();
-  if (que !== "lienzo") renderInspector();
+  if (que !== "lienzo" && que !== "arrastre") renderInspector();
 }

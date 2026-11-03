@@ -1839,8 +1839,12 @@ function aplicarManual(e, A, B) {
 }
 // vuelve a la ruta automática (también a la alternativa 0): lo que se hace cuando cambian los puertos o se reacomoda todo
 function rutaAuto(e) { e.variant = 0; delete e.manual; }
-function rutearFlechas(nodes, edges) {
+/* soloEstas (un Set de ids, opcional): rutea sólo esas flechas y deja las demás como están,
+   usándolas como ya puestas. Es lo que se hace mientras se arrastra (ver rutearAfectadas). */
+function rutearFlechas(nodes, edges, soloEstas) {
   const placed = [];
+  if (soloEstas) for (const e of edges)
+    if (!soloEstas.has(e.id) && e.pts) for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys: { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port } });
   const porId = new Map(nodes.map(n => [n.id, n]));
   let all = { l: 0, t: 0, r: 400, b: 300 };
   if (nodes.length) {
@@ -1848,23 +1852,58 @@ function rutearFlechas(nodes, edges) {
     for (const n of nodes) { const R = rectOf(n); all.l = Math.min(all.l, R.l); all.t = Math.min(all.t, R.t); all.r = Math.max(all.r, R.r); all.b = Math.max(all.b, R.b); }
   }
   for (const e of edges) {
+    if (soloEstas && !soloEstas.has(e.id)) continue;
     const from = porId.get(e.from.id), to = porId.get(e.to.id);
     if (!from || !to) { e.pts = null; continue; }
     const A = portPoint(from, e.from.port), B = portPoint(to, e.to.port);
     const dA = dirOf(e.from.port), dB = dirOf(e.to.port);
     const Rf = rectOf(from), Rt = rectOf(to);
     const near = { l: Math.min(Rf.l, Rt.l), r: Math.max(Rf.r, Rt.r), t: Math.min(Rf.t, Rt.t), b: Math.max(Rf.b, Rt.b) };
-    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
-                                     n.type !== "node" && n.type !== "text" && n.type !== "marco")
-                             .map(n => agrandar(rectOf(n), 9));
     const keys = { from: e.from.id + ":" + e.from.port, to: e.to.id + ":" + e.to.port };
     const cands = candidates(A, dA, B, dB, near, all);
+    /* Un obstáculo que no toca la caja de todos los candidatos no puede tocar ningún tramo
+       (segRect es una prueba de cajas), así que se descarta antes: mismo resultado, y con
+       muchos bloques cada flecha mira sólo los de su zona. */
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const c of cands) for (const q of c) { if (q.x < x1) x1 = q.x; if (q.x > x2) x2 = q.x; if (q.y < y1) y1 = q.y; if (q.y > y2) y2 = q.y; }
+    const obstacles = nodes.filter(n => n.id !== from.id && n.id !== to.id &&
+                                     n.type !== "node" && n.type !== "text" && n.type !== "marco")
+                             .map(n => agrandar(rectOf(n), 9))
+                             .filter(R => !(x2 < R.l || x1 > R.r || y2 < R.t || y1 > R.b));
     const propios = [from, to].filter(n => n.type !== "node").map(rectOf);
     e.pts = aplicarManual(e, A, B) || variante(rutasPorPuntaje(cands, obstacles, placed, keys, 12, propios), e.variant);
     for (const sg of segsOf(e.pts)) placed.push({ seg: sg, keys });
   }
 }
-const routeAll = () => rutearFlechas(S.nodes, S.edges);
+/* routeAll() no vuelve a rutear si no cambió nada de lo que define las rutas: dónde está y
+   cuánto mide cada elemento, y de qué puerto a qué puerto va cada flecha (con su variante y
+   su ruta a mano). Seleccionar, escribir en el panel o abrir un menú ya no rehace todas las
+   rutas. Si alguna flecha perdió sus puntos (deshacer, pegar, abrir), se rutea igual. */
+let _firmaRuteo = null;
+function firmaDeRuteo() {
+  let f = "";
+  for (const n of S.nodes) f += n.id + "," + n.type + "," + n.x + "," + n.y + "," + n.w + "," + n.h + ";";
+  f += "|";
+  for (const e of S.edges) f += e.id + "," + e.from.id + "," + e.from.port + "," + e.to.id + "," + e.to.port + "," + (e.variant || 0) + "," + (e.manual ? JSON.stringify(e.manual) : "") + ";";
+  return f;
+}
+function routeAll() {
+  const f = firmaDeRuteo();
+  if (f === _firmaRuteo && S.edges.every(e => e.pts !== undefined)) return;
+  rutearFlechas(S.nodes, S.edges);
+  _firmaRuteo = f;
+}
+/* Mientras se arrastra: sólo las flechas de lo que se mueve y las que pasan cerca (por donde
+   estaba o por donde está ahora). Las demás quedan como estaban. Al soltar, el render()
+   completo rutea todo como siempre, así que el resultado final es el mismo. */
+function rutearAfectadas(idsMovidos, cajasAntes) {
+  const movidos = S.nodes.filter(n => idsMovidos.has(n.id));
+  const cajas = (cajasAntes || []).concat(movidos.map(n => agrandar(rectOf(n), 12)));
+  const afectadas = new Set(S.edges.filter(e => idsMovidos.has(e.from.id) || idsMovidos.has(e.to.id) ||
+    !e.pts || segsOf(e.pts).some(sg => cajas.some(R => segRect(sg, R)))).map(e => e.id));
+  rutearFlechas(S.nodes, S.edges, afectadas);
+  _firmaRuteo = null;                               // la próxima vez completo
+}
 // Donde una flecha se desprende del tronco que comparte con su hermana va un punto de unión.
 const junctionDots = () => puntosDeUnion(S.edges,
   (a, b) => a.from.id === b.from.id || a.to.id === b.to.id,   // sólo hermanas
@@ -2300,12 +2339,14 @@ function dibujarSuperpuesto() {
 /* firma de un elemento: si no cambió, su <g> se reusa (ver dibujarReusando en comun/lienzo.js) */
 const firmaNodo = (n) => JSON.stringify(n) + (S.sel.includes(n.id) ? "|sel" : "");
 const nodoReusando = (n, capa) => dibujarReusando(capa, n.id, firmaNodo(n), c => renderNode(n, c));
-/* render() redibuja todo; render("lienzo"), todo menos el panel (mientras se arrastra);
-   render("superpuesto"), sólo lo de encima (al pasar el mouse) */
+/* render() redibuja todo; render("lienzo"), todo menos el panel; render("arrastre"), lo mismo
+   pero ruteando sólo las flechas afectadas por lo que se mueve (drag.movidos); render("superpuesto"),
+   sólo lo de encima (al pasar el mouse) */
 function render(que) {
   if (que === "superpuesto") return dibujarSuperpuesto();
   actualizarTamaños();
-  routeAll();
+  if (que === "arrastre" && drag && drag.movidos) rutearAfectadas(drag.movidos, drag.cajasAntes);
+  else routeAll();
   aplicarTema();
   gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
   marcadoresUsados.clear();
@@ -2328,7 +2369,7 @@ function render(que) {
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
   limpiarMarcadores();
-  if (que !== "lienzo") renderInspector();
+  if (que !== "lienzo" && que !== "arrastre") renderInspector();
 }
 /* ======================= inspector ======================= */
 function renderInspector() {
@@ -3022,11 +3063,14 @@ svg.addEventListener("pointermove", ev => {
   if (drag.kind === "move") {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 1) drag.moved = true;
+    // por dónde estaban antes de este paso: las flechas que pasaban por ahí se vuelven a rutear
+    drag.movidos = drag.movidos || new Set(drag.orig.map(o => o.id));
+    drag.cajasAntes = drag.orig.map(o => getNode(o.id)).filter(Boolean).map(n => agrandar(rectOf(n), 12));
     for (const o of drag.orig) {
       const n = getNode(o.id); if (!n) continue;
       n.x = snapV(o.x + dx); n.y = snapV(o.y + dy);
     }
-    render("lienzo"); return;                     // el panel se rehace al soltar
+    render("arrastre"); return;                   // el panel y el ruteo completo, al soltar
   }
   if (drag.kind === "connect") {
     drag.cur = w;

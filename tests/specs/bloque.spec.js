@@ -727,3 +727,29 @@ test("commit() guarda el tamaño nuevo del bloque y el documento no lleva las ru
   expect(r.manual).toEqual({ c: [340] });
   expect(r.mismaRuta).toBe(true);                     // la ruta a mano se rehace igual al abrir
 });
+
+test("con 160 bloques: seleccionar no rerutea, arrastrar es rápido y al soltar las rutas son las de un ruteo completo", async ({ page }) => {
+  const r = await page.evaluate(() => {
+    S.nodes = []; S.edges = []; S.sel = []; S.selEdges = [];
+    for (let i = 0; i < 160; i++) S.nodes.push(makeNode("block", 120 + (i % 10) * 160, 100 + Math.floor(i / 10) * 140, { id: "n" + i, label: "G" + i }));
+    for (let i = 1; i < 160; i++) S.edges.push({ id: "e" + i, from: { id: "n" + (i - 1), port: "r" }, to: { id: "n" + i, port: "l" }, variant: 0 });
+    commit(); render();
+    let ruteos = 0; const orig = rutearFlechas;
+    rutearFlechas = (...a) => { ruteos++; return orig(...a); };
+    S.sel = ["n3"]; render();                              // seleccionar: nada de lo que define las rutas cambió
+    const ruteosAlSeleccionar = ruteos;
+    rutearFlechas = orig;
+    drag = { kind: "move", movidos: new Set(["n15"]), orig: [{ id: "n15" }] };
+    const t0 = performance.now();
+    for (let k = 0; k < 10; k++) { drag.cajasAntes = [agrandar(rectOf(getNode("n15")), 12)]; getNode("n15").y += 20; render("arrastre"); }
+    const porPaso = (performance.now() - t0) / 10;
+    drag = null; render();                                 // soltar
+    const finales = JSON.stringify(S.edges.map((e) => e.pts));
+    const copia = JSON.parse(JSON.stringify(S.edges));
+    rutearFlechas(S.nodes, copia);                         // un ruteo completo desde cero
+    return { ruteosAlSeleccionar, porPaso, iguales: finales === JSON.stringify(copia.map((e) => e.pts)) };
+  });
+  expect(r.ruteosAlSeleccionar).toBe(0);
+  expect(r.porPaso).toBeLessThan(40);                      // antes ~80 ms por paso
+  expect(r.iguales).toBe(true);
+});

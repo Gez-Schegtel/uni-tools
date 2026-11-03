@@ -39,3 +39,16 @@ test("rutearFlechas no lee S: rutea los elementos que recibe", () => {
   assert.ok(edges[0].pts.length >= 2);
   assert.equal(m.S.edges.length, 0);
 });
+
+test("rutear sólo algunas flechas deja las demás como estaban y las usa como ya puestas", () => {
+  const m = ruteo();
+  const nodes = [bloque("a", 0, 0), bloque("b", 300, 0), bloque("c", 0, 200), bloque("d", 300, 200)];
+  const edges = [{ id: "e1", from: { id: "a", port: "r" }, to: { id: "b", port: "l" } },
+                 { id: "e2", from: { id: "c", port: "r" }, to: { id: "d", port: "l" } }];
+  m.rutearFlechas(nodes, edges);
+  const antes = JSON.stringify(edges[0].pts);
+  nodes[3].y = 260;                                          // se mueve d: sólo e2 cambia
+  m.rutearFlechas(nodes, edges, new Set(["e2"]));
+  assert.equal(JSON.stringify(edges[0].pts), antes);
+  assert.equal(edges[1].pts.at(-1).y, 260);
+});
