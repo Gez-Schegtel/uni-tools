@@ -28,7 +28,7 @@ function admiteEntrada(id, ignorandoFlecha) {
 }
 ```
 
-Al comparar con las reglas estrictas que se habían ensayado en el commit `520e9a1`, es **fundamental separar qué es un bug real en `22051e0` de qué es una decisión de diseño que, si se aplica sin cuidado, rompe funcionalidad existente**:
+Al comparar con las reglas estrictas que se habían ensayado en el commit `520e9a1` (de otra rama: no está en este repositorio), es **fundamental separar qué es un bug real en `22051e0` de qué es una decisión de diseño que, si se aplica sin cuidado, rompe funcionalidad existente**:
 
 ### ⚠️ Alerta de No Regresión: Por qué NO se debe prohibir sacar varias flechas de un mismo nodo ni filtrar flechas en `depurarFlechas()` sin antes decidir el modelo
 En `22051e0`, **compartir tronco con puntos de unión automáticos (`junctionDots()` en [`src/bloque/ruteo.js:138-159`](../src/bloque/ruteo.js)) es una funcionalidad activa y testeada**:
