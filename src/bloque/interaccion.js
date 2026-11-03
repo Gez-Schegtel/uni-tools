@@ -288,7 +288,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = nodoCercaDePuertos(ev, w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los puertos
     return;
   }
   if (drag.kind === "pan") {
@@ -301,7 +301,7 @@ svg.addEventListener("pointermove", ev => {
     if (!n) return;
     const antes = [n.x, n.y, n.w, n.h].join();
     estirar(n, drag, w);
-    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render(); }
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
     return;
   }
   if (drag.kind === "tramo") {
@@ -316,11 +316,11 @@ svg.addEventListener("pointermove", ev => {
     drag.moved = true;
     e.manual = { c: drag.c.slice() };
     e.manual.c[drag.idx] = c;
-    render();
+    render("lienzo");
     return;
   }
   if (drag.kind === "draw-marco") {
-    if (moverRecuadroNuevo(drag, w)) render();
+    if (moverRecuadroNuevo(drag, w)) render("superpuesto");
     return;
   }
   if (drag.kind === "move") {
@@ -330,15 +330,15 @@ svg.addEventListener("pointermove", ev => {
       const n = getNode(o.id); if (!n) continue;
       n.x = snapV(o.x + dx); n.y = snapV(o.y + dy);
     }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
   if (drag.kind === "connect") {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
     drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
-    render(); return;
+    render("superpuesto"); return;
   }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }

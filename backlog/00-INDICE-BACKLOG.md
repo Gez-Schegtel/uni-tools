@@ -66,7 +66,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **20** | ✅ Hecho | [`20-saneamiento-ciclo-commit-render-y-datos-derivados.md`](./20-saneamiento-ciclo-commit-render-y-datos-derivados.md) | `BUG-06` + Sec. `2.2.B` | Arquitectura | Medio (45 min) | Actualizar geometrías antes de `snapshot()` en `commit()` y no serializar `e.pts` automáticos en `docDatos()`. |
-| **21** | ⏳ Pendiente | [`21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md`](./21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md) | Sec. `4.1`, `4.2`, `4.3` | Rendimiento | Medio (45 min) | Evitar redibujar todo el SVG y `#insp` en `pointermove` sin arrastre, acotar `_mcache`/`_bcache` y quitar `unescape()`. |
+| **21** | ✅ Hecho | [`21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md`](./21-optimizacion-hover-sin-redibujado-completo-y-caches-acotadas.md) | Sec. `4.1`, `4.2`, `4.3` | Rendimiento | Medio (45 min) | Evitar redibujar todo el SVG y `#insp` en `pointermove` sin arrastre, acotar `_mcache`/`_bcache` y quitar `unescape()`. |
 | **22** | ⏳ Pendiente | [`22-deduplicacion-vista-y-geometria-entre-herramientas.md`](./22-deduplicacion-vista-y-geometria-entre-herramientas.md) | Sec. `4.4` | Mantenibilidad | Medio (40 min) | Unificar `fit()` e `instalarRueda()` de `senales` con `src/comun/vista.js` y centralizar helpers repetidos. |
 
 ---
@@ -108,7 +108,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **40** | ✅ Hecho | [`40-detectar-colisiones-de-nombres-globales.md`](./40-detectar-colisiones-de-nombres-globales.md) | Informe `2.2.A` | Arquitectura / CI | Bajo (30 min) | Que el armado falle si dos módulos de una página declaran el mismo nombre global (hoy una función pisaría a otra en silencio). |
-| **41** | ⏳ Pendiente | [`41-redibujo-por-capas.md`](./41-redibujo-por-capas.md) | Informe `4.1` | Rendimiento | Alto (2 h) | Partir `render()` por capas para que arrastrar, seleccionar o tipear no rearme todo el SVG y el panel. Depende de `20` y `21`. |
+| **41** | ✅ Hecho | [`41-redibujo-por-capas.md`](./41-redibujo-por-capas.md) | Informe `4.1` | Rendimiento | Alto (2 h) | Partir `render()` por capas para que arrastrar, seleccionar o tipear no rearme todo el SVG y el panel. Depende de `20` y `21`. |
 | **42** | ⏳ Pendiente | [`42-equivalente-en-bloques-con-el-ruteo-de-bloques.md`](./42-equivalente-en-bloques-con-el-ruteo-de-bloques.md) | Informe `4.4` | Mantenibilidad | Medio / Alto (1 h) | Que la vista previa del equivalente en bloques use el ruteo y el dibujo de `diagrama-bloque` en vez de copias propias. |
 | **43** | ⏳ Pendiente | [`43-vocabulario-del-modelo-con-accesos-comunes.md`](./43-vocabulario-del-modelo-con-accesos-comunes.md) | Informe `2.2.C` | Mantenibilidad | Bajo / Medio (40 min) | Accesos comunes (`nodosDe`, `conexionesDe`, `etiquetaDe`…) para no repetir condicionales por herramienta, sin tocar el formato de los archivos. |
 | **44** | ⏳ Pendiente | [`44-lgr-organizacion-y-estilo-del-codigo.md`](./44-lgr-organizacion-y-estilo-del-codigo.md) | Revisión LGR | Mantenibilidad | Medio (1 h) | Partir `interfaz.js` y `calculo.js` en módulos, nombres claros en vez de `V`, `Rg`, `t`, y estilo como el resto. |

@@ -91,6 +91,14 @@ Dos consecuencias que importan:
   de un nodo, hay que volver a buscarlo por `[data-id]`.
 - Las funciones de acomodo (`routeAll()`, `acomodarRamas()`, `aplicarTema()`) se llaman al principio
   de `render()`. Lo que se calcula ahí es derivado: se puede recalcular siempre.
+- **Redibujo por capas** (bloques y simulador): `render()` redibuja todo; `render("lienzo")`, todo
+  menos el panel (se usa mientras se arrastra: el panel se rehace al soltar); `render("superpuesto")`,
+  sólo `dibujarSuperpuesto()` (puertos o pines, tiradores, banda, vista previa: lo de pasar el mouse).
+  En bloques, los `<g>` de los elementos se reusan si su firma (`firmaNodo`: el nodo en JSON y si está
+  seleccionado) no cambió, con `dibujarReusando()` de `comun/lienzo.js`. Si el dibujo de un elemento
+  empieza a depender de otra cosa (el zoom, el modo, otro elemento), esa cosa tiene que entrar en la
+  firma o el elemento queda viejo. En el simulador no se reusan: cada compuerta muestra los valores
+  de la simulación.
 
 ### Historial
 

@@ -523,6 +523,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
@@ -731,6 +751,14 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Texto (con acentos y símbolos) a base64: btoa sólo acepta bytes, así que va por UTF-8.
+   Reemplaza al viejo btoa(unescape(encodeURIComponent(s))): unescape() está obsoleta. */
+function aBase64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 /* El PNG sale de dibujar el SVG en un canvas, al triple de tamaño */
 function descargarPNG(s, W, H, fondo, nombre) {
   const img = new Image();
@@ -743,7 +771,7 @@ function descargarPNG(s, W, H, fondo, nombre) {
     c.toBlob(bl => { download(nombre, bl); toast("PNG descargado (3×)"); });
   };
   img.onerror = () => toast("No se pudo generar el PNG");
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+  img.src = "data:image/svg+xml;base64," + aBase64(new XMLSerializer().serializeToString(s));
 }
 
 /* ---- armado del SVG exportado ----
@@ -1971,6 +1999,14 @@ function desnudar(items, siempre) {
 }
 
 /* ---------- 3. medición del texto en el propio SVG ---------- */
+/* Las cachés guardan cada texto que se escribe (también los intermedios, tecla por tecla):
+   con un tope, se olvida lo más viejo y la memoria no crece durante toda la sesión. */
+const TOPE_CACHE = 500;
+function guardarEnCache(cache, k, v) {
+  if (cache.size >= TOPE_CACHE) cache.delete(cache.keys().next().value);
+  cache.set(k, v);
+  return v;
+}
 let _mt = null; const _mcache = new Map();
 function anchoTexto(str, fs) {
   const k = fs + "|" + str;
@@ -1984,8 +2020,7 @@ function anchoTexto(str, fs) {
   let w = 0;
   try { w = _mt.getComputedTextLength(); } catch (e) { w = str.length * fs * .55; }
   if (!w && str) w = str.length * fs * .55;
-  _mcache.set(k, w);
-  return w;
+  return guardarEnCache(_mcache, k, w);
 }
 
 /* ---------- 4. del árbol a cajas con alto y ancho ---------- */
@@ -2060,9 +2095,7 @@ const _bcache = new Map();
 function cajaEtiqueta(label, fs) {
   const k = fs + "|" + label;
   if (_bcache.has(k)) return _bcache.get(k);
-  const b = cajaFila(analizar(label), fs);
-  _bcache.set(k, b);
-  return b;
+  return guardarEnCache(_bcache, k, cajaFila(analizar(label), fs));
 }
 function dibujarMath(g, label, fs, cx, cy) {
   if (!label) return;
@@ -2197,20 +2230,11 @@ function renderTiradoresTramo() {
   }
 }
 let hoverNode = null;
-function render() {
-  actualizarTamaños();
-  routeAll();
-  aplicarTema();
-  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  marcadoresUsados.clear();
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const e of S.edges) renderEdge(e);
-  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo que se dibuja encima de todo y no se exporta: área de impresión, puertos, tiradores,
+   vista previa de la flecha, banda y recuadro en dibujo. Es lo único que cambia al pasar el
+   mouse, así que render("superpuesto") redibuja sólo esto. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPorts();
   renderHandles();
@@ -2224,6 +2248,29 @@ function render() {
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
   if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
+}
+/* firma de un elemento: si no cambió, su <g> se reusa (ver dibujarReusando en comun/lienzo.js) */
+const firmaNodo = (n) => JSON.stringify(n) + (S.sel.includes(n.id) ? "|sel" : "");
+const nodoReusando = (n, capa) => dibujarReusando(capa, n.id, firmaNodo(n), c => renderNode(n, c));
+/* render() redibuja todo; render("lienzo"), todo menos el panel (mientras se arrastra);
+   render("superpuesto"), sólo lo de encima (al pasar el mouse) */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  actualizarTamaños();
+  routeAll();
+  aplicarTema();
+  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
+  marcadoresUsados.clear();
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
+  for (const n of S.nodes) if (esMarco(n) && n.atras) nodoReusando(n, gAtras);
+  for (const e of S.edges) renderEdge(e);
+  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
+  for (const n of S.nodes) if (!esMarco(n)) nodoReusando(n, gNodes);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) nodoReusando(n, gNodes);
+  cerrarReusando(gAtras); cerrarReusando(gNodes);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.length;
   $("#st-e").textContent = S.edges.length;
   $("#st-s").textContent = (S.sel.length + S.selEdges.length) ? (S.sel.length + " elem · " + S.selEdges.length + " flechas") : "—";
@@ -2233,7 +2280,7 @@ function render() {
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
   limpiarMarcadores();
-  renderInspector();
+  if (que !== "lienzo") renderInspector();
 }
 /* ======================= inspector ======================= */
 function renderInspector() {
@@ -2889,7 +2936,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = nodoCercaDePuertos(ev, w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los puertos
     return;
   }
   if (drag.kind === "pan") {
@@ -2902,7 +2949,7 @@ svg.addEventListener("pointermove", ev => {
     if (!n) return;
     const antes = [n.x, n.y, n.w, n.h].join();
     estirar(n, drag, w);
-    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render(); }
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
     return;
   }
   if (drag.kind === "tramo") {
@@ -2917,11 +2964,11 @@ svg.addEventListener("pointermove", ev => {
     drag.moved = true;
     e.manual = { c: drag.c.slice() };
     e.manual.c[drag.idx] = c;
-    render();
+    render("lienzo");
     return;
   }
   if (drag.kind === "draw-marco") {
-    if (moverRecuadroNuevo(drag, w)) render();
+    if (moverRecuadroNuevo(drag, w)) render("superpuesto");
     return;
   }
   if (drag.kind === "move") {
@@ -2931,15 +2978,15 @@ svg.addEventListener("pointermove", ev => {
       const n = getNode(o.id); if (!n) continue;
       n.x = snapV(o.x + dx); n.y = snapV(o.y + dy);
     }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
   if (drag.kind === "connect") {
     drag.cur = w;
     const dst = destinoBajoPuntero(ev, drag, w);
     drag.invalido = !!dst && dst.id !== drag.fromId && (!admiteEntrada(dst.id) || !admitePuertoDestino(dst.id, dst.port));
-    render(); return;
+    render("superpuesto"); return;
   }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }

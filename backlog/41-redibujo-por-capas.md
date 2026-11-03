@@ -1,7 +1,7 @@
 # Spec 41 — Redibujar por Capas en Vez de Rearmar Todo en Cada Cambio
 
 - **ID:** `SPEC-41`
-- **Estado:** ⏳ Pendiente
+- **Estado:** ✅ Completada
 - **Origen:** Revisión de estructura del 2026-11-03 (informe, sección `4.1`)
 - **Prioridad:** Baja (41 / 46)
 - **Esfuerzo estimado:** Alto (~2 horas, una herramienta por vez)
@@ -37,6 +37,15 @@ En las tres herramientas, `render()` vacía las capas del SVG (`textContent = ""
 
 ---
 
+### Lo que se hizo (2026-11-03)
+
+- `render("lienzo")` (todo menos el panel) se usa al arrastrar, estirar y correr tramos, en bloques y en el simulador; el panel se rehace al soltar.
+- En bloques, `dibujarReusando()` (`comun/lienzo.js`) reusa el `<g>` de cada elemento cuya firma no cambió: arrastrar uno no rearma los demás. En el simulador no se aplica todavía (cada compuerta depende de los valores de la simulación: habría que meterlos en la firma); en señales tampoco (no tiene hover ni panel pesado).
+
+Prueba: en `lienzo.spec.js`, «bloques: pasar el mouse … y arrastrar uno no rearma los otros».
+
+---
+
 ## 4. Plan de Pruebas
 
 - La suite actual tiene que pasar igual: `lienzo.spec.js`, `comun.spec.js` y las de cada herramienta.
@@ -46,5 +55,5 @@ En las tres herramientas, `render()` vacía las capas del SVG (`textContent = ""
 
 ## 5. Criterios de Aceptación
 
-- [ ] Arrastrar un nodo en un diagrama de 40 elementos no reconstruye los demás ni el panel.
-- [ ] Ninguna prueba existente cambia.
+- [x] Arrastrar un nodo en un diagrama de 40 elementos no reconstruye los demás ni el panel.
+- [x] Ninguna prueba existente cambia.

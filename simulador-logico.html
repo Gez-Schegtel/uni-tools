@@ -486,6 +486,26 @@ function el(tag, attrs, parent) {
   if (parent) parent.appendChild(e);
   return e;
 }
+/* Redibujar por capas: render() vacía las capas y las vuelve a llenar, pero un elemento cuya
+   firma (lo que define cómo se ve) no cambió reusa el <g> que ya tenía. Así, arrastrar un
+   bloque no rearma los otros cuarenta. La firma la arma cada herramienta. */
+const _dibujados = new Map();                        // capa -> Map(id -> { firma, g })
+function dibujarReusando(capa, id, firma, dibujar) {
+  let c = _dibujados.get(capa);
+  if (!c) _dibujados.set(capa, c = new Map());
+  const v = c.get(id);
+  if (v && v.firma === firma) { capa.appendChild(v.g); v.vivo = true; return v.g; }
+  dibujar(capa);
+  const g = capa.lastChild;
+  c.set(id, { firma, g, vivo: true });
+  return g;
+}
+/* Al terminar de dibujar una capa: olvida lo que ya no está (si no, la caché crece) */
+function cerrarReusando(capa) {
+  const c = _dibujados.get(capa);
+  if (!c) return;
+  for (const [id, v] of c) { if (v.vivo) v.vivo = false; else c.delete(id); }
+}
 /* Texto para meter adentro de HTML (también en atributos entre comillas dobles) */
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"]/g,
@@ -660,6 +680,14 @@ function download(name, blob) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
+/* Texto (con acentos y símbolos) a base64: btoa sólo acepta bytes, así que va por UTF-8.
+   Reemplaza al viejo btoa(unescape(encodeURIComponent(s))): unescape() está obsoleta. */
+function aBase64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 /* El PNG sale de dibujar el SVG en un canvas, al triple de tamaño */
 function descargarPNG(s, W, H, fondo, nombre) {
   const img = new Image();
@@ -672,7 +700,7 @@ function descargarPNG(s, W, H, fondo, nombre) {
     c.toBlob(bl => { download(nombre, bl); toast("PNG descargado (3×)"); });
   };
   img.onerror = () => toast("No se pudo generar el PNG");
-  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(new XMLSerializer().serializeToString(s))));
+  img.src = "data:image/svg+xml;base64," + aBase64(new XMLSerializer().serializeToString(s));
 }
 
 /* ---- armado del SVG exportado ----
@@ -2210,18 +2238,10 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
-function render(soloLienzo) {
-  correr(); routeAll(); aplicarTema();
-  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const w of S.wires) renderWire(w);
-  for (const d of junctionDots())
-    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo de encima, que no se exporta: área de impresión, pines, tiradores del recuadro, vista
+   previa del cable, banda y recuadro en dibujo. Es lo único que cambia al pasar el mouse. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPins();
   // un recuadro seleccionado solo: tiradores de tamaño y asa, como en diagrama-bloque
@@ -2236,6 +2256,24 @@ function render(soloLienzo) {
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
+}
+/* render() redibuja todo; render("lienzo") (o el reloj automático, con true) todo menos el
+   panel, del que sólo actualiza los valores; render("superpuesto"), sólo lo de encima */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  const soloLienzo = que === true || que === "lienzo";
+  correr(); routeAll(); aplicarTema();
+  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = "";
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
+  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
+  for (const w of S.wires) renderWire(w);
+  for (const d of junctionDots())
+    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
+  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.filter(n => n.type !== "label" && !esMarco(n)).length;
   $("#st-e").textContent = S.wires.length;
   $("#st-s").textContent = (S.sel.length + S.selW.length) ? S.sel.length + " · " + S.selW.length + " cables" : "—";
@@ -2830,7 +2868,7 @@ svg.addEventListener("pointermove", ev => {
   const w = toWorld(ev);
   if (!drag) {
     const nid = (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-pid")) || nodoCerca(w);
-    if (nid !== hoverNode) { hoverNode = nid; render(); }
+    if (nid !== hoverNode) { hoverNode = nid; render("superpuesto"); }   // sólo cambian los pines
     return;
   }
   if (drag.kind === "pan") { S.pan.x = drag.px + (ev.clientX - drag.sx); S.pan.y = drag.py + (ev.clientY - drag.sy); moverVista(); return; }
@@ -2838,19 +2876,19 @@ svg.addEventListener("pointermove", ev => {
     const dx = w.x - drag.w0.x, dy = w.y - drag.w0.y;
     if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
     for (const o of drag.orig) { const n = getNode(o.id); if (n) { n.x = snapV(o.x + dx); n.y = snapV(o.y + dy); } }
-    render(); return;
+    render("lienzo"); return;                     // el panel se rehace al soltar
   }
-  if (drag.kind === "connect") { drag.cur = w; render(); return; }
-  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render(); return; }
+  if (drag.kind === "connect") { drag.cur = w; render("superpuesto"); return; }
+  if (drag.kind === "band") { drag.band.x2 = w.x; drag.band.y2 = w.y; render("superpuesto"); return; }
   if (drag.kind === "resize") {
     const n = getNode(drag.nodeId);
     if (!n) return;
     const antes = [n.x, n.y, n.w, n.h].join();
     estirarMarco(n, drag.orig, drag.dir, w);
-    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render(); }
+    if ([n.x, n.y, n.w, n.h].join() !== antes) { drag.moved = true; render("lienzo"); }
     return;
   }
-  if (drag.kind === "draw-marco") { if (moverRecuadroNuevo(drag, w)) render(); return; }
+  if (drag.kind === "draw-marco") { if (moverRecuadroNuevo(drag, w)) render("superpuesto"); return; }
 });
 svg.addEventListener("pointerup", ev => {
   if (soltarDedo(ev)) { render(); return; }

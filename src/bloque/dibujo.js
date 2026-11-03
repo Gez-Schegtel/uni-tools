@@ -113,20 +113,11 @@ function renderTiradoresTramo() {
   }
 }
 let hoverNode = null;
-function render() {
-  actualizarTamaños();
-  routeAll();
-  aplicarTema();
-  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  marcadoresUsados.clear();
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const e of S.edges) renderEdge(e);
-  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo que se dibuja encima de todo y no se exporta: área de impresión, puertos, tiradores,
+   vista previa de la flecha, banda y recuadro en dibujo. Es lo único que cambia al pasar el
+   mouse, así que render("superpuesto") redibuja sólo esto. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPorts();
   renderHandles();
@@ -140,6 +131,29 @@ function render() {
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
   if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
+}
+/* firma de un elemento: si no cambió, su <g> se reusa (ver dibujarReusando en comun/lienzo.js) */
+const firmaNodo = (n) => JSON.stringify(n) + (S.sel.includes(n.id) ? "|sel" : "");
+const nodoReusando = (n, capa) => dibujarReusando(capa, n.id, firmaNodo(n), c => renderNode(n, c));
+/* render() redibuja todo; render("lienzo"), todo menos el panel (mientras se arrastra);
+   render("superpuesto"), sólo lo de encima (al pasar el mouse) */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  actualizarTamaños();
+  routeAll();
+  aplicarTema();
+  gAtras.textContent = ""; gEdges.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
+  marcadoresUsados.clear();
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de flechas y elementos
+  for (const n of S.nodes) if (esMarco(n) && n.atras) nodoReusando(n, gAtras);
+  for (const e of S.edges) renderEdge(e);
+  for (const p of junctionDots()) el("circle", { class: "n-dot", cx: p.x, cy: p.y, r: 4.5 }, gEdges);
+  for (const n of S.nodes) if (!esMarco(n)) nodoReusando(n, gNodes);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) nodoReusando(n, gNodes);
+  cerrarReusando(gAtras); cerrarReusando(gNodes);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.length;
   $("#st-e").textContent = S.edges.length;
   $("#st-s").textContent = (S.sel.length + S.selEdges.length) ? (S.sel.length + " elem · " + S.selEdges.length + " flechas") : "—";
@@ -149,5 +163,5 @@ function render() {
   $("#b-undo").disabled = !undoStack.length;
   $("#b-redo").disabled = !redoStack.length;
   limpiarMarcadores();
-  renderInspector();
+  if (que !== "lienzo") renderInspector();
 }

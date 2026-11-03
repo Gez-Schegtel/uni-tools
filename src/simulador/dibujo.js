@@ -176,18 +176,10 @@ function nodoCerca(w, margen) {
   }
   return best;
 }
-function render(soloLienzo) {
-  correr(); routeAll(); aplicarTema();
-  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = ""; gOv.textContent = "";
-  moverVista();
-  $("#gridbg").style.display = S.showGrid ? "" : "none";
-  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
-  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
-  for (const w of S.wires) renderWire(w);
-  for (const d of junctionDots())
-    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
-  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
-  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+/* Lo de encima, que no se exporta: área de impresión, pines, tiradores del recuadro, vista
+   previa del cable, banda y recuadro en dibujo. Es lo único que cambia al pasar el mouse. */
+function dibujarSuperpuesto() {
+  gOv.textContent = "";
   renderHoja();
   renderPins();
   // un recuadro seleccionado solo: tiradores de tamaño y asa, como en diagrama-bloque
@@ -202,6 +194,24 @@ function render(soloLienzo) {
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
+}
+/* render() redibuja todo; render("lienzo") (o el reloj automático, con true) todo menos el
+   panel, del que sólo actualiza los valores; render("superpuesto"), sólo lo de encima */
+function render(que) {
+  if (que === "superpuesto") return dibujarSuperpuesto();
+  const soloLienzo = que === true || que === "lienzo";
+  correr(); routeAll(); aplicarTema();
+  gAtras.textContent = ""; gWires.textContent = ""; gNodes.textContent = "";
+  moverVista();
+  $("#gridbg").style.display = S.showGrid ? "" : "none";
+  // los recuadros "atrás" van en su propia capa, debajo de cables y compuertas
+  for (const n of S.nodes) if (esMarco(n) && n.atras) renderNode(n, gAtras);
+  for (const w of S.wires) renderWire(w);
+  for (const d of junctionDots())
+    el("circle", { class: "dot" + (valorDe(d.id, d.i) ? " hi" : ""), cx: d.p.x, cy: d.p.y, r: 4 }, gWires);
+  for (const n of S.nodes) if (!esMarco(n)) renderNode(n);
+  for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
+  dibujarSuperpuesto();
   $("#st-n").textContent = S.nodes.filter(n => n.type !== "label" && !esMarco(n)).length;
   $("#st-e").textContent = S.wires.length;
   $("#st-s").textContent = (S.sel.length + S.selW.length) ? S.sel.length + " · " + S.selW.length + " cables" : "—";

@@ -51,3 +51,12 @@ test("los paréntesis que envuelven una fracción suelta se caen solos", () => {
   const t = arb("(a/b)*2");
   assert.equal(t.some(x => x.t === "grupo"), false);
 });
+
+test("las cachés de las ecuaciones no crecen sin tope", () => {
+  const m = require("./cargar").cargar("src/bloque/ecuaciones.js");
+  const c = new Map();
+  for (let i = 0; i < 600; i++) m.guardarEnCache(c, "k" + i, i);
+  assert.equal(c.size, 500);
+  assert.equal(c.has("k0"), false);                    // se fue lo más viejo
+  assert.equal(c.get("k599"), 599);
+});

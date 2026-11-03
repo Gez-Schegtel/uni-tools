@@ -157,6 +157,14 @@ function desnudar(items, siempre) {
 }
 
 /* ---------- 3. medición del texto en el propio SVG ---------- */
+/* Las cachés guardan cada texto que se escribe (también los intermedios, tecla por tecla):
+   con un tope, se olvida lo más viejo y la memoria no crece durante toda la sesión. */
+const TOPE_CACHE = 500;
+function guardarEnCache(cache, k, v) {
+  if (cache.size >= TOPE_CACHE) cache.delete(cache.keys().next().value);
+  cache.set(k, v);
+  return v;
+}
 let _mt = null; const _mcache = new Map();
 function anchoTexto(str, fs) {
   const k = fs + "|" + str;
@@ -170,8 +178,7 @@ function anchoTexto(str, fs) {
   let w = 0;
   try { w = _mt.getComputedTextLength(); } catch (e) { w = str.length * fs * .55; }
   if (!w && str) w = str.length * fs * .55;
-  _mcache.set(k, w);
-  return w;
+  return guardarEnCache(_mcache, k, w);
 }
 
 /* ---------- 4. del árbol a cajas con alto y ancho ---------- */
@@ -246,9 +253,7 @@ const _bcache = new Map();
 function cajaEtiqueta(label, fs) {
   const k = fs + "|" + label;
   if (_bcache.has(k)) return _bcache.get(k);
-  const b = cajaFila(analizar(label), fs);
-  _bcache.set(k, b);
-  return b;
+  return guardarEnCache(_bcache, k, cajaFila(analizar(label), fs));
 }
 function dibujarMath(g, label, fs, cx, cy) {
   if (!label) return;
