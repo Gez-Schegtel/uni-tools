@@ -18,6 +18,8 @@
 
 ## 2. Descripción Técnica del Problema (Causa Raíz)
 
+> **Revisión 2026-11-03:** `instalarRueda()`, `moverVista()` y `encuadrar()` ya son comunes. Los tres `fit()` **no** son iguales (cambian el margen, el zoom máximo, la posición inicial con el lienzo vacío y el manejo del área de impresión), así que unificarlos exige pasar esos valores por `HERRAMIENTA`; si eso no compensa, esta spec se reduce a `DIRP`/`puntoPuerto` y a `proximaLetra()`. Los fragmentos de código de abajo son de una versión anterior.
+
 Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista()`, `encuadrar()` e `instalarRueda()`, todavía persisten tres duplicaciones innecesarias en el código fuente:
 
 1. **`fit()` repetido en las tres herramientas:**
@@ -44,8 +46,8 @@ Si bien [`src/comun/vista.js`](../src/comun/vista.js) ya centralizó `moverVista
      }
      ```
 2. **Constantes de dirección de puertos (`DIRS` / `DIRP`) y geometría de puertos de bloques duplicadas entre `src/bloque/` y `src/senales/equivalente.js`:**
-   - [`src/bloque/geometria.js:18`](../src/bloque/geometria.js) define `const DIRS = { r: { x: 1, y: 0 }, l: { x: -1, y: 0 }, b: { x: 0, y: 1 }, t: { x: 0, y: -1 } };` y `portPoint(n, p)`.
-   - [`src/senales/equivalente.js:7-16`](../src/senales/equivalente.js) vuelve a definir `const DIRP = { r: { x: 1, y: 0 }, l: { x: -1, y: 0 }, b: { x: 0, y: 1 }, t: { x: 0, y: -1 } };`, `const STUB = 20;` y `function puerto(n, p)` con la misma matemática que `portPoint(n, p)`.
+   - [`src/bloque/ruteo.js:2`](../src/bloque/ruteo.js) define `const DIRS = { l: …, r: …, t: …, b: … };` y `portPoint(n, port)` (línea 11).
+   - [`src/senales/equivalente.js:214`](../src/senales/equivalente.js) vuelve a definir `const DIRP` y `puntoPuerto(n, p)` con la misma matemática que `portPoint(n, port)` (el diagrama de señales no incluye `bloque/ruteo.js`, así que unificarlo implica mover esas dos piezas a `src/comun/`).
 3. **Generación de letras libres (`proximoNombreFF()` y `proximaLetra()`) duplicada en el mismo archivo [`src/simulador/modelo.js:31-40`](../src/simulador/modelo.js):**
    - Ambas funciones recorren `for (let i = 0; i < 26; i++) { const l = String.fromCharCode(65 + i); if (!usadas.has(l)) return l; } return "X";` cambiando únicamente el filtro (`n.type === "ff"` vs `n.type === "in"`).
 

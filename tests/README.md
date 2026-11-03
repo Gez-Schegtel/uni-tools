@@ -43,6 +43,7 @@ Puerto del servidor de prueba: `PUERTO=9000 npm test` (por defecto 8780).
 | `correccion.spec.js` | exactitud contra referencias independientes (lo esperado no sale del código de la app): Mason contra resolver el sistema lineal de grafos al azar (transferencia, ecuaciones, lazos, trayectorias y el equivalente en bloques), simplificación equivalente y mínima, circuitos al azar (tabla y expresión mostradas), biestables contra el modelo de libro y ecuaciones de bloques (lo dibujado vale lo escrito y entra en el bloque) |
 | `fuentes.spec.js` | las páginas de la raíz coinciden con lo que arma `src/construir.js` y no quedan restos del armado (directivas, `{{parámetros}}`, CRLF, `<script src>`) |
 | `senales.spec.js` | regla de Mason (lazos que se tocan / no se tocan, varias trayectorias, valor numérico), el equivalente en bloques tiene la misma transferencia que el grafo (con varias ramas a la salida, autolazo y cinco ramas entrando a un nodo), flechas de la vista previa que llegan desde afuera del puerto, términos negativos que se restan, aviso cuando a la entrada le llegan ramas, y que el JSON generado se abre en `diagrama-bloque`; deshacer/rehacer, copiar/pegar y duplicar |
+| `lgr.spec.js` | simulador del LGR: todos los ejemplos se calculan sin errores y muestran los nueve pasos, un estado guardado roto no rompe la página, un grado desmesurado avisa en vez de trabarla, la rueda en líneas (Firefox) hace el mismo zoom que en píxeles y el SVG exportado es válido |
 
 `lienzo.spec.js` repite, en las tres herramientas, el flujo copiar → pegar → mover → deseleccionar → Ctrl+clic / banda, y comprueba que el navegador no pueda seleccionar ni arrastrar el lienzo (causa de un bloqueo que sólo se veía en Firefox). Desde 2026-10 la suite entera corre también en Firefox (`--project=firefox`).
 
@@ -71,6 +72,7 @@ Archivos de `unidades/`:
 - `ecuaciones.test.js`: parser y maquetador de ecuaciones (`parsearExpr`, `armarCaja`) de `diagrama-bloque`.
 - `logica.test.js`: evaluación de compuertas (`evalGate`), simplificación booleana exacta por Quine–McCluskey (`simplify`) y tablas de verdad (`truthTable`) de `simulador-logico`.
 - `mason.test.js`: búsqueda de trayectorias, lazos, determinante Δ y armado de ecuaciones (`analizar`, `producto`) de `diagrama-señales`.
+- `lgr.test.js`: el lugar geométrico de las raíces (`src/lgr/calculo.js`): lectura de polinomios y listas, tope de grado, un caso de libro resuelto a mano y los ejercicios de la Guía 3 contra referencias independientes (otro resolvedor de raíces para el K crítico y la estabilidad por tramos, perturbación de K para los ángulos de salida, raíz doble en los puntos de ruptura) y la condición de ángulo sobre las ramas trazadas.
 
 Fijan los mismos resultados que `correccion.spec.js` verifica en el navegador, sin el costo de
 levantar Chromium o Firefox. Si alguno de esos archivos empezara a tocar el DOM al cargarse, estas

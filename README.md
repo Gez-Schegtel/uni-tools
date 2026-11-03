@@ -14,8 +14,9 @@ exportarlos. Todo corre en el navegador, sin instalar nada ni necesitar un servi
 | **Diagrama de bloques** (`diagrama-bloque.html`) | Bloques con ecuaciones (fracciones apiladas, exponentes, subíndices, letras griegas), sumadores (hasta tres signos y un lado vacío para la salida) y bifurcaciones. Un bloque admite una sola entrada y las flechas deben conectarse siempre a un elemento (no quedan sueltas). Las flechas se rutean solas, muestran vista previa ortogonal y, una vez seleccionadas, se pueden correr a mano o invertir de sentido. Recuadros para agrupar, colores por elemento y área de impresión (A4, A3, 16:9…). |
 | **Circuitos lógicos** (`simulador-logico.html`) | Compuertas, biestables (con uno *Custom* editable), semisumadores y sumadores. Simulación en vivo, reloj con 3 modos, tabla de verdad con la expresión mínima (Quine–McCluskey) y tabla de excitación. Cables que se rutean solos, compuertas giratorias, recuadros, colores y área de impresión. |
 | **Diagrama de señales** (`diagrama-señales.html`) | Nodos y transmitancias, con análisis completo por la regla de Mason: ecuaciones, trayectorias, lazos, Δ, cofactores y función de transferencia (simbólica y numérica). Genera el diagrama de bloques equivalente, que se abre en la otra herramienta. |
+| **Lugar de las raíces** (`simulador-lgr.html`) | Calculadora del lugar geométrico de las raíces desde la ecuación (N(s) y D(s)) o desde los ceros y polos: gráfico con asíntotas, puntos de ruptura, cruces con el eje imaginario y ángulos de salida y llegada, más todos los cálculos paso a paso y los comandos equivalentes de MatLab y SciLab. Trae los ejercicios de la Guía 3 y exporta a SVG y PNG. Viene del proyecto original ([juli-sz/uni-tools](https://github.com/juli-sz/uni-tools)). |
 
-Lo que tienen en común las tres:
+Lo que tienen en común las tres primeras (el LGR es una calculadora: no tiene elementos para editar):
 
 - Atajos de teclado y una leyenda en la barra de estado (el botón **?** los explica todos).
 - Deshacer y rehacer, copiar, cortar, pegar y duplicar, ajuste a la grilla (se puede apagar) y edición del tamaño y las opciones de cada elemento.
@@ -34,10 +35,11 @@ Lo que tienen en común las tres:
 ```
 index.html                  portada
 diagrama-bloque.html        ┐
-simulador-logico.html       ├ las tres herramientas, ARMADAS: no se editan a mano
-diagrama-señales.html       ┘
+simulador-logico.html       ├ las cuatro herramientas, ARMADAS: no se editan a mano
+diagrama-señales.html       │
+simulador-lgr.html          ┘
 src/
-  construir.js              arma los tres HTML de arriba (Node pelado, sin npm)
+  construir.js              arma los cuatro HTML de arriba (Node pelado, sin npm)
   comun/                    lo compartido: historial, ids, copiar/pegar, teclado, zoom,
                             gestos táctiles, abrir/exportar, autoguardado, colores, área
                             de impresión, recuadros, ruteo ortogonal, CSS base, pedazos de HTML
@@ -45,6 +47,7 @@ src/
                             lo propio de cada una: pagina.html (plantilla), estilos.css,
                             herramienta.js (lo que el código común necesita saber de ella)
                             y sus módulos (modelo, dibujo, panel, interacción, exportar…)
+  lgr/                      el LGR: calculo.js (sin DOM) e interfaz.js; todavía no usa comun/
 tests/                      suite de Playwright (Chromium y Firefox) y unidades de los
                             cálculos puros; es lo único con npm
 .github/workflows/          tests.yml (pruebas) y static.yml (publica en GitHub Pages)

@@ -62,9 +62,9 @@ function resumenMason() {
   const A = analizar();
   if (!S.nodos.length) return "";
   const filas = [
-    ["Trayectorias", A.P.length],
-    ["Lazos", A.L.length],
-    ["Disjuntos de a dos", (A.det.combos[2] || []).length]
+    ["Trayectorias", (A.truncado ? "≥ " : "") + A.P.length],
+    ["Lazos", (A.truncado ? "≥ " : "") + A.L.length],
+    ["Disjuntos de a dos", (A.truncado ? "≥ " : "") + (A.det.combos[2] || []).length]
   ];
   return `<div class="sec"><h3>Mason</h3>` +
     filas.map(f => `<div class="row"><label>${f[0]}</label><div class="fill"
@@ -72,7 +72,7 @@ function resumenMason() {
     `<div class="iconbar" style="margin-top:10px">
       <button class="btn on" id="b-mason2" style="width:100%">Ver el análisis completo</button></div>
     <div class="hint" style="margin-top:8px">${A.truncado
-      ? "Se alcanzó el tope simbólico: se muestra un subconjunto de términos."
+      ? "El grafo supera el tope simbólico: no se puede dar la función de transferencia."
       : A.entrada && A.salida
       ? "Ecuaciones, cofactores y función de transferencia."
       : "Marcá un nodo como entrada y otro como salida para que se pueda calcular."}</div></div>`;

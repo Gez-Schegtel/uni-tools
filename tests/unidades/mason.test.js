@@ -75,5 +75,65 @@ test("un grafo muy denso o con muchos lazos disjuntos termina en pocos milisegun
   const r = m.analizar();
   const dt = performance.now() - t0;
   assert.equal(r.truncado, true);
-  assert.equal(dt < 100, true);
+  assert.ok(dt < 500, dt + " ms");                     // con margen: corre en paralelo con las demás
+});
+
+/* Referencia independiente: x = Aᵀx + b·e resuelto por eliminación gaussiana */
+function transferenciaLineal(nodos, ramas) {
+  const n = nodos.length, idx = new Map(nodos.map((x, i) => [x.id, i]));
+  const ent = nodos.findIndex(x => x.tipo === "entrada"), sal = nodos.findIndex(x => x.tipo === "salida");
+  const M = Array.from({ length: n }, (_, i) => Array.from({ length: n + 1 }, (_, j) => (i === j ? 1 : 0)));
+  for (const r of ramas) { const a = idx.get(r.a), d = idx.get(r.de); if (a !== ent) M[a][d] -= Number(r.g); }
+  M[ent][n] = 1;                                       // la entrada es la fuente: e = 1
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let f = c + 1; f < n; f++) if (Math.abs(M[f][c]) > Math.abs(M[p][c])) p = f;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let f = 0; f < n; f++) if (f !== c) { const k = M[f][c] / M[c][c]; for (let j = c; j <= n; j++) M[f][j] -= k * M[c][j]; }
+  }
+  return M[sal][n] / M[sal][sal];
+}
+const completo = (N, gan) => {
+  const nodos = [], ramas = [];
+  for (let i = 0; i < N; i++) nodos.push(nodo("n" + i, "x" + i, i === 0 ? "entrada" : i === N - 1 ? "salida" : "normal"));
+  let k = 0;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (i !== j && j !== 0) ramas.push(rama("n" + i, "n" + j, gan(k++)));
+  return [nodos, ramas];
+};
+
+test("un grafo completo de 7 nodos (409 lazos) no se corta y su transferencia coincide con resolver el sistema", () => {
+  // con el tope de 200 lazos se cortaba y daba un resultado parcial
+  const [nodos, ramas] = completo(7, k => String(((k * 7) % 5 - 2) / 10));
+  const m = conGrafo(nodos, ramas);
+  const r = m.analizar();
+  assert.equal(r.truncado, false);
+  m.conValores(r.P); m.conValores(r.L);
+  const num = r.P.reduce((s, p, i) => s + p.valor * m.valorDelta(r.cof[i].libres, r.cof[i].det), 0);
+  const T = num / m.valorDelta(r.L, r.det);
+  const ref = transferenciaLineal(nodos, ramas);
+  assert.ok(Math.abs(T - ref) < 1e-9 * (1 + Math.abs(ref)), `${T} ≠ ${ref}`);
+});
+
+test("un grafo completo de 9 nodos avisa que supera el tope sin colgarse", () => {
+  const [nodos, ramas] = completo(9, k => "g" + k);
+  const m = conGrafo(nodos, ramas);
+  const t0 = performance.now();
+  assert.equal(m.analizar().truncado, true);
+  assert.ok(performance.now() - t0 < 3000);
+});
+
+test("catorce autolazos disjuntos (16 369 combinaciones) no se cortan y Δ = Π(1 − Lᵢ)", () => {
+  // con el tope de 2000 combinaciones de antes, esto se cortaba y quedaba sin transferencia
+  const nodos = [], ramas = [], n = 14;
+  for (let i = 0; i < n; i++) {
+    const id = "n" + i;
+    nodos.push(nodo(id, "x" + i, i === 0 ? "entrada" : i === n - 1 ? "salida" : "normal"));
+    ramas.push(rama(id, id, String((i % 4 + 1) / 10)));
+    if (i > 0) ramas.push(rama("n" + (i - 1), id, "1"));
+  }
+  const m = conGrafo(nodos, ramas);
+  const r = m.analizar();
+  assert.equal(r.truncado, false);
+  m.conValores(r.L);
+  const ref = Array.from({ length: n }, (_, i) => 1 - (i % 4 + 1) / 10).reduce((a, b) => a * b, 1);
+  assert.ok(Math.abs(m.valorDelta(r.L, r.det) - ref) < 1e-12, `${m.valorDelta(r.L, r.det)} ≠ ${ref}`);
 });

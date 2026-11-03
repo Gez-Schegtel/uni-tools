@@ -147,6 +147,17 @@ test.describe("flechas", () => {
       to: antes.from,
     });
   });
+  test("invertir juntas dos flechas que salen del mismo bloque no le deja dos entradas", async ({ page }) => {
+    await page.evaluate(() => {
+      S.nodes = [makeNode("block", 300, 200, { id: "b" }), makeNode("block", 100, 100, { id: "x" }), makeNode("block", 100, 300, { id: "y" })];
+      S.edges = [{ id: "e1", from: { id: "b", port: "l" }, to: { id: "x", port: "r" }, variant: 0 },
+                 { id: "e2", from: { id: "b", port: "l" }, to: { id: "y", port: "r" }, variant: 0 }];
+      S.sel = []; S.selEdges = ["e1", "e2"]; commit(); render();
+    });
+    await page.click("#e-flip");
+    await expect(page.locator("#toast")).toContainText("una sola entrada");
+    expect(await page.evaluate(() => S.edges.filter((e) => e.to.id === "b").length)).toBe(0);
+  });
   test("cambiar el puerto de origen o destino desde el panel (#e-fp / #e-tp) recalcula la ruta automática de la flecha", async ({ page }) => {
     await page.evaluate(() => {
       S.nodes = [

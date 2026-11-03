@@ -29,6 +29,7 @@ const PAGINAS = {
   "diagrama-bloque.html": "bloque/pagina.html",
   "simulador-logico.html": "simulador/pagina.html",
   "diagrama-señales.html": "senales/pagina.html",
+  "simulador-lgr.html": "lgr/pagina.html",
 };
 
 const DIRECTIVA = /^[ \t]*(?:<!--|\/\*|\/\/)[ \t]*@incluir[ \t]+(\S+)((?:[ \t]+[\w-]+="[^"]*")*)[ \t]*(?:-->|\*\/)?[ \t]*$/;

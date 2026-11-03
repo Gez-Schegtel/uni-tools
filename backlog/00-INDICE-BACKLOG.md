@@ -1,10 +1,10 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **33 especificaciones técnicas e historias de usuario autocontenidas** para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **39 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
-El orden (`01` a `33`) combina tres factores:
+El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio orden sugerido más abajo) combina tres factores:
 1. **Riesgo e Impacto (Primero lo crítico):** Primero se resuelven los bugs que provocan pérdida silenciosa de datos (`01`), caídas por `TypeError` (`02`), corrupción de estado al cargar (`03`, `04`), resultados incorrectos en tablas de verdad (`05`), bloqueo de edición con el reloj (`06`) o congelamiento del navegador (`07`).
 2. **Relación Impacto / Esfuerzo (Quick Wins temprano):** A continuación (`08` a `16`) se ubican las correcciones rápidas de unas pocas líneas en CSS, HTML y manejadores de eventos que tienen bajo riesgo de regresión y alto valor percibido.
 3. **Dependencias lógicas:** Las mejoras de dominio (`17` a `19`) y de arquitectura/rendimiento (`20` a `22`) van antes del saneamiento final de la suite de pruebas (`23` a `25`) y del cierre de documentación e higiene (`26`, `27`).
@@ -25,7 +25,7 @@ El orden (`01` a `33`) combina tres factores:
 | **04** | ✅ Hecho | [`04-sanitizacion-hoja-recuadros-y-biestables-al-cargar.md`](./04-sanitizacion-hoja-recuadros-y-biestables-al-cargar.md) | `BUG-20` | Bug Medio/Alto | Bajo (25 min) | Endurecer `hojaValida()`, aplicar `completarMarco()` al cargar y sanitizar `pins`, `salida`, `salidaNeg` y `rot` en flip-flops. |
 | **05** | ✅ Hecho | [`05-aislamiento-estado-secuencial-en-tabla-de-verdad.md`](./05-aislamiento-estado-secuencial-en-tabla-de-verdad.md) | `BUG-05` | Bug Alto | Bajo (20 min) | Reiniciar el estado secuencial (`q`, `clkPrev`, `clkArranque`) en cada fila de `truthTable()` para no contaminar filas siguientes. |
 | **06** | ✅ Hecho | [`06-proteger-foco-inspector-con-reloj-automatico.md`](./06-proteger-foco-inspector-con-reloj-automatico.md) | `BUG-04` | Bug Alto | Medio (30 min) | Impedir que el pulso cada 400 ms del reloj automático destruya el DOM y el foco del panel derecho (`#insp`). |
-| **07** | ✅ Hecho | [`07-cache-y-cotas-de-seguridad-en-mason.md`](./07-cache-y-cotas-de-seguridad-en-mason.md) | `BUG-03` | Bug Alto / Perf | Medio (40 min) | Cachear `analizar()` de Mason durante arrastres geométricos e imponer topes ante explosión combinatoria en grafos densos. |
+| **07** | ✅ Hecho | [`07-cache-y-cotas-de-seguridad-en-mason.md`](./07-cache-y-cotas-de-seguridad-en-mason.md) | `BUG-03` | Bug Alto / Perf | Medio (40 min) | Cachear `analizar()` de Mason durante arrastres geométricos e imponer topes ante explosión combinatoria en grafos densos. *Revisada el 2026-11-03: topes más altos y sin transferencia si hay corte.* |
 
 ---
 
@@ -87,6 +87,28 @@ El orden (`01` a `33`) combina tres factores:
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **26** | ✅ Hecho | [`26-actualizacion-documentacion-tests-atajos-y-workflows.md`](./26-actualizacion-documentacion-tests-atajos-y-workflows.md) | Sec. `6.1` | Documentación | Bajo (30 min) | Restaurar `CLAUDE.md`, actualizar `tests/README.md`, completar atajos en modales de ayuda (`?`) y ajustar `tests.yml`. |
 | **27** | ✅ Hecho | [`27-limpieza-de-archivos-huerfanos-y-peso-del-repositorio.md`](./27-limpieza-de-archivos-huerfanos-y-peso-del-repositorio.md) | Sec. `6.2` | Higiene Git | Muy bajo (10 min) | Eliminar `uni-tools-logo.jpg` (2.03 MB sin uso) de Git y limpiar `/node_modules` y `/test-results` huérfanos en la raíz. |
+
+---
+
+### Bloque 7 — Auditoría del 2026-11-03 (LGR integrado, publicación e higiene)
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **34** | ⏳ Pendiente | [`34-lgr-cancelaciones-polo-cero.md`](./34-lgr-cancelaciones-polo-cero.md) | Auditoría LGR | Bug Medio / Dominio | Medio (45 min) | Con un polo y un cero cancelados, no dibujar ángulos ni ramas sobre el par y explicar el modo cancelado en la conclusión. |
+| **35** | ⏳ Pendiente | [`35-lgr-paridad-con-las-otras-herramientas.md`](./35-lgr-paridad-con-las-otras-herramientas.md) | Auditoría LGR | Paridad / UX | Alto (2 h, en 3 pasos) | Inicio y ayuda `?` comunes, autoguardado con la clave común y aviso en la portada, guardar/abrir JSON, SVG con datos y leyenda, PNG 3×. |
+| **36** | ⏳ Pendiente | [`36-lgr-entrada-ambigua-coma-y-k.md`](./36-lgr-entrada-ambigua-coma-y-k.md) | Auditoría LGR | UX / Entrada | Bajo (20 min) | Avisar cuando `1,2` en una lista se lee como decimal y no aceptar `K` dentro de un polinomio. |
+| **37** | ⏳ Pendiente | [`37-publicacion-en-pages-solo-con-pruebas-verdes.md`](./37-publicacion-en-pages-solo-con-pruebas-verdes.md) | Auditoría CI | CI / Publicación | Bajo (25 min) | Que Pages publique sólo páginas e imágenes, y sólo si las páginas coinciden con `src/` (o con las pruebas en verde). |
+| **38** | ⏳ Pendiente | [`38-ventana-de-mason-con-delta-compacto.md`](./38-ventana-de-mason-con-delta-compacto.md) | Revisión SPEC-07 | Rendimiento / UX | Medio (40 min) | Mostrar Δ resumido cuando tiene muchos términos, para poder subir el tope de combinaciones disjuntas. |
+| **39** | ⏳ Pendiente | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
+
+**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `34` → `19` → `18` → `20` → `36` → `35` → `21` → `38` → `22` → `39`.
+
+---
+
+## Decisiones (lo que el informe señaló y no se va a hacer)
+
+- **Unificar el vocabulario del modelo** (`nodes`/`nodos`, `edges`/`wires`/`ramas`, `label`/`nombre`; informe, sección `2.2.C`): no se hace. Cambiaría el formato de los archivos guardados y del autoguardado, y obligaría a migrar todos los JSON y SVG que ya tienen los estudiantes. El código común resuelve la diferencia con `HERRAMIENTA`.
+- **Sacar el ámbito global compartido** (informe, sección `2.2.A`): no se hace. Es consecuencia de la regla de un único `<script>` clásico sin bundler; el orden de inclusión está documentado en `CLAUDE.md`.
 
 ---
 

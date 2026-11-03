@@ -30,7 +30,7 @@ function bboxAll() {
 }
 ```
 
-`bboxAll()` ignora por completo los puntos `pts` de `S.edges` (`diagrama-bloque`) y `S.wires` (`simulador-logico`). Cuando un lazo de realimentación rodea por abajo o por arriba a los bloques a más de `28 px` (el margen `pad` usado por [`recorteExportacion()`](../src/comun/exportar.js) en `src/comun/exportar.js:6-9`), el `viewBox` calculado por [`buildExportSVG()`](../src/comun/exportar.js) corta el trazo del lazo y su etiqueta.
+`bboxAll()` ignora por completo los puntos `pts` de `S.edges` (`diagrama-bloque`) y `S.wires` (`simulador-logico`). Cuando un lazo de realimentación rodea por abajo o por arriba a los bloques a más de `28 px` (el margen que deja `buildExportSVG()`), el `viewBox` calculado por `buildExportSVG()` ([`src/bloque/exportar.js`](../src/bloque/exportar.js) y [`src/simulador/exportar.js`](../src/simulador/exportar.js)) corta el trazo del lazo y su etiqueta.
 
 ---
 
@@ -63,7 +63,7 @@ function bboxAll() {
    - En `abrirTexto()` ([`src/comun/documento.js:46`](../src/comun/documento.js)), `fit()` se invoca **antes** de `render()`. Tal como ya hace [`src/senales/interaccion.js:179`](../src/senales/interaccion.js) (`acomodarRamas(); // el encuadre tiene que ver los arcos ya acomodados`), en `bloque` conviene ejecutar `actualizarTamaños(); routeAll();` (y en `simulador`, `routeAll();`) antes de `encuadrar(bboxAll(), 60, 2)` para que `c.pts` ya esté calculado al encuadrar un documento recién abierto.
 
 ### 3.1. Garantías de No Regresión
-- Se respeta el formato exacto `{ l, t, r, b }` que consumen `encuadrar(b, margen, zoomMax)` ([`src/comun/vista.js:18-19`](../src/comun/vista.js)) y `recorteExportacion()` ([`src/comun/exportar.js:8`](../src/comun/exportar.js)).
+- Se respeta el formato exacto `{ l, t, r, b }` que consumen `encuadrar(b, margen, zoomMax)` ([`src/comun/vista.js:18-19`](../src/comun/vista.js)) y `buildExportSVG()` de cada herramienta.
 - Si se usa una hoja de impresión fija (`hojaActiva()`), `recorteExportacion()` sigue usando `{ x: h.x, y: h.y, w: h.w, h: h.h }` sin cambios.
 
 ---

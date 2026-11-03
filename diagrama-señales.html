@@ -1196,7 +1196,13 @@ const nodosDeRamas = (ramas) => {
   return s;
 };
 const salientesDe = (id) => S.ramas.filter(r => r.de === id);
-const MAX_CAMINOS = 200, MAX_LAZOS = 200, MAX_COMB = 2000;
+/* Topes para que un grafo muy denso no congele la página. Con 200 lazos ya se cortaba un
+   grafo de 7 nodos todos contra todos (409 lazos), que se calcula en 20 ms; con estos, ése da
+   exacto y uno de 9 se corta en menos de un segundo, una sola vez (después queda en la caché).
+   Las combinaciones disjuntas se cortan antes porque la ventana de análisis escribe Δ término
+   a término: con 65 000 eran 31 MB de HTML y 3 s trabado. Si se corta, no se da la función
+   de transferencia. */
+const MAX_CAMINOS = 5000, MAX_LAZOS = 5000, MAX_COMB = 20000;
 let _truncadoMason = false;
 let _cacheMason = { clave: "", valor: null };
 
@@ -1683,7 +1689,7 @@ function mostrarMason() {
 
   let h = htmlEcuaciones();
   if (A.truncado)
-    h = `<div class="aviso">El grafo supera el tope simbólico: se muestra sólo una parte de las trayectorias, lazos o combinaciones disjuntas.</div>` + h;
+    h = `<div class="aviso">El grafo supera el tope simbólico: se muestra sólo una parte de las trayectorias, lazos o combinaciones disjuntas, y por eso no se da la función de transferencia.</div>` + h;
   /* Mason toma la entrada como fuente. Si le llegan ramas, lo que calcula es la transferencia
      desde una señal que se suma en ese nodo, no salida/entrada: se avisa, con la salida de libro. */
   if (S.ramas.some(r => r.a === A.entrada.id))
@@ -1739,7 +1745,11 @@ function mostrarMason() {
   }
 
   h += `<h4>5 · Función de transferencia</h4>`;
-  if (!A.P.length) {
+  if (A.truncado) {
+    /* con una parte de los términos, Δ y los cofactores salen mal: mejor no dar un resultado */
+    h += `<div class="nada">El grafo es demasiado grande para la regla de Mason simbólica: con los términos
+      que entraron en el tope, la transferencia saldría mal, así que no se muestra.</div>`;
+  } else if (!A.P.length) {
     h += `<div class="nada">Sin trayectorias directas no hay función de transferencia.</div>`;
   } else {
     const num = A.P.map((p, i) => {
@@ -1878,9 +1888,9 @@ function resumenMason() {
   const A = analizar();
   if (!S.nodos.length) return "";
   const filas = [
-    ["Trayectorias", A.P.length],
-    ["Lazos", A.L.length],
-    ["Disjuntos de a dos", (A.det.combos[2] || []).length]
+    ["Trayectorias", (A.truncado ? "≥ " : "") + A.P.length],
+    ["Lazos", (A.truncado ? "≥ " : "") + A.L.length],
+    ["Disjuntos de a dos", (A.truncado ? "≥ " : "") + (A.det.combos[2] || []).length]
   ];
   return `<div class="sec"><h3>Mason</h3>` +
     filas.map(f => `<div class="row"><label>${f[0]}</label><div class="fill"
@@ -1888,7 +1898,7 @@ function resumenMason() {
     `<div class="iconbar" style="margin-top:10px">
       <button class="btn on" id="b-mason2" style="width:100%">Ver el análisis completo</button></div>
     <div class="hint" style="margin-top:8px">${A.truncado
-      ? "Se alcanzó el tope simbólico: se muestra un subconjunto de términos."
+      ? "El grafo supera el tope simbólico: no se puede dar la función de transferencia."
       : A.entrada && A.salida
       ? "Ecuaciones, cofactores y función de transferencia."
       : "Marcá un nodo como entrada y otro como salida para que se pueda calcular."}</div></div>`;
