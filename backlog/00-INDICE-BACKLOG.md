@@ -56,7 +56,7 @@ El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio 
 | # | Estado | Archivo | Ref. Informe | Tipo | Esfuerzo | Resumen |
 | :-: | :-: | :--- | :---: | :---: | :---: | :--- |
 | **17** | ✅ Hecho | [`17-reglas-completas-de-conexion-en-diagrama-de-bloques.md`](./17-reglas-completas-de-conexion-en-diagrama-de-bloques.md) | `BUG-07` | Bug Medio / Dominio | Medio (45 min) | Completar reglas de conexión en bloques (validar `#e-flip`, entradas en `node`/`io`, salidas únicas, signos de sumador y lazos). |
-| **18** | ⏳ Pendiente | [`18-paridad-de-recuadros-marco-en-simulador-logico.md`](./18-paridad-de-recuadros-marco-en-simulador-logico.md) | `BUG-11` | Bug Medio / UI | Medio (45 min) | Habilitar el área de agarre, los tiradores de tamaño y el dibujo por arrastre para recuadros (`marco`) en el simulador. |
+| **18** | ✅ Hecho | [`18-paridad-de-recuadros-marco-en-simulador-logico.md`](./18-paridad-de-recuadros-marco-en-simulador-logico.md) | `BUG-11` | Bug Medio / UI | Medio (45 min) | Habilitar el área de agarre, los tiradores de tamaño y el dibujo por arrastre para recuadros (`marco`) en el simulador. |
 | **19** | ✅ Hecho | [`19-mejoras-topologicas-en-equivalente-en-bloques.md`](./19-mejoras-topologicas-en-equivalente-en-bloques.md) | `BUG-13` | Bug Medio | Medio (35 min) | Insertar bifurcación antes del rótulo de salida cuando salen lazos de una salida sumada y limpiar bifurcaciones 1→1 superfluas. |
 
 ---

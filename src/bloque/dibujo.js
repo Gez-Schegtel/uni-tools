@@ -92,31 +92,8 @@ function renderHandles() {
   if (S.sel.length !== 1) return;
   const n = getNode(S.sel[0]);
   if (!esEstirable(n)) return;
-  const R = rectOf(n);
-  const tiradores = [
-    { dir: "nw", x: R.l, y: R.t }, { dir: "ne", x: R.r, y: R.t },
-    { dir: "se", x: R.r, y: R.b }, { dir: "sw", x: R.l, y: R.b }
-  ];
-  if (esMarco(n)) tiradores.push(
-    { dir: "n", x: R.cx, y: R.t }, { dir: "s", x: R.cx, y: R.b },
-    { dir: "w", x: R.l, y: R.cy }, { dir: "e", x: R.r, y: R.cy });
-  if (esMarco(n)) {                            // asa de arriba a la izquierda, por fuera del recuadro
-    const gx = R.l + 10, gy = R.t - 24;
-    const g = el("g", { class: "m-grip-wrap", "data-nid": n.id }, gOv);
-    el("rect", { class: "m-grip", x: gx, y: gy, width: 26, height: 18, rx: 4 }, g);
-    el("path", { class: "m-grip-ico", d: `M ${gx + 13} ${gy + 4} V ${gy + 14} M ${gx + 8} ${gy + 9} H ${gx + 18}
-      M ${gx + 13} ${gy + 4} l -2 2 M ${gx + 13} ${gy + 4} l 2 2 M ${gx + 13} ${gy + 14} l -2 -2 M ${gx + 13} ${gy + 14} l 2 -2
-      M ${gx + 8} ${gy + 9} l 2 -2 M ${gx + 8} ${gy + 9} l 2 2 M ${gx + 18} ${gy + 9} l -2 -2 M ${gx + 18} ${gy + 9} l -2 2` }, g);
-  }
-  // el cuadrito de dibujo queda por fuera de la caja de selección punteada
-  const sal = esMarco(n) ? 0 : 4;
-  for (const c of tiradores) {
-    const x = c.x + (c.dir.includes("e") ? sal : c.dir.includes("w") ? -sal : 0);
-    const y = c.y + (c.dir.includes("s") ? sal : c.dir.includes("n") ? -sal : 0);
-    const g = el("g", { class: "m-handle-wrap", "data-handle": c.dir, "data-nid": n.id }, gOv);
-    el("rect", { x: x - 9, y: y - 9, width: 18, height: 18, fill: "transparent" }, g);
-    el("rect", { class: "m-handle", x: x - 5, y: y - 5, width: 10, height: 10, rx: 2 }, g);
-  }
+  // el cuadrito de dibujo queda por fuera de la caja de selección punteada (salvo en recuadros)
+  dibujarTiradores(n, rectOf(n), esMarco(n), esMarco(n) ? 0 : 4);
 }
 // una flecha seleccionada muestra un tirador en el medio de cada tramo
 function renderTiradoresTramo() {
@@ -162,15 +139,7 @@ function render() {
     el("rect", { class: "band", x: Math.min(b.x1, b.x2), y: Math.min(b.y1, b.y2),
       width: Math.abs(b.x2 - b.x1), height: Math.abs(b.y2 - b.y1) }, gOv);
   }
-  if (drag && drag.kind === "draw-marco") {
-    const x1 = drag.start.x, y1 = drag.start.y;
-    const x2 = drag.cur.x, y2 = drag.cur.y;
-    const l = Math.min(x1, x2), t = Math.min(y1, y2);
-    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-    el("rect", { class: "m-shape",
-      style: "stroke:var(--accent);stroke-dasharray:4 3;stroke-width:1.5;fill:rgba(13,91,214,.06)",
-      x: l, y: t, width: w, height: h, rx: 6 }, gOv);
-  }
+  if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
   $("#st-n").textContent = S.nodes.length;
   $("#st-e").textContent = S.edges.length;
   $("#st-s").textContent = (S.sel.length + S.selEdges.length) ? (S.sel.length + " elem · " + S.selEdges.length + " flechas") : "—";

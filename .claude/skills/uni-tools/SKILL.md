@@ -175,7 +175,11 @@ elemento suelto va por `style`, que sí le gana a la clase.
   de largo cero no tiene orientación.
 - Los tiradores de tamaño salen de `renderHandles()` para `esEstirable(n)`; la cuenta está en
   `estirar()`. Los recuadros dejan fijo el lado opuesto; bloques y sumadores crecen desde el centro
-  para no desalinear los puertos.
+  para no desalinear los puertos. Lo de los recuadros es común con el simulador y vive en
+  `comun/recuadros.js`: `dibujarTiradores()`, `estirarMarco()`, y para dibujarlos arrastrando
+  `dibujarRecuadroNuevo()`, `moverRecuadroNuevo()` y `recuadroArrastrado()`. Los dos dibujan el
+  recuadro con `dibujarMarco(g, n, true)`, que agrega el borde ancho invisible `.m-hit` para
+  agarrarlo sin relleno (la exportación lo saca).
 
 ## Trampas conocidas
 

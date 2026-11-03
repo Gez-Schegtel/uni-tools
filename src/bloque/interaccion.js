@@ -71,16 +71,7 @@ svg.addEventListener("pointercancel", ev => { soltarDedo(ev); cancelarDrag(); re
    las flechas no se quiebran. Al estirar a mano un bloque deja de ajustarse a la ecuación. */
 function estirar(n, d, w) {
   const dir = d.dir, o = d.orig;
-  if (esMarco(n)) {
-    const MIN = 20;
-    let l = o.x - o.w / 2, r = o.x + o.w / 2, t = o.y - o.h / 2, b = o.y + o.h / 2;
-    if (dir.includes("w")) l = Math.min(snapV(w.x), r - MIN);
-    if (dir.includes("e")) r = Math.max(snapV(w.x), l + MIN);
-    if (dir.includes("n")) t = Math.min(snapV(w.y), b - MIN);
-    if (dir.includes("s")) b = Math.max(snapV(w.y), t + MIN);
-    n.w = r - l; n.h = b - t; n.x = l + n.w / 2; n.y = t + n.h / 2;
-    return;
-  }
+  if (esMarco(n)) return estirarMarco(n, o, dir, w);
   const paso = S.snap ? S.grid / 2 : 1;              // el ancho total sube de a una celda
   const medio = (v) => Math.round(v / paso) * paso;
   const hw = medio(Math.abs(w.x - o.x)), hh = medio(Math.abs(w.y - o.y));
@@ -329,14 +320,7 @@ svg.addEventListener("pointermove", ev => {
     return;
   }
   if (drag.kind === "draw-marco") {
-    const cx = snapV(w.x), cy = snapV(w.y);
-    if (cx !== drag.cur.x || cy !== drag.cur.y) {
-      drag.cur = { x: cx, y: cy };
-      if (Math.abs(drag.cur.x - drag.start.x) > 3 || Math.abs(drag.cur.y - drag.start.y) > 3) {
-        drag.moved = true;
-      }
-      render();
-    }
+    if (moverRecuadroNuevo(drag, w)) render();
     return;
   }
   if (drag.kind === "move") {
@@ -368,17 +352,11 @@ svg.addEventListener("pointerup", ev => {
     return;
   }
   if (drag.kind === "draw-marco") {
-    const x1 = drag.start.x, y1 = drag.start.y;
-    const x2 = drag.cur.x, y2 = drag.cur.y;
-    const dw = Math.abs(x2 - x1), dh = Math.abs(y2 - y1);
-    if (!drag.moved || (dw < 10 && dh < 10)) {
+    const c = recuadroArrastrado(drag);
+    if (!c) {
       addAt("marco", snapV(w.x), snapV(w.y));
     } else {
-      const nw = Math.max(20, dw);
-      const nh = Math.max(20, dh);
-      const cx = Math.min(x1, x2) + nw / 2;
-      const cy = Math.min(y1, y2) + nh / 2;
-      const n = makeNode("marco", cx, cy, { w: nw, h: nh });
+      const n = makeNode("marco", c.x, c.y, { w: c.w, h: c.h });
       S.nodes.push(n);
       S.sel = [n.id]; S.selEdges = [];
       setPending(null);

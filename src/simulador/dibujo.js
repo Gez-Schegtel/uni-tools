@@ -31,7 +31,7 @@ function renderNode(n, destino) {
   const g = el("g", { class: "node" + (S.sel.includes(n.id) ? " sel" : ""), "data-id": n.id,
     style: estiloColor(n.color), transform: `translate(${n.x},${n.y})` }, destino || gNodes);
   if (esMarco(n)) {
-    dibujarMarco(g, n, false);
+    dibujarMarco(g, n, true);
   } else if (n.type === "in") {
     const w = T.in.w, h = T.in.h;
     el("rect", { class: "sw-track" + (n.on ? " on" : ""), x: -w / 2, y: -h / 2, width: w, height: h, rx: h / 2 }, g);
@@ -190,6 +190,9 @@ function render(soloLienzo) {
   for (const n of S.nodes) if (esMarco(n) && !n.atras) renderNode(n);
   renderHoja();
   renderPins();
+  // un recuadro seleccionado solo: tiradores de tamaño y asa, como en diagrama-bloque
+  if (S.sel.length === 1 && esMarco(getNode(S.sel[0]))) dibujarTiradores(getNode(S.sel[0]), rectOf(getNode(S.sel[0])), true, 0);
+  if (drag && drag.kind === "draw-marco") dibujarRecuadroNuevo(drag);
   if (drag && drag.kind === "connect" && drag.cur) {
     const pts = ptsPrevia(drag.start, pinDir(getNode(drag.fromId), drag.fromPin), drag.cur);
     el("path", { class: "ghostline", d: pathD(pts, 5) }, gOv);

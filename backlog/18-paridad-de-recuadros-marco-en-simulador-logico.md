@@ -52,6 +52,14 @@ En `simulador-logico` existen dos causas por las cuales un recuadro (`marco`) no
 
 ---
 
+### 3.2. Lo que se hizo (2026-11-03)
+
+Se movió a `src/comun/recuadros.js` (y sus estilos a `recuadros.css`) lo que antes estaba sólo en `src/bloque/`: `dibujarTiradores()` (esquinas, lados y asa), `estirarMarco()`, y el dibujo por arrastre (`dibujarRecuadroNuevo()`, `moverRecuadroNuevo()`, `recuadroArrastrado()`). `diagrama-bloque` los usa igual que antes; el simulador dibuja los recuadros con `dibujarMarco(g, n, true)` y suma en `interaccion.js` los arrastres `resize` y `draw-marco`. La exportación del simulador saca el `.m-hit`.
+
+Prueba: `tests/specs/simulador.spec.js`, «los recuadros se dibujan arrastrando, se estiran con los tiradores y se agarran por el borde».
+
+---
+
 ## 4. Plan de Pruebas (Tests a modificar y agregar)
 
 En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
@@ -64,6 +72,6 @@ En [`tests/specs/simulador.spec.js`](../tests/specs/simulador.spec.js):
 
 ## 5. Criterios de Aceptación
 
-- [ ] En `simulador-logico`, los recuadros (`marco`) tienen área de agarre `.m-hit` de 20 px, asa `.m-grip`, los 8 tiradores `.m-handle-wrap` al seleccionarse y creación arrastrando en diagonal.
-- [ ] El código de tiradores y `aplicarResize` vive una sola vez en `src/comun/recuadros.js` sin duplicarse entre `bloque` y `simulador`.
-- [ ] `node src/construir.js` actualiza `diagrama-bloque.html` y `simulador-logico.html`, y pasan los tests de recuadros en ambas herramientas.
+- [x] En `simulador-logico`, los recuadros (`marco`) tienen área de agarre `.m-hit` de 20 px, asa `.m-grip`, los 8 tiradores `.m-handle-wrap` al seleccionarse y creación arrastrando en diagonal.
+- [x] El código de tiradores y `aplicarResize` vive una sola vez en `src/comun/recuadros.js` sin duplicarse entre `bloque` y `simulador`.
+- [x] `node src/construir.js` actualiza `diagrama-bloque.html` y `simulador-logico.html`, y pasan los tests de recuadros en ambas herramientas.

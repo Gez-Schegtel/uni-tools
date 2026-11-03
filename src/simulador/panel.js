@@ -50,8 +50,9 @@ function renderInspector() {
         </div>
         <div class="row"><label>Tamaño letra</label><div class="fill"><input type="number" id="m-font" min="8" max="40" value="${n.font}"></div></div>
         <div class="hint" style="margin-top:8px">Sirve para encuadrar un grupo de compuertas y ponerle
-          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde y los clics de
-          adentro pasan a lo que haya debajo.</div></div>`;
+          nombre: no se cablea ni desvía los cables. Sin relleno lo agarrás por el borde o por el asa y
+          los clics de adentro pasan a lo que haya debajo. Los cuadritos lo estiran; con la herramienta
+          (<kbd>M</kbd>) también se puede dibujar arrastrando en diagonal.</div></div>`;
     }
     h += seccionColorPropio(n, "nc-", clavesColor(n));
     if (n.type === "ff") h += panelBiestable(n);
