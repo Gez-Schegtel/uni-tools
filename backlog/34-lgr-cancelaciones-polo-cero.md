@@ -3,7 +3,7 @@
 - **ID:** `SPEC-34`
 - **Estado:** ⏳ Pendiente
 - **Origen:** Auditoría del 2026-11-03 al integrar `simulador-lgr.html` del proyecto original
-- **Prioridad:** Media (34 / 39)
+- **Prioridad:** Media (34 / 46)
 - **Esfuerzo estimado:** Medio (~45 minutos)
 - **Archivos afectados:** `src/lgr/calculo.js`, `src/lgr/interfaz.js`, `tests/unidades/lgr.test.js`
 

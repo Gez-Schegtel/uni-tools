@@ -3,7 +3,7 @@
 - **ID:** `SPEC-38`
 - **Estado:** ⏳ Pendiente
 - **Origen:** Auditoría del 2026-11-03 (revisión de SPEC-07)
-- **Prioridad:** Baja (38 / 39)
+- **Prioridad:** Baja (38 / 46)
 - **Esfuerzo estimado:** Medio (~40 minutos)
 - **Archivos afectados:** `src/senales/analisis.js`, `src/senales/mason.js`, `tests/specs/senales.spec.js`
 

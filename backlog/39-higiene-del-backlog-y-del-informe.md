@@ -3,7 +3,7 @@
 - **ID:** `SPEC-39`
 - **Estado:** ⏳ Pendiente
 - **Origen:** Auditoría del 2026-11-03
-- **Prioridad:** Baja (39 / 39)
+- **Prioridad:** Baja (39 / 46)
 - **Esfuerzo estimado:** Muy bajo (~15 minutos)
 - **Archivos afectados:** `backlog/00-INDICE-BACKLOG.pdf`, `INFORME_ANALISIS.md`, `backlog/0*-*.md` a `backlog/2*-*.md`
 
@@ -22,7 +22,7 @@
 1. **`backlog/00-INDICE-BACKLOG.pdf`** es una foto del índice del 2 de noviembre: ya no tiene SPEC-34 a SPEC-39 y va a quedar viejo con cada cambio de estado. Se versiona un binario que duplica el `.md`.
 2. **`INFORME_ANALISIS.md`** describe el estado del 28 de octubre. Varias cosas ya no son ciertas (`CLAUDE.md` «eliminado», BUG-01 a BUG-07 «abiertos») y no lo aclara.
 3. **Números de línea en las specs:** casi todas citan `archivo.js:NN` de una versión anterior. Las specs ya hechas son historia; en las pendientes (18 a 22) conviene citar funciones, no líneas.
-4. **Prioridades «n / 27»** en SPEC-01 a SPEC-27, cuando el backlog ya tiene 39.
+4. **Prioridades «n / 27»** en SPEC-01 a SPEC-27, cuando el backlog ya tiene 46.
 
 ---
 

@@ -1,10 +1,10 @@
 # Backlog Ordenado de Especificaciones e Historias de Usuario — `uni-tools`
 
-Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **39 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
+Este directorio contiene el backlog completo derivado de [`INFORME_ANALISIS.md`](../INFORME_ANALISIS.md) más los requerimientos adicionales de UX y dominio solicitados, desglosado en **46 especificaciones técnicas e historias de usuario autocontenidas** (las `34` a `39` salen de la auditoría del 2026-11-03, hecha al integrar el simulador del LGR del proyecto original, y las `40` a `46` de la revisión de estructura y estilo del mismo día) para poder trabajarlas una por una de forma ordenada, incremental y verificable.
 
 ## Criterio de Priorización y Ordenamiento
 
-El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio orden sugerido más abajo) combina tres factores:
+El orden (`01` a `33`; las `34` a `46` se agregaron después y tienen su propio orden sugerido más abajo) combina tres factores:
 1. **Riesgo e Impacto (Primero lo crítico):** Primero se resuelven los bugs que provocan pérdida silenciosa de datos (`01`), caídas por `TypeError` (`02`), corrupción de estado al cargar (`03`, `04`), resultados incorrectos en tablas de verdad (`05`), bloqueo de edición con el reloj (`06`) o congelamiento del navegador (`07`).
 2. **Relación Impacto / Esfuerzo (Quick Wins temprano):** A continuación (`08` a `16`) se ubican las correcciones rápidas de unas pocas líneas en CSS, HTML y manejadores de eventos que tienen bajo riesgo de regresión y alto valor percibido.
 3. **Dependencias lógicas:** Las mejoras de dominio (`17` a `19`) y de arquitectura/rendimiento (`20` a `22`) van antes del saneamiento final de la suite de pruebas (`23` a `25`) y del cierre de documentación e higiene (`26`, `27`).
@@ -101,14 +101,28 @@ El orden (`01` a `33`; las `34` a `39` se agregaron después y tienen su propio 
 | **38** | ⏳ Pendiente | [`38-ventana-de-mason-con-delta-compacto.md`](./38-ventana-de-mason-con-delta-compacto.md) | Revisión SPEC-07 | Rendimiento / UX | Medio (40 min) | Mostrar Δ resumido cuando tiene muchos términos, para poder subir el tope de combinaciones disjuntas. |
 | **39** | ⏳ Pendiente | [`39-higiene-del-backlog-y-del-informe.md`](./39-higiene-del-backlog-y-del-informe.md) | Auditoría | Documentación | Muy bajo (15 min) | Quitar el PDF del índice, fechar el informe, citar funciones en vez de líneas y actualizar las prioridades «n / 27». |
 
-**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `34` → `19` → `18` → `20` → `36` → `35` → `21` → `38` → `22` → `39`.
+---
+
+### Bloque 8 — Revisión de Estructura y Estilo del 2026-11-03
+
+| # | Estado | Archivo | Origen | Tipo | Esfuerzo | Resumen |
+| :-: | :-: | :--- | :---: | :---: | :---: | :--- |
+| **40** | ⏳ Pendiente | [`40-detectar-colisiones-de-nombres-globales.md`](./40-detectar-colisiones-de-nombres-globales.md) | Informe `2.2.A` | Arquitectura / CI | Bajo (30 min) | Que el armado falle si dos módulos de una página declaran el mismo nombre global (hoy una función pisaría a otra en silencio). |
+| **41** | ⏳ Pendiente | [`41-redibujo-por-capas.md`](./41-redibujo-por-capas.md) | Informe `4.1` | Rendimiento | Alto (2 h) | Partir `render()` por capas para que arrastrar, seleccionar o tipear no rearme todo el SVG y el panel. Depende de `20` y `21`. |
+| **42** | ⏳ Pendiente | [`42-equivalente-en-bloques-con-el-ruteo-de-bloques.md`](./42-equivalente-en-bloques-con-el-ruteo-de-bloques.md) | Informe `4.4` | Mantenibilidad | Medio / Alto (1 h) | Que la vista previa del equivalente en bloques use el ruteo y el dibujo de `diagrama-bloque` en vez de copias propias. |
+| **43** | ⏳ Pendiente | [`43-vocabulario-del-modelo-con-accesos-comunes.md`](./43-vocabulario-del-modelo-con-accesos-comunes.md) | Informe `2.2.C` | Mantenibilidad | Bajo / Medio (40 min) | Accesos comunes (`nodosDe`, `conexionesDe`, `etiquetaDe`…) para no repetir condicionales por herramienta, sin tocar el formato de los archivos. |
+| **44** | ⏳ Pendiente | [`44-lgr-organizacion-y-estilo-del-codigo.md`](./44-lgr-organizacion-y-estilo-del-codigo.md) | Revisión LGR | Mantenibilidad | Medio (1 h) | Partir `interfaz.js` y `calculo.js` en módulos, nombres claros en vez de `V`, `Rg`, `t`, y estilo como el resto. |
+| **45** | ⏳ Pendiente | [`45-lgr-trazado-sin-trabar-la-pagina.md`](./45-lgr-trazado-sin-trabar-la-pagina.md) | Auditoría LGR | Rendimiento / UX | Medio (45 min) | Trazado incremental y cancelable: hoy un grado 20 traba la página 1,5 s con cada tecla. |
+| **46** | ⏳ Pendiente | [`46-lgr-tolerancias-de-ruptura-y-cruce.md`](./46-lgr-tolerancias-de-ruptura-y-cruce.md) | Auditoría LGR | Exactitud numérica | Medio (40 min) | Escalar el problema antes de analizarlo para que las tolerancias fijas de ruptura, cruce y raíces nulas no fallen con escalas extremas. |
+
+**Orden sugerido para lo pendiente:** `37` (protege lo publicado) → `40` (barato y previene) → `34` → `19` → `18` → `20` → `36` → `45` → `35` + `44` (juntas) → `21` → `41` → `22` + `42` → `43` → `46` → `38` → `39`.
 
 ---
 
 ## Decisiones (lo que el informe señaló y no se va a hacer)
 
-- **Unificar el vocabulario del modelo** (`nodes`/`nodos`, `edges`/`wires`/`ramas`, `label`/`nombre`; informe, sección `2.2.C`): no se hace. Cambiaría el formato de los archivos guardados y del autoguardado, y obligaría a migrar todos los JSON y SVG que ya tienen los estudiantes. El código común resuelve la diferencia con `HERRAMIENTA`.
-- **Sacar el ámbito global compartido** (informe, sección `2.2.A`): no se hace. Es consecuencia de la regla de un único `<script>` clásico sin bundler; el orden de inclusión está documentado en `CLAUDE.md`.
+- **Renombrar las claves del modelo** (`nodes`/`nodos`, `edges`/`wires`/`ramas`, `label`/`nombre`; informe, sección `2.2.C`): no se hace. Cambiaría el formato de los archivos guardados y del autoguardado, y obligaría a migrar todos los JSON y SVG que ya tienen los estudiantes. Lo que sí se hace es esconder la diferencia detrás de accesos comunes (`SPEC-43`).
+- **Sacar el ámbito global compartido** (informe, sección `2.2.A`): no se hace. Es consecuencia de la regla de un único `<script>` clásico sin bundler; el orden de inclusión está documentado en `CLAUDE.md`. Lo que sí se hace es detectar las colisiones de nombres al armar (`SPEC-40`).
 
 ---
 

@@ -3,7 +3,7 @@
 - **ID:** `SPEC-37`
 - **Estado:** ⏳ Pendiente
 - **Origen:** Auditoría del 2026-11-03
-- **Prioridad:** Media (37 / 39)
+- **Prioridad:** Media (37 / 46)
 - **Esfuerzo estimado:** Bajo (~25 minutos)
 - **Archivos afectados:** `.github/workflows/static.yml`, `.github/workflows/tests.yml`
 
